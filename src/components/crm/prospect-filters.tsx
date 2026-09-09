@@ -66,33 +66,61 @@ export function ProspectFilters() {
       </div>
 
       {showFilters && (
-        <div className="absolute top-full mt-2 right-0 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10 p-2">
-          <div className="text-xs font-semibold text-gray-500 mb-2 px-2 uppercase">Filtrar por Clase</div>
-          <div className="space-y-1">
-            <button 
-              onClick={() => handleClassFilter('')}
-              className={`w-full text-left px-2 py-1.5 text-sm rounded ${!currentClass ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'}`}
-            >
-              Todas las clases
-            </button>
-            <button 
-              onClick={() => handleClassFilter('A')}
-              className={`w-full text-left px-2 py-1.5 text-sm rounded ${currentClass === 'A' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-50'}`}
-            >
-              Clase A
-            </button>
-            <button 
-              onClick={() => handleClassFilter('B')}
-              className={`w-full text-left px-2 py-1.5 text-sm rounded ${currentClass === 'B' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-50'}`}
-            >
-              Clase B
-            </button>
-            <button 
-              onClick={() => handleClassFilter('C')}
-              className={`w-full text-left px-2 py-1.5 text-sm rounded ${currentClass === 'C' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-50'}`}
-            >
-              Clase C
-            </button>
+        <div className="absolute top-full mt-2 right-0 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-10 p-3">
+          <div className="space-y-4">
+            <div>
+              <div className="text-xs font-semibold text-gray-500 mb-2 uppercase">Filtrar por Clase</div>
+              <div className="space-y-1">
+                <button 
+                  onClick={() => handleClassFilter('')}
+                  className={`w-full text-left px-2 py-1.5 text-sm rounded ${!currentClass ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'}`}
+                >
+                  Todas las clases
+                </button>
+                <button 
+                  onClick={() => handleClassFilter('A')}
+                  className={`w-full text-left px-2 py-1.5 text-sm rounded ${currentClass === 'A' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-50'}`}
+                >
+                  Clase A
+                </button>
+                <button 
+                  onClick={() => handleClassFilter('B')}
+                  className={`w-full text-left px-2 py-1.5 text-sm rounded ${currentClass === 'B' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-50'}`}
+                >
+                  Clase B
+                </button>
+                <button 
+                  onClick={() => handleClassFilter('C')}
+                  className={`w-full text-left px-2 py-1.5 text-sm rounded ${currentClass === 'C' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-50'}`}
+                >
+                  Clase C
+                </button>
+              </div>
+            </div>
+            
+            <div className="pt-2 border-t border-gray-100">
+              <div className="text-xs font-semibold text-gray-500 mb-2 uppercase">Filtrar por Ciudad</div>
+              <input 
+                type="text" 
+                placeholder="Ej: Córdoba, San Francisco..."
+                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500"
+                defaultValue={searchParams.get('city') || ''}
+                onChange={(e) => {
+                  const params = new URLSearchParams(searchParams);
+                  if (e.target.value) {
+                    params.set('city', e.target.value);
+                  } else {
+                    params.delete('city');
+                  }
+                  const timeoutId = setTimeout(() => {
+                    startTransition(() => {
+                      router.push(`/prospects?${params.toString()}`);
+                    });
+                  }, 500);
+                  return () => clearTimeout(timeoutId);
+                }}
+              />
+            </div>
           </div>
         </div>
       )}

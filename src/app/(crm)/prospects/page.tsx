@@ -13,6 +13,7 @@ export default async function ProspectsPage({
   
   const search = typeof params.search === 'string' ? params.search : '';
   const prospectClass = typeof params.class === 'string' ? params.class : '';
+  const city = typeof params.city === 'string' ? params.city : '';
   
   let query = supabase.from('prospects').select('*').order('created_at', { ascending: false });
   
@@ -21,6 +22,9 @@ export default async function ProspectsPage({
   }
   if (prospectClass) {
     query = query.eq('class', prospectClass);
+  }
+  if (city) {
+    query = query.ilike('city', `%${city}%`);
   }
   
   const { data: prospects, error } = await query;
