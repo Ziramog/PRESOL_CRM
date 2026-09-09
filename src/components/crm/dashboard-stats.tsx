@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, DollarSign, Target, CalendarAlert, Map, ArrowRight } from 'lucide-react';
+import { Building2, DollarSign, Target, Calendar, Map, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 export function DashboardStats({ prospects, opportunities, tasks, activeTrip }: any) {
@@ -74,7 +74,7 @@ export function DashboardStats({ prospects, opportunities, tasks, activeTrip }: 
       <div className={`rounded-lg border p-4 shadow-sm flex flex-col justify-between ${overdueOrTodayTasks.length > 0 ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}>
         <div className="flex items-start justify-between mb-2">
           <div className={`p-2 rounded-md ${overdueOrTodayTasks.length > 0 ? 'bg-red-100 text-red-600' : 'bg-orange-50 text-orange-600'}`}>
-            <CalendarAlert className="w-5 h-5" />
+            <Calendar className="w-5 h-5" />
           </div>
           <Link href="/tasks" className={`text-xs transition-colors ${overdueOrTodayTasks.length > 0 ? 'text-red-400 hover:text-red-700' : 'text-gray-400 hover:text-orange-600'}`}>
             Ir a Agenda ↗
