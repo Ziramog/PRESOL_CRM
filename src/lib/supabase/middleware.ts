@@ -40,10 +40,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Si ya está logueado y trata de ir al login, mandar a la home
+  // Si ya está logueado y trata de ir al login, mandar a prospectos
   if (user && request.nextUrl.pathname.startsWith('/login')) {
     const url = request.nextUrl.clone()
-    url.pathname = '/'
+    url.pathname = '/prospects'
     return NextResponse.redirect(url)
   }
 

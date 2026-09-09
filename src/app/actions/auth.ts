@@ -18,7 +18,7 @@ export async function login(formData: FormData) {
     return { error: 'Credenciales inválidas. Verifica tu email y contraseña.' };
   }
 
-  redirect('/');
+  redirect('/prospects');
 }
 
 export async function logout() {
