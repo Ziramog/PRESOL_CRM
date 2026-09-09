@@ -2,16 +2,28 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, Filter } from 'lucide-react';
-import { useTransition, useState } from 'react';
+import { useTransition, useState, useRef, useEffect } from 'react';
 
-export function ProspectFilters() {
+export function ProspectFilters({ availableCities = [] }: { availableCities?: string[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [showFilters, setShowFilters] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
+  
+  const currentClass = searchParams.get('class');
+  const currentCity = searchParams.get('city') || '';
 
-  const currentSearch = searchParams.get('search') || '';
-  const currentClass = searchParams.get('class') || '';
+  // Handle click outside to close filters
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setShowFilters(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleSearch = (term: string) => {
     const params = new URLSearchParams(searchParams);
@@ -26,10 +38,10 @@ export function ProspectFilters() {
     });
   };
 
-  const handleClassFilter = (className: string) => {
+  const handleClassFilter = (cls: string) => {
     const params = new URLSearchParams(searchParams);
-    if (className) {
-      params.set('class', className);
+    if (cls) {
+      params.set('class', cls);
     } else {
       params.delete('class');
     }
@@ -37,33 +49,54 @@ export function ProspectFilters() {
     startTransition(() => {
       router.push(`/prospects?${params.toString()}`);
     });
+    setShowFilters(false);
+  };
+
+  const handleCityFilter = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const params = new URLSearchParams(searchParams);
+    if (e.target.value) {
+      params.set('city', e.target.value);
+    } else {
+      params.delete('city');
+    }
+    startTransition(() => {
+      router.push(`/prospects?${params.toString()}`);
+    });
   };
 
   return (
-    <div className="flex flex-col w-full sm:w-auto gap-2 relative">
-      <div className="flex w-full sm:w-auto gap-2">
-        <div className="relative flex-1 sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input 
-            type="text" 
-            placeholder="Buscar empresa..." 
-            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            defaultValue={currentSearch}
-            onChange={(e) => {
-              // Debounce search
-              const value = e.target.value;
-              const timeoutId = setTimeout(() => handleSearch(value), 300);
-              return () => clearTimeout(timeoutId);
-            }}
-          />
+    <div className="flex items-center gap-2 w-full sm:w-auto relative" ref={filterRef}>
+      <div className="relative flex-1 sm:w-64">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Search className="h-4 w-4 text-gray-400" />
         </div>
-        <button 
-          onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center justify-center px-3 py-2 border rounded-md transition-colors ${currentClass ? 'bg-blue-50 border-blue-200 text-blue-600' : 'border-gray-300 bg-white hover:bg-gray-50 text-gray-600'}`}
-        >
-          <Filter className="h-4 w-4" />
-        </button>
+        <input
+          type="text"
+          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
+          placeholder="Buscar empresas..."
+          defaultValue={searchParams.get('search') || ''}
+          onChange={(e) => {
+            const timeoutId = setTimeout(() => handleSearch(e.target.value), 500);
+            return () => clearTimeout(timeoutId);
+          }}
+        />
+        {isPending && (
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <div className="animate-spin h-4 w-4 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+          </div>
+        )}
       </div>
+
+      <button 
+        onClick={() => setShowFilters(!showFilters)}
+        className={`p-2 rounded-md border transition-colors flex items-center gap-2 ${
+          showFilters || currentClass || currentCity ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+        }`}
+        title="Filtros"
+      >
+        <Filter className="h-4 w-4" />
+        <span className="sr-only sm:not-sr-only sm:text-sm font-medium">Filtros</span>
+      </button>
 
       {showFilters && (
         <div className="absolute top-full mt-2 right-0 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-10 p-3">
@@ -100,26 +133,16 @@ export function ProspectFilters() {
             
             <div className="pt-2 border-t border-gray-100">
               <div className="text-xs font-semibold text-gray-500 mb-2 uppercase">Filtrar por Ciudad</div>
-              <input 
-                type="text" 
-                placeholder="Ej: Córdoba, San Francisco..."
-                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500"
-                defaultValue={searchParams.get('city') || ''}
-                onChange={(e) => {
-                  const params = new URLSearchParams(searchParams);
-                  if (e.target.value) {
-                    params.set('city', e.target.value);
-                  } else {
-                    params.delete('city');
-                  }
-                  const timeoutId = setTimeout(() => {
-                    startTransition(() => {
-                      router.push(`/prospects?${params.toString()}`);
-                    });
-                  }, 500);
-                  return () => clearTimeout(timeoutId);
-                }}
-              />
+              <select
+                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+                value={currentCity}
+                onChange={handleCityFilter}
+              >
+                <option value="">Todas las ciudades</option>
+                {availableCities.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

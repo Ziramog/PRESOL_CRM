@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Map, Users, CheckSquare, Settings, Home, Target } from 'lucide-react';
+import Image from 'next/image';
 
 const items = [
   { name: 'Dashboard', href: '/', icon: Home },
@@ -19,7 +20,13 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-64 bg-gray-900 border-r border-gray-800 h-screen fixed top-0 left-0 text-white">
       <div className="flex h-16 shrink-0 items-center px-6 border-b border-gray-800">
-        <h1 className="text-xl font-bold tracking-tight text-white">PRESOL CRM</h1>
+        <Image 
+          src="/presol-intro.png" 
+          alt="PRESOL Logo" 
+          width={120} 
+          height={40} 
+          className="object-contain brightness-0 invert"
+        />
       </div>
       
       <div className="flex-1 overflow-y-auto py-4">

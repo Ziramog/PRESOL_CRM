@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { login } from '@/app/actions/auth';
 import { Loader2, Lock } from 'lucide-react';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -20,27 +21,42 @@ export default function LoginPage() {
       setError(result.error);
       setIsPending(false);
     }
-    // Si no hay error, el action hace redirect
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+    <div className="min-h-screen relative flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      {/* Background Image with Overlay */}
+      <div className="absolute inset-0 z-0">
+        <Image 
+          src="/presol-intro.png" 
+          alt="PRESOL Background" 
+          fill 
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm"></div>
+      </div>
+
+      <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg">
-            <span className="text-2xl font-bold">P</span>
+          <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100">
+            <Image 
+              src="/presol-intro.png" 
+              alt="PRESOL Logo" 
+              width={160} 
+              height={60} 
+              className="object-contain h-16 w-auto"
+              priority
+            />
           </div>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          PRESOL CRM
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Ingresa tus credenciales para acceder
+        <p className="mt-6 text-center text-sm font-medium text-gray-700">
+          Ingresa tus credenciales para acceder al CRM
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-200">
+      <div className="relative z-10 mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white/90 backdrop-blur-md py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-gray-100/50">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">

@@ -28,6 +28,10 @@ export default async function ProspectsPage({
   }
   
   const { data: prospects, error } = await query;
+  
+  // Get distinct cities for filter
+  const { data: allCitiesData } = await supabase.from('prospects').select('city').not('city', 'is', null);
+  const cities = Array.from(new Set(allCitiesData?.map(c => c.city).filter(Boolean))).sort();
 
   if (error) {
     console.error(error);
@@ -38,7 +42,7 @@ export default async function ProspectsPage({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Prospectos</h1>
         
-        <ProspectFilters />
+        <ProspectFilters availableCities={cities} />
       </div>
 
       {/* Mobile view (Cards) */}
