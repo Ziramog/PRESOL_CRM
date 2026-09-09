@@ -39,19 +39,23 @@ export default async function ProspectsPage({
     query = query.eq('contact_status', status);
   }
   
-  const { data: prospects, error } = await query;
+  const [prospectsResponse, citiesResponse, sectorsResponse] = await Promise.all([
+    query,
+    supabase.from('prospects').select('city').not('city', 'is', null),
+    supabase.from('prospects').select('sector').not('sector', 'is', null)
+  ]);
+
+  const { data: prospects, error } = prospectsResponse;
   
-  // Get distinct cities for filter
-  const { data: allCitiesData } = await supabase.from('prospects').select('city').not('city', 'is', null);
-  const cities = Array.from(new Set(allCitiesData?.map(c => c.city).filter(Boolean))).sort();
-
-  // Get distinct sectors for filter
-  const { data: allSectorsData } = await supabase.from('prospects').select('sector').not('sector', 'is', null);
-  const sectors = Array.from(new Set(allSectorsData?.map(s => s.sector).filter(Boolean))).sort();
-
   if (error) {
     console.error(error);
   }
+  
+  // Get distinct cities for filter
+  const cities = Array.from(new Set(citiesResponse.data?.map(c => c.city).filter(Boolean))).sort();
+
+  // Get distinct sectors for filter
+  const sectors = Array.from(new Set(sectorsResponse.data?.map(s => s.sector).filter(Boolean))).sort();
 
   return (
     <div className="space-y-6">

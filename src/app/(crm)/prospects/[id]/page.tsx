@@ -14,44 +14,34 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
   const { id } = await params;
   const supabase = await createAdminClient();
 
-  // Parallel data fetching for better performance
-  const [prospectResponse, contactsResponse] = await Promise.all([
+  // Parallel data fetching for maximum performance
+  const [
+    prospectResponse,
+    contactsResponse,
+    activitiesResponse,
+    commentsResponse,
+    tasksResponse,
+    opportunitiesResponse
+  ] = await Promise.all([
     supabase.from('prospects').select('*').eq('id', id).single(),
-    supabase.from('contacts').select('*').eq('prospect_id', id)
+    supabase.from('contacts').select('*').eq('prospect_id', id),
+    supabase.from('activities').select('id, occurred_at, created_at, type, outcome, summary, notes, profiles(full_name)').eq('prospect_id', id),
+    supabase.from('comments').select('id, body, is_direction_note, created_at, profiles(full_name)').eq('prospect_id', id),
+    supabase.from('tasks').select('*').eq('prospect_id', id).eq('status', 'pending').order('due_at', { ascending: true }),
+    supabase.from('opportunities').select('*').eq('prospect_id', id).neq('stage', 'won').neq('stage', 'lost').order('created_at', { ascending: false })
   ]);
 
   const { data: prospect, error } = prospectResponse;
-  const { data: contacts } = contactsResponse;
-
+  
   if (error || !prospect) {
     notFound();
   }
 
-  // Fetch activities and comments
-  const { data: activities } = await supabase
-    .from('activities')
-    .select('id, occurred_at, created_at, type, outcome, summary, notes, profiles(full_name)')
-    .eq('prospect_id', id);
-    
-  const { data: comments } = await supabase
-    .from('comments')
-    .select('id, body, is_direction_note, created_at, profiles(full_name)')
-    .eq('prospect_id', id);
-
-  const { data: pendingTasks } = await supabase
-    .from('tasks')
-    .select('*')
-    .eq('prospect_id', id)
-    .eq('status', 'pending')
-    .order('due_at', { ascending: true });
-
-  const { data: opportunities } = await supabase
-    .from('opportunities')
-    .select('*')
-    .eq('prospect_id', id)
-    .neq('stage', 'won')
-    .neq('stage', 'lost')
-    .order('created_at', { ascending: false });
+  const { data: contacts } = contactsResponse;
+  const { data: activities } = activitiesResponse;
+  const { data: comments } = commentsResponse;
+  const { data: pendingTasks } = tasksResponse;
+  const { data: opportunities } = opportunitiesResponse;
 
   // Unify and sort
   const timelineItems = [
