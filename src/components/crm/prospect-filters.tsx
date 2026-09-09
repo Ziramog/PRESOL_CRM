@@ -122,137 +122,142 @@ export function ProspectFilters({
       </button>
 
       {showFilters && (
-        <div className="absolute top-full mt-2 right-0 w-full sm:w-80 min-w-[300px] max-h-[85vh] bg-white border border-gray-200 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden">
-          {/* Header */}
-          <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-            <h3 className="font-semibold text-gray-900">Filtros Avanzados</h3>
-            {activeFiltersCount > 0 && (
-              <button 
-                onClick={() => {
-                  const params = new URLSearchParams(searchParams);
-                  params.delete('class');
-                  params.delete('city');
-                  params.delete('sector');
-                  startTransition(() => router.push(`/prospects?${params.toString()}`));
-                }}
-                className="text-xs text-blue-600 font-medium hover:text-blue-800"
-              >
-                Limpiar todos
-              </button>
-            )}
-          </div>
-
-          {/* Tabs */}
-          <div className="flex border-b border-gray-200">
-            <button 
-              onClick={() => setActiveTab('city')}
-              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'city' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-            >
-              Ciudad {currentCities.length > 0 && `(${currentCities.length})`}
-            </button>
-            <button 
-              onClick={() => setActiveTab('sector')}
-              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'sector' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-            >
-              Rubro {currentSector && '(1)'}
-            </button>
-            <button 
-              onClick={() => setActiveTab('class')}
-              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'class' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-            >
-              Clase {currentClass && '(1)'}
-            </button>
-          </div>
-
-          {/* Tab Content (Scrollable Area) */}
-          <div className="p-3 overflow-y-auto flex-1">
-            
-            {/* CIUDAD TAB */}
-            {activeTab === 'city' && (
-              <div className="space-y-1">
+        <>
+          {/* Mobile Overlay */}
+          <div className="fixed inset-0 bg-gray-900/50 z-[90] sm:hidden" onClick={() => setShowFilters(false)} />
+          
+          <div className="fixed inset-x-0 bottom-0 top-20 sm:absolute sm:top-full sm:bottom-auto sm:mt-2 sm:right-0 sm:w-80 sm:min-w-[300px] sm:max-h-[85vh] bg-white sm:border sm:border-gray-200 sm:rounded-xl rounded-t-xl shadow-2xl z-[100] flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
+              <h3 className="font-semibold text-gray-900">Filtros Avanzados</h3>
+              {activeFiltersCount > 0 && (
                 <button 
                   onClick={() => {
                     const params = new URLSearchParams(searchParams);
+                    params.delete('class');
                     params.delete('city');
+                    params.delete('sector');
                     startTransition(() => router.push(`/prospects?${params.toString()}`));
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-md transition-colors ${currentCities.length === 0 ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
+                  className="text-xs text-blue-600 font-medium hover:text-blue-800"
                 >
-                  Todas las ciudades
-                  {currentCities.length === 0 && <Check className="w-4 h-4 text-blue-600" />}
+                  Limpiar todos
                 </button>
-                <div className="my-2 border-t border-gray-100"></div>
-                {availableCities.map(c => {
-                  const isSelected = currentCities.includes(c);
-                  return (
+              )}
+            </div>
+
+            {/* Tabs */}
+            <div className="flex border-b border-gray-200 shrink-0 bg-white">
+              <button 
+                onClick={() => setActiveTab('city')}
+                className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'city' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+              >
+                Ciudad {currentCities.length > 0 && `(${currentCities.length})`}
+              </button>
+              <button 
+                onClick={() => setActiveTab('sector')}
+                className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'sector' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+              >
+                Rubro {currentSector && '(1)'}
+              </button>
+              <button 
+                onClick={() => setActiveTab('class')}
+                className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'class' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+              >
+                Clase {currentClass && '(1)'}
+              </button>
+            </div>
+
+            {/* Tab Content (Scrollable Area) */}
+            <div className="p-3 overflow-y-auto flex-1 bg-white">
+              
+              {/* CIUDAD TAB */}
+              {activeTab === 'city' && (
+                <div className="space-y-1 pb-20 sm:pb-0">
+                  <button 
+                    onClick={() => {
+                      const params = new URLSearchParams(searchParams);
+                      params.delete('city');
+                      startTransition(() => router.push(`/prospects?${params.toString()}`));
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-3 sm:py-2.5 text-sm rounded-md transition-colors ${currentCities.length === 0 ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
+                  >
+                    Todas las ciudades
+                    {currentCities.length === 0 && <Check className="w-4 h-4 text-blue-600" />}
+                  </button>
+                  <div className="my-2 border-t border-gray-100"></div>
+                  {availableCities.map(c => {
+                    const isSelected = currentCities.includes(c);
+                    return (
+                      <button 
+                        key={c}
+                        onClick={() => toggleCityFilter(c)}
+                        className={`w-full flex items-center justify-between px-3 py-3 sm:py-2.5 text-sm rounded-md transition-colors ${isSelected ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
+                      >
+                        <span className="truncate">{c}</span>
+                        {isSelected && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* SECTOR TAB */}
+              {activeTab === 'sector' && (
+                <div className="space-y-1 pb-20 sm:pb-0">
+                  <button 
+                    onClick={() => handleSingleFilter('sector', '')}
+                    className={`w-full flex items-center justify-between px-3 py-3 sm:py-2.5 text-sm rounded-md transition-colors ${!currentSector ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
+                  >
+                    Todos los rubros
+                    {!currentSector && <Check className="w-4 h-4 text-blue-600" />}
+                  </button>
+                  <div className="my-2 border-t border-gray-100"></div>
+                  {availableSectors.map(s => (
                     <button 
-                      key={c}
-                      onClick={() => toggleCityFilter(c)}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-md transition-colors ${isSelected ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
+                      key={s}
+                      onClick={() => handleSingleFilter('sector', s)}
+                      className={`w-full flex items-center justify-between px-3 py-3 sm:py-2.5 text-sm rounded-md transition-colors ${currentSector === s ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
                     >
-                      <span className="truncate">{c}</span>
-                      {isSelected && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
+                      <span className="truncate">{s}</span>
+                      {currentSector === s && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
                     </button>
-                  )
-                })}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
 
-            {/* SECTOR TAB */}
-            {activeTab === 'sector' && (
-              <div className="space-y-1">
-                <button 
-                  onClick={() => handleSingleFilter('sector', '')}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-md transition-colors ${!currentSector ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
-                >
-                  Todos los rubros
-                  {!currentSector && <Check className="w-4 h-4 text-blue-600" />}
-                </button>
-                <div className="my-2 border-t border-gray-100"></div>
-                {availableSectors.map(s => (
+              {/* CLASS TAB */}
+              {activeTab === 'class' && (
+                <div className="space-y-2 pb-20 sm:pb-0">
                   <button 
-                    key={s}
-                    onClick={() => handleSingleFilter('sector', s)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-md transition-colors ${currentSector === s ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
+                    onClick={() => handleSingleFilter('class', '')}
+                    className={`w-full flex items-center justify-between px-3 py-4 sm:py-3 text-sm rounded-md transition-colors border ${!currentClass ? 'bg-gray-900 border-gray-900 text-white font-medium' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
                   >
-                    <span className="truncate">{s}</span>
-                    {currentSector === s && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
+                    Todas las clases
                   </button>
-                ))}
-              </div>
-            )}
-
-            {/* CLASS TAB */}
-            {activeTab === 'class' && (
-              <div className="space-y-2">
-                <button 
-                  onClick={() => handleSingleFilter('class', '')}
-                  className={`w-full flex items-center justify-between px-3 py-3 text-sm rounded-md transition-colors border ${!currentClass ? 'bg-gray-900 border-gray-900 text-white font-medium' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
-                >
-                  Todas las clases
-                </button>
-                {['A', 'B', 'C'].map(cls => (
-                  <button 
-                    key={cls}
-                    onClick={() => handleSingleFilter('class', cls)}
-                    className={`w-full flex items-center justify-between px-3 py-3 text-sm rounded-md transition-colors border ${currentClass === cls ? 'bg-blue-50 border-blue-200 text-blue-700 font-medium' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
-                  >
-                    Clase {cls}
-                  </button>
-                ))}
-              </div>
-            )}
+                  {['A', 'B', 'C'].map(cls => (
+                    <button 
+                      key={cls}
+                      onClick={() => handleSingleFilter('class', cls)}
+                      className={`w-full flex items-center justify-between px-3 py-4 sm:py-3 text-sm rounded-md transition-colors border ${currentClass === cls ? 'bg-blue-50 border-blue-200 text-blue-700 font-medium' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+                    >
+                      Clase {cls}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="p-4 sm:p-3 border-t border-gray-100 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] sm:shadow-none shrink-0 sticky bottom-0 z-10">
+              <button 
+                onClick={() => setShowFilters(false)}
+                className="w-full py-3 sm:py-2 bg-blue-600 text-white rounded-md text-base sm:text-sm font-medium hover:bg-blue-700"
+              >
+                Cerrar panel
+              </button>
+            </div>
           </div>
-          
-          <div className="p-3 border-t border-gray-100 bg-gray-50">
-            <button 
-              onClick={() => setShowFilters(false)}
-              className="w-full py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
-            >
-              Aplicar ({activeFiltersCount}) y Cerrar
-            </button>
-          </div>
-        </div>
+        </>
       )}
     </div>
   );
