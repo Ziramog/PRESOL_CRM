@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Map, Users, CheckSquare, Settings, Home, Target } from 'lucide-react';
 
 const items = [
-  { name: 'Dashboard', href: '/dashboard', icon: Home },
+  { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Prospectos', href: '/prospects', icon: Users },
   { name: 'Giras', href: '/trips', icon: Map },
   { name: 'Tareas', href: '/tasks', icon: CheckSquare },
@@ -25,7 +25,7 @@ export function Sidebar() {
       <div className="flex-1 overflow-y-auto py-4">
         <nav className="space-y-1 px-3">
           {items.map((item) => {
-            const isActive = pathname?.startsWith(item.href);
+            const isActive = item.href === '/' ? pathname === '/' : pathname?.startsWith(item.href);
             const Icon = item.icon;
             
             return (
