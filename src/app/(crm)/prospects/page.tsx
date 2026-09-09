@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { ProspectCard } from '@/components/crm/prospect-card';
 import { ProspectTable } from '@/components/crm/prospect-table';
 import { ProspectFilters } from '@/components/crm/prospect-filters';
+import { NewProspectButton } from '@/components/crm/new-prospect-button';
 
 export default async function ProspectsPage({
   searchParams,
@@ -51,7 +52,10 @@ export default async function ProspectsPage({
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">Prospectos</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold text-gray-900">Prospectos</h1>
+          <NewProspectButton availableCities={cities} availableSectors={sectors} />
+        </div>
         
         <ProspectFilters availableCities={cities} availableSectors={sectors} />
       </div>
