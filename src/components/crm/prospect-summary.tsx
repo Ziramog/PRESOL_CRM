@@ -50,6 +50,15 @@ export function ProspectSummary({ prospect }: { prospect: any }) {
             )}
           </div>
         </div>
+
+        {prospect.pending_data && (
+          <div className="md:col-span-2">
+            <h4 className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">Notas de Dirección</h4>
+            <div className="bg-amber-50 rounded-md p-3 text-sm text-amber-900 border border-amber-200 whitespace-pre-wrap">
+              {prospect.pending_data}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
