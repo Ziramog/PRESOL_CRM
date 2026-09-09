@@ -1,19 +1,33 @@
+'use client';
+
+import { useState } from 'react';
 import { Phone, Mail, UserPlus, Info } from 'lucide-react';
+import { ContactForm } from './contact-form';
 
 export function ProspectContacts({ contacts, prospect }: { contacts: any[], prospect: any }) {
+  const [showForm, setShowForm] = useState(false);
   const hasContacts = contacts && contacts.length > 0;
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
       <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
         <h3 className="text-base font-semibold text-gray-900">Contactos</h3>
-        <button className="text-sm text-blue-600 font-medium hover:text-blue-800 flex items-center gap-1">
+        <button 
+          onClick={() => setShowForm(true)}
+          className="text-sm text-blue-600 font-medium hover:text-blue-800 flex items-center gap-1"
+        >
           <UserPlus className="w-4 h-4" />
           Añadir
         </button>
       </div>
       
       <div className="p-5 space-y-6">
+        {showForm && (
+          <div className="mb-6">
+            <ContactForm prospectId={prospect.id} onClose={() => setShowForm(false)} />
+          </div>
+        )}
+
         {/* Contacto principal de la importación (Dato maestro) */}
         {(prospect.ask_for || prospect.pending_data) && (
           <div className="bg-amber-50 rounded-md p-3 border border-amber-100">
