@@ -14,6 +14,7 @@ export default async function ProspectsPage({
   const search = typeof params.search === 'string' ? params.search : '';
   const prospectClass = typeof params.class === 'string' ? params.class : '';
   const city = typeof params.city === 'string' ? params.city : '';
+  const sector = typeof params.sector === 'string' ? params.sector : '';
   
   let query = supabase.from('prospects').select('*').order('created_at', { ascending: false });
   
@@ -26,12 +27,19 @@ export default async function ProspectsPage({
   if (city) {
     query = query.ilike('city', `%${city}%`);
   }
+  if (sector) {
+    query = query.eq('sector', sector);
+  }
   
   const { data: prospects, error } = await query;
   
   // Get distinct cities for filter
   const { data: allCitiesData } = await supabase.from('prospects').select('city').not('city', 'is', null);
   const cities = Array.from(new Set(allCitiesData?.map(c => c.city).filter(Boolean))).sort();
+
+  // Get distinct sectors for filter
+  const { data: allSectorsData } = await supabase.from('prospects').select('sector').not('sector', 'is', null);
+  const sectors = Array.from(new Set(allSectorsData?.map(s => s.sector).filter(Boolean))).sort();
 
   if (error) {
     console.error(error);
@@ -42,7 +50,7 @@ export default async function ProspectsPage({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Prospectos</h1>
         
-        <ProspectFilters availableCities={cities} />
+        <ProspectFilters availableCities={cities} availableSectors={sectors} />
       </div>
 
       {/* Mobile view (Cards) */}
