@@ -57,3 +57,21 @@ export async function createProspect(formData: FormData) {
   revalidatePath('/prospects');
   return { success: true, prospect: data };
 }
+
+export async function updateProspectStatus(prospectId: string, status: string) {
+  const supabase = await createAdminClient();
+  
+  const { error } = await supabase
+    .from('prospects')
+    .update({ contact_status: status })
+    .eq('id', prospectId);
+
+  if (error) {
+    console.error('Error updating prospect status:', error);
+    return { error: 'Error al actualizar el estado' };
+  }
+
+  revalidatePath(`/prospects/${prospectId}`);
+  revalidatePath('/prospects');
+  return { success: true };
+}

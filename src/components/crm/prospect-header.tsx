@@ -1,13 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { MapPin, Navigation, Phone, MessageCircle, PlusCircle, CalendarPlus, Target } from 'lucide-react';
 import { ActivityForm } from './activity-form';
 import { TaskForm } from './task-form';
+import { updateProspectStatus } from '@/app/actions/prospects';
+
+const STATUS_OPTIONS = [
+  { value: 'pending', label: 'Pendiente' },
+  { value: 'attempted', label: 'Intentado' },
+  { value: 'contacted', label: 'Contactado' },
+  { value: 'visited', label: 'Visitado' },
+  { value: 'follow_up', label: 'En Seguimiento' },
+  { value: 'opportunity', label: 'Con Oportunidad' },
+  { value: 'customer', label: 'Cliente Activo' },
+  { value: 'not_interested', label: 'No Interesado' },
+  { value: 'discarded', label: 'Descartado' },
+  { value: 'wrong_contact', label: 'Dato Erróneo' }
+];
 
 export function ProspectHeader({ prospect }: { prospect: any }) {
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newStatus = e.target.value;
+    startTransition(() => {
+      updateProspectStatus(prospect.id, newStatus);
+    });
+  };
 
   const openMaps = () => {
     if (prospect.google_maps_url) {
@@ -38,9 +60,31 @@ export function ProspectHeader({ prospect }: { prospect: any }) {
                   Clase {prospect.class}
                 </span>
               )}
-              <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded font-medium">
-                {prospect.contact_status}
-              </span>
+              <div className="relative">
+                <select
+                  value={prospect.contact_status || 'pending'}
+                  onChange={handleStatusChange}
+                  disabled={isPending}
+                  className={`text-xs px-2 py-0.5 pl-2 pr-6 rounded font-medium appearance-none cursor-pointer border transition-colors outline-none
+                    ${isPending ? 'opacity-50' : ''}
+                    ${prospect.contact_status === 'visited' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                      prospect.contact_status === 'customer' ? 'bg-green-50 text-green-700 border-green-200' :
+                      prospect.contact_status === 'contacted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                      prospect.contact_status === 'discarded' ? 'bg-red-50 text-red-700 border-red-200' :
+                      'bg-gray-50 text-gray-700 border-gray-200'
+                    }
+                  `}
+                >
+                  {STATUS_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-current opacity-70">
+                  <svg className="h-3 w-3 fill-current" viewBox="0 0 20 20">
+                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
             
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">

@@ -96,10 +96,20 @@ export async function updateStopStatus(stopId: string, tripId: string, status: s
   const { error } = await supabase
     .from('trip_stops')
     .update(updateData)
-    .eq('id', stopId);
+    .eq('id', stopId)
+    .select('prospect_id');
 
   if (error) {
     return { error: error.message };
+  }
+
+  // Automate prospect status
+  if (status === 'visited') {
+    // We need the prospectId to update it
+    const { data } = await supabase.from('trip_stops').select('prospect_id').eq('id', stopId).single();
+    if (data?.prospect_id) {
+      await supabase.from('prospects').update({ contact_status: 'visited' }).eq('id', data.prospect_id);
+    }
   }
 
   revalidatePath(`/trips/${tripId}`);
