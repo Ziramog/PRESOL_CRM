@@ -1,10 +1,10 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 export async function createTrip(formData: FormData) {
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
   
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
@@ -37,7 +37,7 @@ export async function createTrip(formData: FormData) {
 }
 
 export async function addTripStop(tripId: string, prospectId: string) {
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
   
   // Find current max order
   const { data: existingStops } = await supabase
@@ -66,7 +66,7 @@ export async function addTripStop(tripId: string, prospectId: string) {
 }
 
 export async function removeTripStop(stopId: string, tripId: string) {
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
   
   const { error } = await supabase
     .from('trip_stops')
@@ -82,7 +82,7 @@ export async function removeTripStop(stopId: string, tripId: string) {
 }
 
 export async function updateStopStatus(stopId: string, tripId: string, status: string, skipReason?: string) {
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
   
   const updateData: any = { status };
   

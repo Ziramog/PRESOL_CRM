@@ -1,10 +1,10 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 export async function createActivity(formData: FormData) {
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
   
   const prospect_id = formData.get('prospect_id') as string;
   const type = formData.get('type') as string;

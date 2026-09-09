@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { TaskListItem } from '@/components/crm/task-list-item';
 import { isBefore, isToday, startOfDay, parseISO } from 'date-fns';
 
 export default async function TasksPage() {
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   // For MVP we get the admin user ID
   const { data: profiles } = await supabase.from('profiles').select('id').limit(1);

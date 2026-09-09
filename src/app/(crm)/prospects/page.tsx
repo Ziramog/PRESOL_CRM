@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { ProspectCard } from '@/components/crm/prospect-card';
 import { ProspectTable } from '@/components/crm/prospect-table';
 import { ProspectFilters } from '@/components/crm/prospect-filters';
@@ -8,7 +8,7 @@ export default async function ProspectsPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
   const params = await searchParams;
   
   const search = typeof params.search === 'string' ? params.search : '';

@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { DashboardStats } from '@/components/crm/dashboard-stats';
 import { RecentActivity } from '@/components/crm/recent-activity';
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   // Fetch all basic stats in parallel for speed
   const [

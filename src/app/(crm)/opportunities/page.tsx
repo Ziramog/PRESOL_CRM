@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { OpportunityCard } from '@/components/crm/opportunity-card';
 import { Target, DollarSign, Activity } from 'lucide-react';
 
@@ -11,7 +11,7 @@ const STAGES = [
 ];
 
 export default async function OpportunitiesPage() {
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   const { data: profiles } = await supabase.from('profiles').select('id').limit(1);
   const userId = profiles && profiles.length > 0 ? profiles[0].id : null;

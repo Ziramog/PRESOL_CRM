@@ -1,11 +1,11 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 
 export async function searchProspects(query: string) {
   if (!query.trim()) return { data: [] };
   
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
   
   const { data, error } = await supabase
     .from('prospects')

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import { ProspectHeader } from '@/components/crm/prospect-header';
 import { ProspectSummary } from '@/components/crm/prospect-summary';
@@ -12,7 +12,7 @@ import { ChevronLeft } from 'lucide-react';
 
 export default async function ProspectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   // Parallel data fetching for better performance
   const [prospectResponse, contactsResponse] = await Promise.all([

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ChevronLeft, Map, Play, CheckCircle } from 'lucide-react';
@@ -7,7 +7,7 @@ import { TripBuilder } from '@/components/crm/trip-builder';
 
 export default async function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
   
   const { data: trip } = await supabase
     .from('trips')
@@ -46,7 +46,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
             'use server';
             const { createClient } = await import('@/lib/supabase/server');
             const { revalidatePath } = await import('next/cache');
-            const supabase = await createClient();
+            const supabase = await createAdminClient();
             await supabase.from('trips').update({ status: 'in_progress' }).eq('id', trip.id);
             revalidatePath(`/trips/${trip.id}`);
             revalidatePath('/trips');
@@ -63,7 +63,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
             'use server';
             const { createClient } = await import('@/lib/supabase/server');
             const { revalidatePath } = await import('next/cache');
-            const supabase = await createClient();
+            const supabase = await createAdminClient();
             await supabase.from('trips').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', trip.id);
             revalidatePath(`/trips/${trip.id}`);
             revalidatePath('/trips');

@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Map, Calendar, ChevronRight, PlusCircle, MapPin } from 'lucide-react';
 
 export default async function TripsPage() {
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   const { data: profiles } = await supabase.from('profiles').select('id').limit(1);
   const userId = profiles && profiles.length > 0 ? profiles[0].id : null;
