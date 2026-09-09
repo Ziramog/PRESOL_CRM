@@ -41,11 +41,11 @@ export default function LoginPage() {
         <div className="flex justify-center">
           <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100">
             <Image 
-              src="/presol-intro.png" 
+              src="/logo-presol.png" 
               alt="PRESOL Logo" 
               width={160} 
               height={60} 
-              className="object-contain h-16 w-auto"
+              className="object-contain h-16 w-auto rounded"
               priority
             />
           </div>

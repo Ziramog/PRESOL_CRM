@@ -20,13 +20,15 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-64 bg-gray-900 border-r border-gray-800 h-screen fixed top-0 left-0 text-white">
       <div className="flex h-16 shrink-0 items-center px-6 border-b border-gray-800">
-        <Image 
-          src="/presol-intro.png" 
-          alt="PRESOL Logo" 
-          width={120} 
-          height={40} 
-          className="object-contain brightness-0 invert"
-        />
+        <div className="bg-white px-2 py-1 rounded-md overflow-hidden">
+          <Image 
+            src="/logo-presol.png" 
+            alt="PRESOL Logo" 
+            width={140} 
+            height={40} 
+            className="object-contain"
+          />
+        </div>
       </div>
       
       <div className="flex-1 overflow-y-auto py-4">
