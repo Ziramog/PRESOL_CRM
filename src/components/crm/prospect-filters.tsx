@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, Filter, X, Check } from 'lucide-react';
 import { useTransition, useState, useRef, useEffect } from 'react';
 
+type Tab = 'class' | 'sector' | 'city';
+
 export function ProspectFilters({ 
   availableCities = [],
   availableSectors = []
@@ -15,11 +17,12 @@ export function ProspectFilters({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [showFilters, setShowFilters] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>('city');
   const filterRef = useRef<HTMLDivElement>(null);
   
   const currentClass = searchParams.get('class');
-  const currentCity = searchParams.get('city') || '';
   const currentSector = searchParams.get('sector') || '';
+  const currentCities = searchParams.getAll('city');
 
   // Handle click outside to close filters
   useEffect(() => {
@@ -45,7 +48,7 @@ export function ProspectFilters({
     });
   };
 
-  const handleFilter = (key: string, value: string) => {
+  const handleSingleFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams);
     if (value) {
       params.set(key, value);
@@ -58,7 +61,26 @@ export function ProspectFilters({
     });
   };
 
-  const activeFiltersCount = (currentClass ? 1 : 0) + (currentCity ? 1 : 0) + (currentSector ? 1 : 0);
+  const toggleCityFilter = (city: string) => {
+    const params = new URLSearchParams(searchParams);
+    const cities = params.getAll('city');
+    
+    params.delete('city'); // Clear all city params
+    
+    if (cities.includes(city)) {
+      // Remove it
+      cities.filter(c => c !== city).forEach(c => params.append('city', c));
+    } else {
+      // Add it
+      [...cities, city].forEach(c => params.append('city', c));
+    }
+
+    startTransition(() => {
+      router.push(`/prospects?${params.toString()}`);
+    });
+  };
+
+  const activeFiltersCount = (currentClass ? 1 : 0) + currentCities.length + (currentSector ? 1 : 0);
 
   return (
     <div className="flex items-center gap-2 w-full sm:w-auto relative" ref={filterRef}>
@@ -100,10 +122,11 @@ export function ProspectFilters({
       </button>
 
       {showFilters && (
-        <div className="absolute top-full mt-2 right-0 w-80 sm:w-80 max-h-[80vh] overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-2xl z-50 flex flex-col">
-          <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 sticky top-0 z-10">
+        <div className="absolute top-full mt-2 right-0 w-full sm:w-80 min-w-[300px] max-h-[85vh] bg-white border border-gray-200 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
             <h3 className="font-semibold text-gray-900">Filtros Avanzados</h3>
-            {(currentClass || currentCity || currentSector) && (
+            {activeFiltersCount > 0 && (
               <button 
                 onClick={() => {
                   const params = new URLSearchParams(searchParams);
@@ -119,76 +142,115 @@ export function ProspectFilters({
             )}
           </div>
 
-          <div className="p-4 space-y-6">
-            {/* Clase */}
-            <div>
-              <div className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Por Clase</div>
-              <div className="grid grid-cols-4 gap-2">
-                <button 
-                  onClick={() => handleFilter('class', '')}
-                  className={`py-1.5 text-xs rounded-md border text-center transition-colors ${!currentClass ? 'bg-gray-900 border-gray-900 text-white font-medium' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-                >
-                  Todas
-                </button>
-                {['A', 'B', 'C'].map(cls => (
-                  <button 
-                    key={cls}
-                    onClick={() => handleFilter('class', cls)}
-                    className={`py-1.5 text-xs rounded-md border text-center transition-colors ${currentClass === cls ? 'bg-blue-50 border-blue-200 text-blue-700 font-medium' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-                  >
-                    {cls}
-                  </button>
-                ))}
-              </div>
-            </div>
+          {/* Tabs */}
+          <div className="flex border-b border-gray-200">
+            <button 
+              onClick={() => setActiveTab('city')}
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'city' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+            >
+              Ciudad {currentCities.length > 0 && `(${currentCities.length})`}
+            </button>
+            <button 
+              onClick={() => setActiveTab('sector')}
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'sector' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+            >
+              Rubro {currentSector && '(1)'}
+            </button>
+            <button 
+              onClick={() => setActiveTab('class')}
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'class' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+            >
+              Clase {currentClass && '(1)'}
+            </button>
+          </div>
 
-            {/* Rubro (Sector) */}
-            <div>
-              <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Por Rubro</div>
-              <div className="max-h-48 overflow-y-auto border border-gray-100 rounded-md bg-gray-50/30 p-1 space-y-0.5 custom-scrollbar">
+          {/* Tab Content (Scrollable Area) */}
+          <div className="p-3 overflow-y-auto flex-1">
+            
+            {/* CIUDAD TAB */}
+            {activeTab === 'city' && (
+              <div className="space-y-1">
                 <button 
-                  onClick={() => handleFilter('sector', '')}
-                  className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded ${!currentSector ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams);
+                    params.delete('city');
+                    startTransition(() => router.push(`/prospects?${params.toString()}`));
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-md transition-colors ${currentCities.length === 0 ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
+                >
+                  Todas las ciudades
+                  {currentCities.length === 0 && <Check className="w-4 h-4 text-blue-600" />}
+                </button>
+                <div className="my-2 border-t border-gray-100"></div>
+                {availableCities.map(c => {
+                  const isSelected = currentCities.includes(c);
+                  return (
+                    <button 
+                      key={c}
+                      onClick={() => toggleCityFilter(c)}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-md transition-colors ${isSelected ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
+                    >
+                      <span className="truncate">{c}</span>
+                      {isSelected && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* SECTOR TAB */}
+            {activeTab === 'sector' && (
+              <div className="space-y-1">
+                <button 
+                  onClick={() => handleSingleFilter('sector', '')}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-md transition-colors ${!currentSector ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
                   Todos los rubros
                   {!currentSector && <Check className="w-4 h-4 text-blue-600" />}
                 </button>
+                <div className="my-2 border-t border-gray-100"></div>
                 {availableSectors.map(s => (
                   <button 
                     key={s}
-                    onClick={() => handleFilter('sector', s)}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded ${currentSector === s ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
+                    onClick={() => handleSingleFilter('sector', s)}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-md transition-colors ${currentSector === s ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
                   >
                     <span className="truncate">{s}</span>
                     {currentSector === s && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
                   </button>
                 ))}
               </div>
-            </div>
-            
-            {/* Ciudad */}
-            <div>
-              <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Por Ciudad</div>
-              <div className="max-h-48 overflow-y-auto border border-gray-100 rounded-md bg-gray-50/30 p-1 space-y-0.5 custom-scrollbar">
+            )}
+
+            {/* CLASS TAB */}
+            {activeTab === 'class' && (
+              <div className="space-y-2">
                 <button 
-                  onClick={() => handleFilter('city', '')}
-                  className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded ${!currentCity ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
+                  onClick={() => handleSingleFilter('class', '')}
+                  className={`w-full flex items-center justify-between px-3 py-3 text-sm rounded-md transition-colors border ${!currentClass ? 'bg-gray-900 border-gray-900 text-white font-medium' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
                 >
-                  Todas las ciudades
-                  {!currentCity && <Check className="w-4 h-4 text-blue-600" />}
+                  Todas las clases
                 </button>
-                {availableCities.map(c => (
+                {['A', 'B', 'C'].map(cls => (
                   <button 
-                    key={c}
-                    onClick={() => handleFilter('city', c)}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded ${currentCity === c ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
+                    key={cls}
+                    onClick={() => handleSingleFilter('class', cls)}
+                    className={`w-full flex items-center justify-between px-3 py-3 text-sm rounded-md transition-colors border ${currentClass === cls ? 'bg-blue-50 border-blue-200 text-blue-700 font-medium' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
                   >
-                    <span className="truncate">{c}</span>
-                    {currentCity === c && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
+                    Clase {cls}
                   </button>
                 ))}
               </div>
-            </div>
+            )}
+          </div>
+          
+          <div className="p-3 border-t border-gray-100 bg-gray-50">
+            <button 
+              onClick={() => setShowFilters(false)}
+              className="w-full py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+            >
+              Aplicar ({activeFiltersCount}) y Cerrar
+            </button>
           </div>
         </div>
       )}
