@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, Filter, X, Check } from 'lucide-react';
 import { useTransition, useState, useRef, useEffect } from 'react';
 
-type Tab = 'class' | 'sector' | 'city';
+type Tab = 'class' | 'sector' | 'city' | 'status';
 
 export function ProspectFilters({ 
   availableCities = [],
@@ -18,11 +18,31 @@ export function ProspectFilters({
   const [isPending, startTransition] = useTransition();
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('city');
+  const [isInitialized, setIsInitialized] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   
   const currentClass = searchParams.get('class');
   const currentSector = searchParams.get('sector') || '';
+  const currentStatus = searchParams.get('status') || '';
   const currentCities = searchParams.getAll('city');
+
+  // Handle localStorage persistence
+  useEffect(() => {
+    const storedFilters = localStorage.getItem('presol_prospect_filters');
+    const currentQuery = searchParams.toString();
+    
+    // If we have stored filters, no current query, and haven't initialized yet
+    if (!isInitialized && storedFilters && !currentQuery) {
+      startTransition(() => {
+        router.replace(`/prospects?${storedFilters}`);
+      });
+    } else if (isInitialized) {
+      // If we are initialized, save the current query whenever it changes
+      localStorage.setItem('presol_prospect_filters', currentQuery);
+    }
+    
+    setIsInitialized(true);
+  }, [searchParams, router, isInitialized]);
 
   // Handle click outside to close filters
   useEffect(() => {
@@ -80,7 +100,7 @@ export function ProspectFilters({
     });
   };
 
-  const activeFiltersCount = (currentClass ? 1 : 0) + currentCities.length + (currentSector ? 1 : 0);
+  const activeFiltersCount = (currentClass ? 1 : 0) + currentCities.length + (currentSector ? 1 : 0) + (currentStatus ? 1 : 0);
 
   return (
     <div className="flex items-center gap-2 w-full sm:w-auto relative" ref={filterRef}>
@@ -126,7 +146,7 @@ export function ProspectFilters({
           {/* Mobile Overlay */}
           <div className="fixed inset-0 bg-gray-900/50 z-[90] sm:hidden" onClick={() => setShowFilters(false)} />
           
-          <div className="fixed inset-x-0 bottom-0 top-20 sm:absolute sm:top-full sm:bottom-auto sm:mt-2 sm:right-0 sm:w-80 sm:min-w-[300px] sm:max-h-[85vh] bg-white sm:border sm:border-gray-200 sm:rounded-xl rounded-t-xl shadow-2xl z-[100] flex flex-col overflow-hidden">
+          <div className="fixed inset-x-0 bottom-0 top-20 sm:absolute sm:top-full sm:bottom-auto sm:mt-2 sm:right-0 sm:w-[350px] sm:min-w-[350px] sm:max-h-[85vh] bg-white sm:border sm:border-gray-200 sm:rounded-xl rounded-t-xl shadow-2xl z-[100] flex flex-col overflow-hidden">
             {/* Header */}
             <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
               <h3 className="font-semibold text-gray-900">Filtros Avanzados</h3>
@@ -137,6 +157,7 @@ export function ProspectFilters({
                     params.delete('class');
                     params.delete('city');
                     params.delete('sector');
+                    params.delete('status');
                     startTransition(() => router.push(`/prospects?${params.toString()}`));
                   }}
                   className="text-xs text-blue-600 font-medium hover:text-blue-800"
@@ -147,22 +168,28 @@ export function ProspectFilters({
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-gray-200 shrink-0 bg-white">
+            <div className="flex border-b border-gray-200 shrink-0 bg-white overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <button 
                 onClick={() => setActiveTab('city')}
-                className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'city' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                className={`flex-none px-3 py-2.5 text-xs font-medium border-b-2 transition-colors ${activeTab === 'city' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
               >
                 Ciudad {currentCities.length > 0 && `(${currentCities.length})`}
               </button>
               <button 
+                onClick={() => setActiveTab('status')}
+                className={`flex-none px-3 py-2.5 text-xs font-medium border-b-2 transition-colors ${activeTab === 'status' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+              >
+                Estado {currentStatus && '(1)'}
+              </button>
+              <button 
                 onClick={() => setActiveTab('sector')}
-                className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'sector' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                className={`flex-none px-3 py-2.5 text-xs font-medium border-b-2 transition-colors ${activeTab === 'sector' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
               >
                 Rubro {currentSector && '(1)'}
               </button>
               <button 
                 onClick={() => setActiveTab('class')}
-                className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'class' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                className={`flex-none px-3 py-2.5 text-xs font-medium border-b-2 transition-colors ${activeTab === 'class' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
               >
                 Clase {currentClass && '(1)'}
               </button>
@@ -199,6 +226,37 @@ export function ProspectFilters({
                       </button>
                     )
                   })}
+                </div>
+              )}
+
+              {/* ESTADO TAB */}
+              {activeTab === 'status' && (
+                <div className="space-y-1 pb-20 sm:pb-0">
+                  <button 
+                    onClick={() => handleSingleFilter('status', '')}
+                    className={`w-full flex items-center justify-between px-3 py-3 sm:py-2.5 text-sm rounded-md transition-colors ${!currentStatus ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
+                  >
+                    Todos los estados
+                    {!currentStatus && <Check className="w-4 h-4 text-blue-600" />}
+                  </button>
+                  <div className="my-2 border-t border-gray-100"></div>
+                  {[
+                    { value: 'pending', label: 'Pendiente' },
+                    { value: 'contacted', label: 'Contactado' },
+                    { value: 'visited', label: 'Visitado' },
+                    { value: 'opportunity', label: 'Con Oportunidad' },
+                    { value: 'customer', label: 'Cliente Activo' },
+                    { value: 'wrong_contact', label: 'Dato Erróneo' },
+                  ].map(s => (
+                    <button 
+                      key={s.value}
+                      onClick={() => handleSingleFilter('status', s.value)}
+                      className={`w-full flex items-center justify-between px-3 py-3 sm:py-2.5 text-sm rounded-md transition-colors ${currentStatus === s.value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
+                    >
+                      <span className="truncate">{s.label}</span>
+                      {currentStatus === s.value && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
+                    </button>
+                  ))}
                 </div>
               )}
 

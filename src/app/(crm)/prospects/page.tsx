@@ -19,6 +19,7 @@ export default async function ProspectsPage({
   const selectedCities = Array.isArray(cityParam) ? cityParam : typeof cityParam === 'string' ? [cityParam] : [];
   
   const sector = typeof params.sector === 'string' ? params.sector : '';
+  const status = typeof params.status === 'string' ? params.status : '';
   
   let query = supabase.from('prospects').select('*').order('created_at', { ascending: false });
   
@@ -33,6 +34,9 @@ export default async function ProspectsPage({
   }
   if (sector) {
     query = query.eq('sector', sector);
+  }
+  if (status) {
+    query = query.eq('contact_status', status);
   }
   
   const { data: prospects, error } = await query;
