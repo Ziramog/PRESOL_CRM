@@ -6,7 +6,7 @@ import { Map, Users, CheckSquare, Settings, Home, Target } from 'lucide-react';
 import Image from 'next/image';
 
 const items = [
-  { name: 'Dashboard', href: '/', icon: Home },
+  { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Prospectos', href: '/prospects', icon: Users },
   { name: 'Giras', href: '/trips', icon: Map },
   { name: 'Tareas', href: '/tasks', icon: CheckSquare },

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Map, Users, CheckSquare, MoreHorizontal, Home } from 'lucide-react';
 
 const items = [
-  { name: 'Inicio', href: '/', icon: Home },
+  { name: 'Inicio', href: '/dashboard', icon: Home },
   { name: 'Ruta', href: '/trips', icon: Map },
   { name: 'Prospectos', href: '/prospects', icon: Users },
   { name: 'Tareas', href: '/tasks', icon: CheckSquare },
