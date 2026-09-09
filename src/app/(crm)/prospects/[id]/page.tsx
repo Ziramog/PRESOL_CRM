@@ -6,6 +6,7 @@ import { ProspectContacts } from '@/components/crm/prospect-contacts';
 import { ProspectTimeline } from '@/components/crm/prospect-timeline';
 import { DirectionCommentForm } from '@/components/crm/direction-comment-form';
 import { RealtimeListener } from '@/components/crm/realtime-listener';
+import { ProspectOpportunities } from '@/components/crm/prospect-opportunities';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 
@@ -44,6 +45,14 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
     .eq('status', 'pending')
     .order('due_at', { ascending: true });
 
+  const { data: opportunities } = await supabase
+    .from('opportunities')
+    .select('*')
+    .eq('prospect_id', id)
+    .neq('stage', 'won')
+    .neq('stage', 'lost')
+    .order('created_at', { ascending: false });
+
   // Unify and sort
   const timelineItems = [
     ...(activities || []).map(a => ({ 
@@ -64,6 +73,14 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
     return dateB.getTime() - dateA.getTime();
   });
 
+  const STAGES = [
+    { id: 'detected', label: 'Detectada' },
+    { id: 'qualified', label: 'Calificada' },
+    { id: 'quote_needed', label: 'A Cotizar' },
+    { id: 'quote_sent', label: 'Cotizada' },
+    { id: 'negotiation', label: 'Negociación' }
+  ];
+
   return (
     <div className="space-y-6 pb-20 md:pb-0">
       <div>
@@ -77,6 +94,14 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <ProspectSummary prospect={prospect} />
+          
+          {/* Oportunidades Section */}
+          <ProspectOpportunities 
+            opportunities={opportunities || []} 
+            prospectId={prospect.id} 
+            stages={STAGES} 
+          />
+
           <ProspectTimeline items={timelineItems} />
         </div>
         
