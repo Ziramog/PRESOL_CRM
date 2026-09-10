@@ -1,9 +1,9 @@
 import { getDashboardData } from '@/lib/dashboard/queries';
-import { KPIGrid } from '@/components/dashboard/KPIGrid';
+import { ExecutiveSummary } from '@/components/dashboard/ExecutiveSummary';
 import { ResultBreakdown } from '@/components/dashboard/ResultBreakdown';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
+import { FollowUpsBlock } from '@/components/dashboard/FollowUpsBlock';
 import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
-import { DashboardCalendar } from '@/components/dashboard/DashboardCalendar';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,27 +21,31 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
     category: searchParams.category,
   });
 
+  const isCustom = period === 'custom' && searchParams.from_date;
+  const periodTitle = isCustom ? 'Resultados Personalizados' : period === 'yesterday' ? 'Resultados de Ayer' : period === 'week' ? 'Resultados de la Semana' : 'Resultados de Hoy';
+
   return (
     <div className="space-y-6 pb-20 md:pb-0">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">Resumen de actividad comercial</p>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard Comercial</h1>
+          <p className="text-sm text-gray-500 mt-1">Gestión diaria y rendimiento</p>
         </div>
         <DashboardFilters currentParams={searchParams} />
       </div>
 
-      <KPIGrid data={data} />
+      <ExecutiveSummary summary={data.summary} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 space-y-6">
-          <div className="hidden lg:block">
-            <DashboardCalendar />
+      <div className="pt-4 border-t border-gray-200">
+        <h2 className="text-sm font-bold tracking-widest text-gray-900 uppercase mb-4">{periodTitle}</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          <div className="lg:col-span-1 space-y-4 lg:space-y-6">
+            <ResultBreakdown results={data.results} />
+            <FollowUpsBlock followups={data.followups} />
           </div>
-          <ResultBreakdown results={data.results} />
-        </div>
-        <div className="lg:col-span-2">
-          <RecentActivity activities={data.recent_activity} />
+          <div className="lg:col-span-2">
+            <RecentActivity activities={data.recent_activity} />
+          </div>
         </div>
       </div>
     </div>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { DashboardCalendar } from './DashboardCalendar';
-import { X } from 'lucide-react';
+import { X, Filter } from 'lucide-react';
 
 export function DashboardFilters({ currentParams }: { currentParams?: Record<string, string | undefined> }) {
   const router = useRouter();
@@ -17,15 +17,7 @@ export function DashboardFilters({ currentParams }: { currentParams?: Record<str
     const newPeriod = e.target.value;
     
     if (newPeriod === 'custom') {
-      if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
-        // Desktop: just set the period and clear dates, letting them use the inline calendar
-        // But honestly we just do nothing, or we can focus the calendar. Let's just do nothing.
-      } else {
-        // Mobile: show modal
-        setShowCalendar(true);
-      }
-      // Revert the select visually by setting it back to currentPeriod if they didn't pick anything
-      // But we can't easily do that without state. For now, we don't push URL.
+      setShowCalendar(true);
       return;
     }
 
@@ -42,22 +34,23 @@ export function DashboardFilters({ currentParams }: { currentParams?: Record<str
         <select 
           value={currentPeriod === 'custom' && !searchParams.get('from_date') ? 'today' : currentPeriod} 
           onChange={handlePeriodChange}
-          className="bg-white/80 backdrop-blur-md border border-gray-200 text-gray-700 text-xs font-bold tracking-widest uppercase rounded-sm focus:ring-blue-500 focus:border-blue-500 block w-full py-2 px-3 shadow-sm hover:shadow-md transition-all cursor-pointer outline-none"
+          className="bg-white/80 backdrop-blur-md border border-gray-200 text-gray-700 text-[11px] font-bold tracking-widest uppercase rounded-sm focus:ring-gray-900 focus:border-gray-900 block w-full py-2 px-3 shadow-sm hover:shadow-md hover:border-gray-300 transition-all cursor-pointer outline-none min-w-[140px]"
         >
           <option value="today">Hoy</option>
           <option value="yesterday">Ayer</option>
           <option value="week">Esta Semana</option>
-          <option value="month">Este Mes</option>
-          <option value="custom" className="lg:hidden">Día Específico</option>
-          {currentPeriod === 'custom' && searchParams.get('from_date') && (
-             <option value="custom" className="hidden lg:block">Día Específico</option>
-          )}
+          <option value="custom">Día específico</option>
         </select>
+        
+        {/* We can add an Analizar button here later for other filters */}
+        <button className="bg-gray-900 text-white border border-gray-900 rounded-sm px-3 flex items-center justify-center hover:bg-gray-800 transition-colors shadow-sm">
+          <Filter className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       {showCalendar && (
-        <div className="fixed inset-0 z-[120] flex flex-col justify-end bg-black/40 backdrop-blur-sm transition-all duration-300 animate-in fade-in lg:hidden">
-          <div className="bg-white w-full rounded-t-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4">
+        <div className="fixed inset-0 z-[120] flex items-end lg:items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300 animate-in fade-in">
+          <div className="bg-white w-full lg:max-w-sm rounded-t-2xl lg:rounded-sm shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 lg:slide-in-from-bottom-0 lg:zoom-in-95">
             <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50/50">
               <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Seleccionar fecha</h3>
               <button 
@@ -67,7 +60,7 @@ export function DashboardFilters({ currentParams }: { currentParams?: Record<str
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-5 bg-gray-50/30 pb-10">
+            <div className="p-5 bg-gray-50/30 pb-10 lg:pb-5">
               <DashboardCalendar onClose={() => setShowCalendar(false)} hideShadows />
             </div>
           </div>
