@@ -25,7 +25,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
   ] = await Promise.all([
     supabase.from('prospects').select('*').eq('id', id).single(),
     supabase.from('contacts').select('*').eq('prospect_id', id),
-    supabase.from('activities').select('id, occurred_at, created_at, type, outcome, summary, notes, profiles(full_name)').eq('prospect_id', id),
+    supabase.from('activities').select('id, activity_at, created_at, type, outcome, summary, notes, profiles(full_name)').eq('prospect_id', id),
     supabase.from('comments').select('id, body, is_direction_note, created_at, profiles(full_name)').eq('prospect_id', id),
     supabase.from('tasks').select('*').eq('prospect_id', id).eq('status', 'pending').order('due_at', { ascending: true }),
     supabase.from('opportunities').select('*').eq('prospect_id', id).neq('stage', 'won').neq('stage', 'lost').order('created_at', { ascending: false })
@@ -56,8 +56,8 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
       profiles: Array.isArray(c.profiles) ? c.profiles[0] : c.profiles
     }))
   ].sort((a, b) => {
-    const dateAStr = (a._type === 'activity' ? a.occurred_at : a.created_at) || a.created_at;
-    const dateBStr = (b._type === 'activity' ? b.occurred_at : b.created_at) || b.created_at;
+    const dateAStr = (a._type === 'activity' ? a.activity_at : a.created_at) || a.created_at;
+    const dateBStr = (b._type === 'activity' ? b.activity_at : b.created_at) || b.created_at;
     const dateA = new Date(dateAStr);
     const dateB = new Date(dateBStr);
     return dateB.getTime() - dateA.getTime();

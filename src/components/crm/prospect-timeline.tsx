@@ -9,7 +9,7 @@ import { deleteActivity, deleteComment } from '@/app/actions/activities';
 type TimelineItem = {
   _type: 'activity' | 'comment';
   id: string;
-  occurred_at?: string;
+  activity_at?: string;
   created_at: string;
   type?: string; // from activity
   outcome?: string; // from activity
@@ -80,7 +80,7 @@ export function ProspectTimeline({ items, prospectId }: { items: TimelineItem[],
       <div className="p-5">
         <div className="relative border-l-2 border-gray-100 ml-3 space-y-8 pb-4">
           {items.map((item, idx) => {
-            const dateStr = (item._type === 'activity' ? item.occurred_at : item.created_at) || item.created_at;
+            const dateStr = (item._type === 'activity' ? item.activity_at : item.created_at) || item.created_at;
             const date = new Date(dateStr);
             const isDirection = item._type === 'comment' && item.is_direction_note;
             const authorName = item.profiles?.full_name || 'Usuario';
