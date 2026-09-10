@@ -22,7 +22,7 @@ export function DashboardCalendar() {
   // Read currently selected custom date from URL if it exists
   const fromDateParam = searchParams.get('from_date');
   const selectedDate = searchParams.get('period') === 'custom' && fromDateParam 
-    ? new Date(fromDateParam) 
+    ? new Date(fromDateParam + 'T00:00:00') 
     : null;
 
   useEffect(() => {

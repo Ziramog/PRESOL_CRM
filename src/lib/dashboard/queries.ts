@@ -33,14 +33,18 @@ export async function getDashboardData(params: DashboardParams) {
   } else if (params.period === 'month') {
     fromDate = startOfMonth(zonedNow);
     toDate = endOfMonth(zonedNow);
-  } else if (params.period === 'custom' && params.from_date && params.to_date) {
-    fromDate = startOfDay(toZonedTime(new Date(params.from_date), TZ));
-    toDate = endOfDay(toZonedTime(new Date(params.to_date), TZ));
   }
+  
+  let fromIso: string;
+  let toIso: string;
 
-  // Convert to ISO string for PG accurately using fromZonedTime
-  const fromIso = fromZonedTime(fromDate, TZ).toISOString();
-  const toIso = fromZonedTime(toDate, TZ).toISOString();
+  if (params.period === 'custom' && params.from_date && params.to_date) {
+    fromIso = fromZonedTime(params.from_date + 'T00:00:00', TZ).toISOString();
+    toIso = fromZonedTime(params.to_date + 'T23:59:59.999', TZ).toISOString();
+  } else {
+    fromIso = fromZonedTime(fromDate, TZ).toISOString();
+    toIso = fromZonedTime(toDate, TZ).toISOString();
+  }
 
   const { data, error } = await supabase.rpc('get_commercial_dashboard', {
     from_date: fromIso,
@@ -80,9 +84,20 @@ export async function getDirectionData(params: DashboardParams) {
     toDate = endOfMonth(zonedNow);
   }
 
+  let fromIso: string;
+  let toIso: string;
+
+  if (params.period === 'custom' && params.from_date && params.to_date) {
+    fromIso = fromZonedTime(params.from_date + 'T00:00:00', TZ).toISOString();
+    toIso = fromZonedTime(params.to_date + 'T23:59:59.999', TZ).toISOString();
+  } else {
+    fromIso = fromZonedTime(fromDate, TZ).toISOString();
+    toIso = fromZonedTime(toDate, TZ).toISOString();
+  }
+
   const { data, error } = await supabase.rpc('get_direction_dashboard', {
-    from_date: fromZonedTime(fromDate, TZ).toISOString(),
-    to_date: fromZonedTime(toDate, TZ).toISOString(),
+    from_date: fromIso,
+    to_date: toIso,
   });
 
   if (error) {
