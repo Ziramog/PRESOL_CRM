@@ -11,6 +11,7 @@ export async function createActivity(formData: FormData) {
   const outcome = formData.get('outcome') as string;
   const summary = formData.get('summary') as string;
   const notes = formData.get('notes') as string;
+  const activity_at_str = formData.get('activity_at') as string;
 
   // En MVP no tenemos un usuario logueado todavía en auth completo, usaremos el primer admin que encontremos
   // O en caso de error, podríamos saltarnos esto. Pero RLS requiere un `created_by` válido.
@@ -21,14 +22,20 @@ export async function createActivity(formData: FormData) {
     return { error: 'No admin user found to assign created_by' };
   }
 
-  const { error } = await supabase.from('activities').insert({
+  const activityData: any = {
     prospect_id,
     type,
     outcome: outcome || null,
     summary: summary || null,
     notes: notes || null,
     created_by
-  });
+  };
+
+  if (activity_at_str) {
+    activityData.activity_at = new Date(activity_at_str).toISOString();
+  }
+
+  const { error } = await supabase.from('activities').insert(activityData);
 
   if (error) {
     console.error('Error creating activity:', error);

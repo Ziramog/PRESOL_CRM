@@ -111,6 +111,20 @@ export function ActivityForm({
             />
           </div>
 
+          <details className="group">
+            <summary className="text-xs font-medium text-gray-500 cursor-pointer hover:text-gray-700 outline-none select-none">
+              Opciones avanzadas (Carga retroactiva)
+            </summary>
+            <div className="pt-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Fecha y hora (Dejar vacío para usar Ahora)</label>
+              <input 
+                type="datetime-local" 
+                name="activity_at" 
+                className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+          </details>
+
           {error && <div className="text-sm text-red-600 font-medium bg-red-50 p-2 rounded">{error}</div>}
 
           <div className="flex gap-3 pt-2">
