@@ -13,6 +13,10 @@ export function DashboardFilters({ currentParams }: { currentParams?: Record<str
     const newPeriod = e.target.value;
     const params = new URLSearchParams(searchParams.toString());
     params.set('period', newPeriod);
+    if (newPeriod !== 'custom') {
+      params.delete('from_date');
+      params.delete('to_date');
+    }
     router.push(`${pathname}?${params.toString()}`);
   };
 
@@ -27,6 +31,7 @@ export function DashboardFilters({ currentParams }: { currentParams?: Record<str
         <option value="yesterday">Ayer</option>
         <option value="week">Esta Semana</option>
         <option value="month">Este Mes</option>
+        <option value="custom" hidden>Día Específico</option>
       </select>
     </div>
   );
