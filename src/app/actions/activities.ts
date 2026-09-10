@@ -35,19 +35,13 @@ export async function createActivity(formData: FormData) {
     return { error: error.message };
   }
 
-  // Automatización del estado del prospecto
-  let newStatus = '';
-  if (type === 'visit') {
-    newStatus = 'visited';
-  } else if (type === 'call' && outcome === 'answered') {
-    newStatus = 'contacted';
-  } else if (type === 'call' && outcome === 'wrong_number') {
-    newStatus = 'wrong_contact';
-  } else if (type === 'call') {
-    newStatus = 'attempted';
-  } else if (type === 'email') {
-    newStatus = 'attempted';
-  }
+  const { data: prospect } = await supabase.from('prospects').select('contact_status').eq('id', prospect_id).single();
+
+  const newStatus = prospect ? (await import('@/lib/prospects/status-engine')).calculateNewStatus(
+    prospect.contact_status,
+    type,
+    outcome || null
+  ) : null;
 
   if (newStatus) {
     await supabase.from('prospects').update({ contact_status: newStatus }).eq('id', prospect_id);
