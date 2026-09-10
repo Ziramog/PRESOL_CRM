@@ -145,7 +145,7 @@ export async function getDashboardKPIList(
   // Deduplicate by prospect_id (unless it's opportunities or tasks where multiple per prospect makes sense)
   if (['visited', 'effective_contacts', 'interested'].includes(kpi)) {
     const unique = new Map();
-    data.forEach(item => {
+    data.forEach((item: any) => {
       if (!unique.has(item.prospect_id)) {
         unique.set(item.prospect_id, item);
       }
