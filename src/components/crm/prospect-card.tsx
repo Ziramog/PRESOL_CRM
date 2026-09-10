@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { MapPin, Phone } from 'lucide-react';
+import { MapPin, Phone, MessageSquare } from 'lucide-react';
 import { PROSPECT_STATUS } from '@/lib/constants';
 
 export function ProspectCard({ prospect }: { prospect: any }) {
@@ -9,7 +9,17 @@ export function ProspectCard({ prospect }: { prospect: any }) {
       className="block bg-white border border-gray-200 rounded-lg p-4 shadow-sm active:bg-gray-50 transition-colors"
     >
       <div className="flex justify-between items-start mb-2">
-        <h3 className="font-semibold text-gray-900 line-clamp-1">{prospect.company_name}</h3>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <h3 className="font-semibold text-gray-900 line-clamp-1">{prospect.company_name}</h3>
+          {prospect.has_direction_note && (
+            <span
+              title="Tiene nota de dirección"
+              className="flex items-center justify-center w-4 h-4 rounded-full bg-amber-100 text-amber-600 shrink-0"
+            >
+              <MessageSquare className="w-2.5 h-2.5" strokeWidth={2} />
+            </span>
+          )}
+        </div>
         {prospect.class && (
           <span className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 ml-2
             ${prospect.class === 'A' ? 'bg-green-100 text-green-800' : 
