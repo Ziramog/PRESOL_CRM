@@ -8,6 +8,11 @@ import { DirectionCommentForm } from '@/components/crm/direction-comment-form';
 import { RealtimeListener } from '@/components/crm/realtime-listener';
 import { ProspectOpportunities } from '@/components/crm/prospect-opportunities';
 import Link from 'next/link';
+import { NextActionCard } from '@/components/crm/v2/NextActionCard';
+import { PrimaryContactCard } from '@/components/crm/v2/PrimaryContactCard';
+import { LastInteractionCard } from '@/components/crm/v2/LastInteractionCard';
+import { CommercialInfoSection } from '@/components/crm/v2/CommercialInfoSection';
+import { ProspectDataSection } from '@/components/crm/v2/ProspectDataSection';
 import { ChevronLeft } from 'lucide-react';
 
 export default async function ProspectDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -74,55 +79,53 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
   return (
     <div className="space-y-6 pb-20 md:pb-0">
       <div>
-        <Link href="/prospects" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 mb-4 transition-colors">
+        <Link href="/dashboard" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 mb-4 transition-colors">
           <ChevronLeft className="w-4 h-4 mr-1" />
-          Volver a prospectos
+          Volver
         </Link>
         <ProspectHeader prospect={prospect} />
       </div>
 
+      {/* MOBILE FIRST V2 LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <ProspectSummary prospect={prospect} />
+        
+        {/* COLUMNA PRINCIPAL (Calle/Ventas) */}
+        <div className="lg:col-span-2">
           
-          {/* Oportunidades Section */}
+          <NextActionCard tasks={pendingTasks || []} />
+          
+          <PrimaryContactCard contacts={contacts || []} prospect={prospect} />
+          
+          <LastInteractionCard activities={activities || []} />
+          
+          <CommercialInfoSection prospect={prospect} />
+          
+          <ProspectDataSection prospect={prospect} />
+
           <ProspectOpportunities 
             opportunities={opportunities || []} 
             prospectId={prospect.id} 
             stages={STAGES} 
           />
 
-          <ProspectTimeline items={timelineItems} prospectId={id} />
+          <div className="mt-8">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Historial Completo</h3>
+            <ProspectTimeline items={timelineItems} prospectId={id} />
+          </div>
+
         </div>
         
+        {/* COLUMNA SECUNDARIA (Administración/Dirección) */}
         <div className="space-y-6">
-          <ProspectContacts contacts={contacts || []} prospect={prospect} />
+          <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wider">Directorio de Contactos</h3>
+            <ProspectContacts contacts={contacts || []} prospect={prospect} />
+          </div>
           
           <DirectionCommentForm prospectId={prospect.id} />
           <RealtimeListener prospectId={prospect.id} />
-
-          <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm mt-6">
-            <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wider">Próximos pasos</h3>
-            {!pendingTasks || pendingTasks.length === 0 ? (
-              <div className="text-sm text-gray-500 text-center py-4">
-                No hay tareas programadas.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {pendingTasks.map(task => (
-                  <div key={task.id} className="border-l-2 border-blue-500 pl-3 py-1">
-                    <p className="text-sm font-medium text-gray-900">{task.title}</p>
-                    {task.due_at && (
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        Vence: {new Date(task.due_at).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
+
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Map, Calendar, ChevronRight, PlusCircle, MapPin } from 'lucide-react';
+import { CreateRetrospectiveTripButton } from '@/components/crm/v2/CreateRetrospectiveTripButton';
 
 export default async function TripsPage() {
   const supabase = await createAdminClient();
@@ -31,13 +32,16 @@ export default async function TripsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Giras (Route Mode)</h1>
           <p className="text-sm text-gray-500 mt-1">Planifica y ejecuta tus rutas de visitas</p>
         </div>
-        <Link 
-          href="/trips/new"
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
-        >
-          <PlusCircle className="w-4 h-4" />
-          Crear Gira
-        </Link>
+        <div className="flex gap-2">
+          <CreateRetrospectiveTripButton />
+          <Link 
+            href="/trips/new"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+          >
+            <PlusCircle className="w-4 h-4" />
+            Crear Gira
+          </Link>
+        </div>
       </div>
 
       {activeTrips.length > 0 && (
