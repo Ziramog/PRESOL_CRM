@@ -14,6 +14,12 @@ export function KPIGrid({ data }: { data: any }) {
   
   const searchParams = useSearchParams();
   const period = searchParams.get('period') || 'today';
+  const fromDate = searchParams.get('from_date') || undefined;
+  const toDate = searchParams.get('to_date') || undefined;
+  const userId = searchParams.get('user_id') || undefined;
+  const city = searchParams.get('city') || undefined;
+  const category = searchParams.get('category') || undefined;
+  const tripId = searchParams.get('trip_id') || undefined;
 
   const handleKpiClick = async (kpiKey: string, title: string) => {
     setModalTitle(title);
@@ -21,7 +27,7 @@ export function KPIGrid({ data }: { data: any }) {
     setLoading(true);
     setModalData([]);
     
-    const list = await getDashboardKPIList(kpiKey, period);
+    const list = await getDashboardKPIList(kpiKey, period, fromDate, toDate, userId, city, category, tripId);
     setModalData(list);
     setLoading(false);
   };

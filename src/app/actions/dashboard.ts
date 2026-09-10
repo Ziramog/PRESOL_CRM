@@ -6,7 +6,16 @@ import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
-export async function getDashboardKPIList(kpi: string, period: string) {
+export async function getDashboardKPIList(
+  kpi: string, 
+  period: string, 
+  fromDateParam?: string, 
+  toDateParam?: string,
+  userId?: string,
+  city?: string,
+  category?: string,
+  tripId?: string
+) {
   const supabase = await createAdminClient();
   
   const now = new Date();
@@ -27,66 +36,104 @@ export async function getDashboardKPIList(kpi: string, period: string) {
     toDate = endOfMonth(zonedNow);
   }
 
-  const fromIso = fromZonedTime(fromDate, TZ).toISOString();
-  const toIso = fromZonedTime(toDate, TZ).toISOString();
+  let fromIso: string;
+  let toIso: string;
 
+  if (period === 'custom' && fromDateParam && toDateParam) {
+    fromIso = fromZonedTime(fromDateParam + 'T00:00:00', TZ).toISOString();
+    toIso = fromZonedTime(toDateParam + 'T23:59:59.999', TZ).toISOString();
+  } else {
+    fromIso = fromZonedTime(fromDate, TZ).toISOString();
+    toIso = fromZonedTime(toDate, TZ).toISOString();
+  }
+
+  // Helper to apply common filters based on whether the table is activities/tasks/opportunities
+  const applyFilters = (q: any, tablePrefix: string = '') => {
+    if (userId) {
+      if (tablePrefix === 't.') q = q.eq('assigned_to', userId);
+      else q = q.eq('created_by', userId);
+    }
+    if (tripId) q = q.eq('trip_id', tripId);
+    
+    // We cannot easily filter joined table 'prospects' using simple .eq without inner join syntax in JS client
+    // But we can use !inner on the select string to force an inner join and filter it!
+    return q;
+  };
+
+  // We add !inner to prospects to ensure we only get records where the prospect matches our filters
+  let prospectSelect = 'prospect_id, prospects!inner(id, company_name, city, commercial_category)';
+  
   let query;
 
   switch (kpi) {
     case 'visited':
-      query = supabase
+      query = applyFilters(supabase
         .from('activities')
-        .select('prospect_id, prospects(id, company_name, city)')
+        .select(prospectSelect)
         .eq('type', 'visit')
+        .is('deleted_at', null)
         .gte('activity_at', fromIso)
-        .lte('activity_at', toIso);
+        .lte('activity_at', toIso));
       break;
     
     case 'effective_contacts':
-      query = supabase
+      query = applyFilters(supabase
         .from('activities')
-        .select('prospect_id, prospects(id, company_name, city)')
-        .not('outcome', 'in', '("no_answer","closed","not_available","invalid_data")')
+        .select(prospectSelect)
+        .not('outcome', 'in', '(no_answer,closed,not_available,invalid_data,wrong_number,sent,read,reception_only)')
+        .is('deleted_at', null)
         .gte('activity_at', fromIso)
-        .lte('activity_at', toIso);
+        .lte('activity_at', toIso));
       break;
 
     case 'interested':
-      query = supabase
+      query = applyFilters(supabase
         .from('activities')
-        .select('prospect_id, prospects(id, company_name, city)')
+        .select(prospectSelect)
         .in('outcome', ['interested', 'requested_info', 'requested_quote', 'follow_up'])
+        .is('deleted_at', null)
         .gte('activity_at', fromIso)
-        .lte('activity_at', toIso);
+        .lte('activity_at', toIso));
       break;
 
     case 'opportunities':
-      query = supabase
+      query = applyFilters(supabase
         .from('opportunities')
-        .select('prospect_id, stage, prospects(id, company_name, city)')
+        .select(prospectSelect.replace('prospect_id,', 'prospect_id, stage,'))
+        .is('deleted_at', null)
         .gte('created_at', fromIso)
-        .lte('created_at', toIso);
+        .lte('created_at', toIso));
       break;
 
     case 'tasks_overdue':
-      query = supabase
+      query = applyFilters(supabase
         .from('tasks')
-        .select('prospect_id, title, due_at, prospects(id, company_name, city)')
+        .select(prospectSelect.replace('prospect_id,', 'prospect_id, title, due_at,'))
         .eq('status', 'pending')
-        .lt('due_at', fromIso);
+        .is('deleted_at', null)
+        .lt('due_at', fromIso), 't.');
       break;
 
     case 'tasks_today':
-      query = supabase
+      query = applyFilters(supabase
         .from('tasks')
-        .select('prospect_id, title, due_at, prospects(id, company_name, city)')
+        .select(prospectSelect.replace('prospect_id,', 'prospect_id, title, due_at,'))
         .eq('status', 'pending')
+        .is('deleted_at', null)
         .gte('due_at', fromIso)
-        .lte('due_at', toIso);
+        .lte('due_at', toIso), 't.');
       break;
 
     default:
       return [];
+  }
+
+  // Apply prospect filters using nested syntax for inner join
+  if (city) {
+    query = query.eq('prospects.city', city);
+  }
+  if (category) {
+    query = query.eq('prospects.commercial_category', category);
   }
 
   const { data, error } = await query;
