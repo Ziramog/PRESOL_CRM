@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Clock, Trash2, AlertTriangle } from 'lucide-react';
+import { Clock, Trash2, AlertTriangle, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ACTIVITY_RESULTS } from '@/lib/constants';
 import { deleteActivity } from '@/app/actions/activities';
+import { ActivityForm } from '@/components/crm/activity-form';
 
 export function LastInteractionCard({ activities, prospectId }: { activities: any[], prospectId?: string }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [isDeleting, startTransition] = useTransition();
 
   if (!activities || activities.length === 0) {
@@ -42,14 +44,24 @@ export function LastInteractionCard({ activities, prospectId }: { activities: an
               {format(new Date(lastActivity.activity_at), "d MMM, HH:mm", { locale: es })}
             </div>
             {prospectId && (
-              <button
-                type="button"
-                onClick={() => setShowDeleteModal(true)}
-                className="p-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-sm transition-colors cursor-pointer"
-                title="Borrar esta actividad"
-              >
-                <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(true)}
+                  className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-sm transition-colors cursor-pointer"
+                  title="Editar esta actividad"
+                >
+                  <Pencil className="w-3.5 h-3.5" strokeWidth={1.5} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="p-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-sm transition-colors cursor-pointer"
+                  title="Borrar esta actividad"
+                >
+                  <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -133,6 +145,14 @@ export function LastInteractionCard({ activities, prospectId }: { activities: an
             </div>
           </div>
         </div>
+      )}
+
+      {showEditModal && prospectId && (
+        <ActivityForm
+          prospectId={prospectId}
+          activityToEdit={lastActivity}
+          onClose={() => setShowEditModal(false)}
+        />
       )}
     </>
   );

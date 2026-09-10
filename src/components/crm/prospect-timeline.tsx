@@ -3,9 +3,10 @@
 import { useState, useTransition } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { MessageSquare, Phone, MapPin, User, Calendar, FileText, Smartphone, Trash2, Loader2, AlertTriangle, X } from 'lucide-react';
+import { MessageSquare, Phone, MapPin, User, Calendar, FileText, Smartphone, Trash2, Loader2, AlertTriangle, X, Pencil } from 'lucide-react';
 import { deleteActivity, deleteComment } from '@/app/actions/activities';
 import { ACTIVITY_RESULTS } from '@/lib/constants';
+import { ActivityForm } from './activity-form';
 
 type TimelineItem = {
   _type: 'activity' | 'comment';
@@ -52,6 +53,7 @@ const getColor = (item: TimelineItem) => {
 export function ProspectTimeline({ items, prospectId }: { items: TimelineItem[], prospectId: string }) {
   const [isPending, startTransition] = useTransition();
   const [itemToDelete, setItemToDelete] = useState<TimelineItem | null>(null);
+  const [itemToEdit, setItemToEdit] = useState<TimelineItem | null>(null);
 
   const confirmDelete = () => {
     if (!itemToDelete) return;
@@ -109,14 +111,26 @@ export function ProspectTimeline({ items, prospectId }: { items: TimelineItem[],
                           {formatDistanceToNow(date, { addSuffix: true, locale: es })}
                         </time>
                       </div>
-                      <button 
-                        onClick={() => setItemToDelete(item)}
-                        disabled={isPending}
-                        className="p-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-sm transition-all opacity-80 md:opacity-0 md:group-hover:opacity-100 cursor-pointer"
-                        title="Borrar actividad o comentario"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        {item._type === 'activity' && (
+                          <button 
+                            onClick={() => setItemToEdit(item)}
+                            disabled={isPending}
+                            className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-sm transition-all opacity-80 md:opacity-0 md:group-hover:opacity-100 cursor-pointer"
+                            title="Editar actividad"
+                          >
+                            <Pencil className="w-3.5 h-3.5" strokeWidth={1.5} />
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => setItemToDelete(item)}
+                          disabled={isPending}
+                          className="p-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-sm transition-all opacity-80 md:opacity-0 md:group-hover:opacity-100 cursor-pointer"
+                          title="Borrar actividad o comentario"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                        </button>
+                      </div>
                     </div>
                     
                     {item._type === 'activity' && outcomeLabel && (
@@ -193,6 +207,14 @@ export function ProspectTimeline({ items, prospectId }: { items: TimelineItem[],
             </div>
           </div>
         </div>
+      )}
+
+      {itemToEdit && (
+        <ActivityForm
+          prospectId={prospectId}
+          activityToEdit={itemToEdit}
+          onClose={() => setItemToEdit(null)}
+        />
       )}
     </>
   );

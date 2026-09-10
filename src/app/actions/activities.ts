@@ -58,6 +58,55 @@ export async function createActivity(formData: FormData) {
   return { success: true };
 }
 
+export async function updateActivity(formData: FormData) {
+  const supabase = await createAdminClient();
+
+  const id = formData.get('id') as string;
+  const prospect_id = formData.get('prospect_id') as string;
+  const type = formData.get('type') as string;
+  const outcome = formData.get('outcome') as string;
+  const notes = formData.get('notes') as string;
+  const activity_at_str = formData.get('activity_at') as string;
+
+  if (!id || !prospect_id) {
+    return { error: 'Faltan datos obligatorios para editar la actividad.' };
+  }
+
+  const updateData: any = {
+    type,
+    outcome: outcome || null,
+    notes: notes || null,
+  };
+
+  if (activity_at_str) {
+    updateData.activity_at = new Date(activity_at_str).toISOString();
+  }
+
+  const { error } = await supabase.from('activities').update(updateData).eq('id', id);
+
+  if (error) {
+    console.error('Error updating activity:', error);
+    return { error: error.message };
+  }
+
+  const { data: prospect } = await supabase.from('prospects').select('contact_status').eq('id', prospect_id).single();
+  const newStatus = prospect ? (await import('@/lib/prospects/status-engine')).calculateNewStatus(
+    prospect.contact_status,
+    type,
+    outcome || null
+  ) : null;
+
+  if (newStatus) {
+    await supabase.from('prospects').update({ contact_status: newStatus }).eq('id', prospect_id);
+  }
+
+  revalidatePath(`/prospects/${prospect_id}`);
+  revalidatePath('/prospects');
+  revalidatePath('/dashboard');
+  revalidatePath('/direction');
+  return { success: true };
+}
+
 export async function deleteActivity(id: string, prospectId: string) {
   const supabase = await createAdminClient();
   const { error } = await supabase.from('activities').delete().eq('id', id);
