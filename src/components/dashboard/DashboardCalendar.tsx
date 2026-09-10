@@ -11,7 +11,13 @@ import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { getActiveDates } from '@/app/actions/dashboard';
 
-export function DashboardCalendar() {
+export function DashboardCalendar({ 
+  onClose, 
+  hideShadows = false 
+}: { 
+  onClose?: () => void,
+  hideShadows?: boolean
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -49,6 +55,7 @@ export function DashboardCalendar() {
     params.set('to_date', dateStr);
     
     router.push(`?${params.toString()}`);
+    if (onClose) onClose();
   };
 
   const monthStart = startOfMonth(currentMonth);
@@ -62,7 +69,7 @@ export function DashboardCalendar() {
   const weekDays = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'];
 
   return (
-    <div className="bg-white/80 backdrop-blur-md rounded-lg border border-gray-200 p-5 shadow-sm">
+    <div className={`bg-white/80 backdrop-blur-md ${hideShadows ? '' : 'rounded-lg border border-gray-200 p-5 shadow-sm'}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <CalendarIcon className="w-4 h-4 text-gray-500" />

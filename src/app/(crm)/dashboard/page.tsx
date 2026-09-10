@@ -35,7 +35,9 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-6">
-          <DashboardCalendar />
+          <div className="hidden lg:block">
+            <DashboardCalendar />
+          </div>
           <ResultBreakdown results={data.results} />
         </div>
         <div className="lg:col-span-2">
