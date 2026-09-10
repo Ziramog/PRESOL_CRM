@@ -9,7 +9,7 @@ const items = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Prospectos', href: '/prospects', icon: Users },
   { name: 'Giras', href: '/trips', icon: Map },
-  { name: 'Dirección', href: '/direction', icon: BarChart3 },
+  // { name: 'Dirección', href: '/direction', icon: BarChart3 }, // hidden until fully developed
   { name: 'Tareas', href: '/tasks', icon: CheckSquare },
   { name: 'Oportunidades', href: '/opportunities', icon: Target },
   { name: 'Configuración', href: '/settings', icon: Settings },

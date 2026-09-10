@@ -8,7 +8,8 @@ const items = [
   { name: 'Inicio', href: '/dashboard', icon: Home },
   { name: 'Ruta', href: '/trips', icon: Map },
   { name: 'CRM', href: '/prospects', icon: Users },
-  { name: 'Dir.', href: '/direction', icon: BarChart3 },
+  // { name: 'Dir.', href: '/direction', icon: BarChart3 }, // hidden until fully developed
+  { name: 'Tareas', href: '/tasks', icon: CheckSquare },
   { name: 'Más', href: '/settings', icon: MoreHorizontal },
 ];
 
