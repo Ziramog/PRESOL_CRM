@@ -63,6 +63,9 @@ export async function deleteActivity(id: string, prospectId: string) {
   const { error } = await supabase.from('activities').delete().eq('id', id);
   if (error) return { error: error.message };
   revalidatePath(`/prospects/${prospectId}`);
+  revalidatePath('/prospects');
+  revalidatePath('/dashboard');
+  revalidatePath('/direction');
   return { success: true };
 }
 
@@ -71,5 +74,6 @@ export async function deleteComment(id: string, prospectId: string) {
   const { error } = await supabase.from('comments').delete().eq('id', id);
   if (error) return { error: error.message };
   revalidatePath(`/prospects/${prospectId}`);
+  revalidatePath('/prospects');
   return { success: true };
 }

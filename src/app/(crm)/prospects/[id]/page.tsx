@@ -96,7 +96,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
           
           <PrimaryContactCard contacts={contacts || []} prospect={prospect} />
           
-          <LastInteractionCard activities={activities || []} />
+          <LastInteractionCard activities={activities || []} prospectId={id} />
           
           <CommercialInfoSection prospect={prospect} />
           
