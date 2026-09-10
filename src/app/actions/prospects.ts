@@ -76,3 +76,28 @@ export async function updateProspectStatus(prospectId: string, status: string) {
   revalidatePath('/prospects');
   return { success: true };
 }
+
+export async function deleteProspect(prospectId: string) {
+  const supabase = await createAdminClient();
+
+  // Clean up related child rows to satisfy foreign key constraints
+  await supabase.from('comments').delete().eq('prospect_id', prospectId);
+  await supabase.from('tasks').delete().eq('prospect_id', prospectId);
+  await supabase.from('opportunities').delete().eq('prospect_id', prospectId);
+  await supabase.from('activities').delete().eq('prospect_id', prospectId);
+  await supabase.from('trip_stops').delete().eq('prospect_id', prospectId);
+  await supabase.from('contacts').delete().eq('prospect_id', prospectId);
+
+  const { error } = await supabase.from('prospects').delete().eq('id', prospectId);
+
+  if (error) {
+    console.error('Error deleting prospect:', error);
+    return { error: 'Error al eliminar el prospecto: ' + error.message };
+  }
+
+  revalidatePath('/prospects');
+  revalidatePath('/dashboard');
+  revalidatePath('/direction');
+  return { success: true };
+}
+

@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { MapPin, Navigation, Phone, MessageCircle, PlusCircle, CalendarPlus, Target } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { MapPin, Navigation, Phone, MessageCircle, PlusCircle, CalendarPlus, Target, Trash2, AlertTriangle, X } from 'lucide-react';
 import { ActivityForm } from './activity-form';
 import { TaskForm } from './task-form';
-import { updateProspectStatus } from '@/app/actions/prospects';
+import { updateProspectStatus, deleteProspect } from '@/app/actions/prospects';
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pendiente' },
@@ -20,9 +21,25 @@ const STATUS_OPTIONS = [
 ];
 
 export function ProspectHeader({ prospect }: { prospect: any }) {
+  const router = useRouter();
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    setDeleteError(null);
+    const res = await deleteProspect(prospect.id);
+    if (res.error) {
+      setDeleteError(res.error);
+      setIsDeleting(false);
+    } else {
+      router.push('/prospects');
+    }
+  };
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = e.target.value;
@@ -138,24 +155,33 @@ export function ProspectHeader({ prospect }: { prospect: any }) {
         </div>
         
         {/* Acciones de gestión */}
-        <div className="flex overflow-x-auto pb-2 -mx-5 px-5 md:mx-0 md:px-0 gap-2 mt-6 border-t border-gray-100 pt-5 scrollbar-hide">
+        <div className="flex items-center overflow-x-auto pb-2 -mx-5 px-5 md:mx-0 md:px-0 gap-2 mt-6 border-t border-gray-100 pt-5 scrollbar-hide">
           <button 
             onClick={() => setShowActivityForm(true)}
-            className="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+            className="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-sm text-xs font-semibold tracking-wider uppercase hover:bg-blue-700 transition-colors shadow-sm active:scale-95"
           >
             <PlusCircle className="w-4 h-4" />
             Registrar actividad
           </button>
           <button 
             onClick={() => setShowTaskForm(true)}
-            className="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
+            className="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-sm text-xs font-semibold tracking-wider uppercase hover:bg-gray-50 transition-colors"
           >
             <CalendarPlus className="w-4 h-4 text-gray-500" />
             Crear tarea
           </button>
-          <button className="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
+          <button className="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-sm text-xs font-semibold tracking-wider uppercase hover:bg-gray-50 transition-colors">
             <Target className="w-4 h-4 text-gray-500" />
             Crear oportunidad
+          </button>
+          
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            title="Eliminar prospecto permanentemente"
+            className="whitespace-nowrap flex items-center gap-1.5 px-3 py-2 text-rose-600 hover:text-rose-700 bg-rose-50/60 hover:bg-rose-100/60 border border-rose-200 rounded-sm text-xs font-semibold tracking-wider uppercase transition-colors ml-auto shadow-sm active:scale-95 cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+            Borrar
           </button>
         </div>
       </div>
@@ -172,6 +198,63 @@ export function ProspectHeader({ prospect }: { prospect: any }) {
           prospectId={prospect.id} 
           onClose={() => setShowTaskForm(false)} 
         />
+      )}
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-white/60 backdrop-blur-md transition-all duration-300">
+          <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-sm w-full max-w-md shadow-2xl p-6 ring-1 ring-black/5 animate-in fade-in zoom-in-95">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-sm bg-rose-50 text-rose-600 border border-rose-100 shrink-0">
+                <AlertTriangle className="w-5 h-5" strokeWidth={1.5} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-light tracking-tight text-gray-900">
+                  ¿Eliminar prospecto?
+                </h3>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">
+                  {prospect.company_name}
+                </p>
+                <p className="text-sm text-gray-600 mt-3 leading-relaxed">
+                  Esta acción no se puede deshacer. Se eliminarán permanentemente el prospecto y todas sus interacciones, tareas y contactos vinculados.
+                </p>
+                {deleteError && (
+                  <p className="text-xs text-rose-600 bg-rose-50 border border-rose-200 p-2.5 rounded-sm mt-3 font-medium">
+                    {deleteError}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2.5 mt-6 pt-4 border-t border-gray-100">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-sm transition-colors border border-gray-200 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleDelete}
+                className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-50 rounded-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white"></div>
+                    Eliminando...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                    Sí, eliminar
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
