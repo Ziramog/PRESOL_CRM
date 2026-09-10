@@ -2,6 +2,9 @@
 
 import { createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { fromZonedTime } from 'date-fns-tz';
+
+const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
 export async function createTask(formData: FormData) {
   const supabase = await createAdminClient();
@@ -20,11 +23,18 @@ export async function createTask(formData: FormData) {
     return { error: 'No user found to assign created_by' };
   }
 
+  // Parse in Argentina timezone at 12:00:00 to avoid UTC midnight shifting backward into previous date
+  let dueIso: string | null = null;
+  if (due_at) {
+    const cleanDate = due_at.includes('T') ? due_at : `${due_at}T12:00:00`;
+    dueIso = fromZonedTime(cleanDate, TZ).toISOString();
+  }
+
   const { error } = await supabase.from('tasks').insert({
     prospect_id,
     title,
     description: description || null,
-    due_at: due_at ? new Date(due_at).toISOString() : null,
+    due_at: dueIso,
     priority: priority || 'normal',
     status: 'pending',
     created_by,

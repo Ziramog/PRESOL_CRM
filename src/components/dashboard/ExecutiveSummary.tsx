@@ -201,7 +201,7 @@ function PeriodCard({
     { key: 'effective_contacts', label: 'Contactos efectivos', value: d.effective_contacts },
     { key: 'interested', label: 'Interesados', value: d.interested },
     { key: 'opportunities', label: 'Oportunidades', value: d.opportunities },
-    { key: isPrimary ? 'tasks_today' : 'tasks_overdue', label: 'Seguimientos', value: d.followups },
+    { key: 'followups', label: 'Seguimientos', value: d.followups },
   ];
 
   return (

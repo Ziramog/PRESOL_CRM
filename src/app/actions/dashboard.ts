@@ -114,6 +114,7 @@ export async function getDashboardKPIList(
         .lt('due_at', fromIso), 't.');
       break;
 
+    case 'followups':
     case 'tasks_today':
       query = applyFilters(supabase
         .from('tasks')
