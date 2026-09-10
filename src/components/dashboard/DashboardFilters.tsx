@@ -1,17 +1,19 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
-export function DashboardFilters({ currentParams }: { currentParams: Record<string, string | undefined> }) {
+export function DashboardFilters({ currentParams }: { currentParams?: Record<string, string | undefined> }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   
-  const currentPeriod = currentParams.period || 'today';
+  const currentPeriod = searchParams.get('period') || 'today';
 
   const handlePeriodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newPeriod = e.target.value;
-    const params = new URLSearchParams(currentParams as Record<string, string>);
+    const params = new URLSearchParams(searchParams.toString());
     params.set('period', newPeriod);
-    router.push(`/dashboard?${params.toString()}`);
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   return (
@@ -19,15 +21,13 @@ export function DashboardFilters({ currentParams }: { currentParams: Record<stri
       <select 
         value={currentPeriod} 
         onChange={handlePeriodChange}
-        className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+        className="bg-white/80 backdrop-blur-md border border-gray-200 text-gray-700 text-xs font-bold tracking-widest uppercase rounded-sm focus:ring-blue-500 focus:border-blue-500 block w-full py-2 px-3 shadow-sm hover:shadow-md transition-all cursor-pointer outline-none"
       >
         <option value="today">Hoy</option>
         <option value="yesterday">Ayer</option>
         <option value="week">Esta Semana</option>
         <option value="month">Este Mes</option>
       </select>
-      
-      {/* Aqui se pueden agregar mAs filtros: usuarios, zonas, categorias */}
     </div>
   );
 }

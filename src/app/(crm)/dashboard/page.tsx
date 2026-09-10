@@ -6,7 +6,8 @@ import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DashboardPage({ searchParams }: { searchParams: { [key: string]: string | undefined } }) {
+export default async function DashboardPage(props: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
+  const searchParams = await props.searchParams;
   const period = (searchParams.period as any) || 'today';
   
   const data = await getDashboardData({

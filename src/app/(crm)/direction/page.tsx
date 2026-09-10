@@ -4,10 +4,17 @@ import { Map, Briefcase, Users, AlertTriangle } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DirectionDashboardPage({ searchParams }: { searchParams: { [key: string]: string | undefined } }) {
+export default async function DirectionDashboardPage(props: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
+  const searchParams = await props.searchParams;
   const period = (searchParams.period as any) || 'week'; // Por defecto semana para direccion
   
-  const data = await getDirectionData({ period });
+  const data = await getDirectionData({
+    period,
+    from_date: searchParams.from_date,
+    to_date: searchParams.to_date,
+    city: searchParams.city,
+    category: searchParams.category,
+  });
 
   return (
     <div className="space-y-6 pb-20 md:pb-0">
