@@ -1,6 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } from 'date-fns';
-import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
@@ -38,9 +38,9 @@ export async function getDashboardData(params: DashboardParams) {
     toDate = endOfDay(toZonedTime(new Date(params.to_date), TZ));
   }
 
-  // Convert to ISO string for PG
-  const fromIso = fromDate.toISOString();
-  const toIso = toDate.toISOString();
+  // Convert to ISO string for PG accurately using fromZonedTime
+  const fromIso = fromZonedTime(fromDate, TZ).toISOString();
+  const toIso = fromZonedTime(toDate, TZ).toISOString();
 
   const { data, error } = await supabase.rpc('get_commercial_dashboard', {
     from_date: fromIso,
@@ -81,8 +81,8 @@ export async function getDirectionData(params: DashboardParams) {
   }
 
   const { data, error } = await supabase.rpc('get_direction_dashboard', {
-    from_date: fromDate.toISOString(),
-    to_date: toDate.toISOString(),
+    from_date: fromZonedTime(fromDate, TZ).toISOString(),
+    to_date: fromZonedTime(toDate, TZ).toISOString(),
   });
 
   if (error) {
