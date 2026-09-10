@@ -1,8 +1,10 @@
 'use client';
 
+import { useTransition } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { MessageSquare, Phone, MapPin, User, Calendar, FileText, Smartphone } from 'lucide-react';
+import { MessageSquare, Phone, MapPin, User, Calendar, FileText, Smartphone, Trash2, Loader2 } from 'lucide-react';
+import { deleteActivity, deleteComment } from '@/app/actions/activities';
 
 type TimelineItem = {
   _type: 'activity' | 'comment';
@@ -46,7 +48,21 @@ const getColor = (item: TimelineItem) => {
   }
 };
 
-export function ProspectTimeline({ items }: { items: TimelineItem[] }) {
+export function ProspectTimeline({ items, prospectId }: { items: TimelineItem[], prospectId: string }) {
+  const [isPending, startTransition] = useTransition();
+
+  const handleDelete = (item: TimelineItem) => {
+    if (!window.confirm('¿Estás seguro de que deseas borrar este registro?')) return;
+    
+    startTransition(async () => {
+      if (item._type === 'activity') {
+        await deleteActivity(item.id, prospectId);
+      } else {
+        await deleteComment(item.id, prospectId);
+      }
+    });
+  };
+
   if (!items || items.length === 0) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
@@ -70,7 +86,7 @@ export function ProspectTimeline({ items }: { items: TimelineItem[] }) {
             const authorName = item.profiles?.full_name || 'Usuario';
             
             return (
-              <div key={`${item._type}-${item.id}`} className="relative pl-6">
+              <div key={`${item._type}-${item.id}`} className="relative pl-6 group">
                 <span className={`absolute -left-[17px] top-1 flex h-8 w-8 items-center justify-center rounded-full ring-4 ring-white ${getColor(item)}`}>
                   {getIcon(item)}
                 </span>
@@ -88,6 +104,14 @@ export function ProspectTimeline({ items }: { items: TimelineItem[] }) {
                         {formatDistanceToNow(date, { addSuffix: true, locale: es })}
                       </time>
                     </div>
+                    <button 
+                      onClick={() => handleDelete(item)}
+                      disabled={isPending}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded"
+                      title="Borrar registro"
+                    >
+                      {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    </button>
                   </div>
                   
                   {item._type === 'activity' && item.outcome && (

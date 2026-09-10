@@ -92,7 +92,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
             stages={STAGES} 
           />
 
-          <ProspectTimeline items={timelineItems} />
+          <ProspectTimeline items={timelineItems} prospectId={id} />
         </div>
         
         <div className="space-y-6">

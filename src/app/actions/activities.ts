@@ -56,3 +56,19 @@ export async function createActivity(formData: FormData) {
   revalidatePath(`/prospects/${prospect_id}`);
   return { success: true };
 }
+
+export async function deleteActivity(id: string, prospectId: string) {
+  const supabase = await createAdminClient();
+  const { error } = await supabase.from('activities').delete().eq('id', id);
+  if (error) return { error: error.message };
+  revalidatePath(`/prospects/${prospectId}`);
+  return { success: true };
+}
+
+export async function deleteComment(id: string, prospectId: string) {
+  const supabase = await createAdminClient();
+  const { error } = await supabase.from('comments').delete().eq('id', id);
+  if (error) return { error: error.message };
+  revalidatePath(`/prospects/${prospectId}`);
+  return { success: true };
+}
