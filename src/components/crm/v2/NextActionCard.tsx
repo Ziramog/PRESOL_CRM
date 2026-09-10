@@ -15,22 +15,22 @@ export function NextActionCard({ tasks }: { tasks: any[] }) {
   const nextTask = tasks[0];
 
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 shadow-sm mb-6 flex items-start justify-between">
+    <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-sm p-6 shadow-sm mb-6 flex items-start justify-between hover:shadow-lg transition-all duration-300">
       <div>
-        <h3 className="text-sm font-semibold text-blue-900 uppercase tracking-wider mb-2">Qué hacer ahora</h3>
-        <p className="text-base font-medium text-blue-900">{nextTask.title}</p>
-        <div className="flex items-center text-sm text-blue-700 mt-2">
-          {nextTask.type === 'call' ? <PhoneCall className="w-4 h-4 mr-1" /> : nextTask.type === 'visit' ? <Calendar className="w-4 h-4 mr-1" /> : <CheckSquare className="w-4 h-4 mr-1" />}
+        <h3 className="text-[11px] font-bold text-blue-600 uppercase tracking-widest mb-3">Qué hacer ahora</h3>
+        <p className="text-xl font-light tracking-tight text-gray-900">{nextTask.title}</p>
+        <div className="flex items-center text-sm font-medium text-gray-500 mt-3">
+          {nextTask.type === 'call' ? <PhoneCall className="w-4 h-4 mr-2" strokeWidth={1.5} /> : nextTask.type === 'visit' ? <Calendar className="w-4 h-4 mr-2" strokeWidth={1.5} /> : <CheckSquare className="w-4 h-4 mr-2" strokeWidth={1.5} />}
           <span className="capitalize">{nextTask.type}</span>
           {nextTask.due_at && (
             <>
-              <span className="mx-2">•</span>
+              <span className="mx-3 text-gray-300">|</span>
               <span>{format(new Date(nextTask.due_at), "d MMM yyyy", { locale: es })}</span>
             </>
           )}
         </div>
       </div>
-      <button className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded transition-colors">
+      <button className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold tracking-wider uppercase px-4 py-2 rounded-sm transition-colors shadow-sm active:scale-95">
         Completar
       </button>
     </div>
