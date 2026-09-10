@@ -39,6 +39,7 @@ export async function createProspect(formData: FormData) {
   const { data, error } = await supabase
     .from('prospects')
     .insert([{
+      external_id: `MAN-${Date.now()}`,
       company_name,
       class: prospectClass || null,
       visit_priority: visit_priority || null,
