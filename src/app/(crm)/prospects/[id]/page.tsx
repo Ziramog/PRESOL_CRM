@@ -79,7 +79,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
   return (
     <div className="space-y-6 pb-20 md:pb-0">
       <div>
-        <Link href="/dashboard" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 mb-4 transition-colors">
+        <Link href="/prospects" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 mb-4 transition-colors">
           <ChevronLeft className="w-4 h-4 mr-1" />
           Volver
         </Link>
