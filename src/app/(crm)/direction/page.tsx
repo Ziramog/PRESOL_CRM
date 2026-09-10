@@ -2,6 +2,8 @@ import { getDirectionData } from '@/lib/dashboard/queries';
 import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
 import { Map, Briefcase, Users, AlertTriangle } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DirectionDashboardPage({ searchParams }: { searchParams: { [key: string]: string | undefined } }) {
   const period = (searchParams.period as any) || 'week'; // Por defecto semana para direccion
   

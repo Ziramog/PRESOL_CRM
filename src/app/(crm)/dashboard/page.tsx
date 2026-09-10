@@ -4,6 +4,8 @@ import { ResultBreakdown } from '@/components/dashboard/ResultBreakdown';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage({ searchParams }: { searchParams: { [key: string]: string | undefined } }) {
   const period = (searchParams.period as any) || 'today';
   
