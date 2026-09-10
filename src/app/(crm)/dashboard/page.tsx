@@ -7,12 +7,21 @@ import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DashboardPage(props: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
+const PERIOD_TITLES: Record<string, string> = {
+  today: 'Hoy',
+  yesterday: 'Ayer',
+  week: 'Esta semana',
+  custom: 'Período personalizado',
+};
+
+export default async function DashboardPage(props: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) {
   const searchParams = await props.searchParams;
-  const period = (searchParams.period as any) || 'today';
-  
+  const period = (searchParams.period as string) || 'today';
+
   const data = await getDashboardData({
-    period,
+    period: period as any,
     from_date: searchParams.from_date,
     to_date: searchParams.to_date,
     user_id: searchParams.user_id,
@@ -21,25 +30,31 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
     category: searchParams.category,
   });
 
-  const isCustom = period === 'custom' && searchParams.from_date;
-  const periodTitle = isCustom ? 'Resultados Personalizados' : period === 'yesterday' ? 'Resultados de Ayer' : period === 'week' ? 'Resultados de la Semana' : 'Resultados de Hoy';
+  const periodTitle = PERIOD_TITLES[period] ?? 'Período';
 
   return (
-    <div className="space-y-6 pb-20 md:pb-0">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-8 pb-24 md:pb-8">
+      {/* Page header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard Comercial</h1>
-          <p className="text-sm text-gray-500 mt-1">Gestión diaria y rendimiento</p>
+          <h1 className="text-xl font-semibold text-gray-900 tracking-tight">Dashboard</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Actividad comercial en tiempo real</p>
         </div>
         <DashboardFilters currentParams={searchParams} />
       </div>
 
+      {/* Executive 3-card summary — always fixed to yesterday/today/week */}
       <ExecutiveSummary summary={data.summary} />
 
-      <div className="pt-4 border-t border-gray-200">
-        <h2 className="text-sm font-bold tracking-widest text-gray-900 uppercase mb-4">{periodTitle}</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-1 space-y-4 lg:space-y-6">
+      {/* Detail section — reacts to selected period */}
+      <div>
+        <div className="flex items-center gap-3 mb-5">
+          <h2 className="text-[11px] font-bold tracking-[0.2em] text-gray-400 uppercase">{periodTitle}</h2>
+          <div className="flex-1 h-px bg-gray-100" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5">
+          <div className="space-y-4 lg:space-y-5">
             <ResultBreakdown results={data.results} />
             <FollowUpsBlock followups={data.followups} />
           </div>

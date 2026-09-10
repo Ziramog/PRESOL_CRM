@@ -1,9 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { isBefore, isToday, isAfter, startOfDay } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
-import Link from 'next/link';
+import { AlertCircle, Clock, CalendarDays } from 'lucide-react';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
@@ -11,62 +12,93 @@ export function FollowUpsBlock({ followups }: { followups: any[] }) {
   if (!followups) return null;
 
   const now = new Date();
-  
-  // Categorize tasks
-  const overdue = followups.filter(t => isBefore(new Date(t.due_at), startOfDay(now)));
-  const today = followups.filter(t => isToday(new Date(t.due_at)));
-  const upcoming = followups.filter(t => isAfter(new Date(t.due_at), now) && !isToday(new Date(t.due_at)));
+  const todayStart = startOfDay(now);
 
-  const countRow = (label: string, count: number, colorClass: string) => (
-    <div className="flex justify-between items-center text-sm py-1">
-      <span className="font-medium text-gray-700">{label}</span>
-      <span className={`font-bold ${colorClass}`}>{count}</span>
-    </div>
-  );
+  const overdue = followups.filter((t) => isBefore(new Date(t.due_at), todayStart));
+  const today = followups.filter((t) => isToday(new Date(t.due_at)));
+  const upcoming = followups.filter((t) => isAfter(new Date(t.due_at), now) && !isToday(new Date(t.due_at)));
+
+  const statChips = [
+    {
+      icon: AlertCircle,
+      label: 'Vencidas',
+      count: overdue.length,
+      color: overdue.length > 0 ? 'text-red-600 bg-red-50' : 'text-gray-500 bg-gray-50',
+    },
+    {
+      icon: Clock,
+      label: 'Hoy',
+      count: today.length,
+      color: today.length > 0 ? 'text-blue-600 bg-blue-50' : 'text-gray-500 bg-gray-50',
+    },
+    {
+      icon: CalendarDays,
+      label: 'Próximas',
+      count: upcoming.length,
+      color: 'text-gray-600 bg-gray-50',
+    },
+  ];
 
   return (
-    <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-sm p-6 shadow-sm h-full hover:shadow-lg transition-all duration-300">
-      <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-5 border-b border-gray-100 pb-3">Seguimientos</h2>
-      
-      <div className="space-y-1 mb-6">
-        {countRow('Vencidos', overdue.length, overdue.length > 0 ? 'text-red-600' : 'text-gray-900')}
-        {countRow('Para hoy', today.length, today.length > 0 ? 'text-blue-600' : 'text-gray-900')}
-        {countRow('Próximos', upcoming.length, 'text-gray-900')}
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+      <div className="px-5 py-4 border-b border-gray-100">
+        <h2 className="text-[10px] font-bold tracking-[0.2em] text-gray-400 uppercase">Seguimientos</h2>
       </div>
 
-      <div className="space-y-3">
-        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Próximas acciones</h3>
-        
-        {followups.length === 0 ? (
-          <p className="text-gray-400 font-light text-sm">No hay tareas pendientes.</p>
-        ) : (
-          <ul className="space-y-2">
-            {followups.slice(0, 5).map(task => {
+      {/* Summary chips */}
+      <div className="grid grid-cols-3 gap-2 px-5 pt-4 pb-4">
+        {statChips.map(({ icon: Icon, label, count, color }) => (
+          <div key={label} className={`flex flex-col items-center justify-center rounded-lg py-3 ${color}`}>
+            <span className="text-xl font-bold tabular-nums">{count}</span>
+            <span className="text-[10px] font-semibold tracking-wider uppercase mt-0.5 opacity-80">{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Task list */}
+      {followups.length === 0 ? (
+        <div className="px-5 pb-5 text-center">
+          <p className="text-sm text-gray-400">No hay tareas pendientes.</p>
+        </div>
+      ) : (
+        <div className="border-t border-gray-100">
+          <p className="px-5 pt-3 pb-1 text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase">Próximas acciones</p>
+          <ul>
+            {followups.slice(0, 5).map((task) => {
               const prospect = Array.isArray(task.prospects) ? task.prospects[0] : task.prospects;
-              const formattedTime = formatInTimeZone(new Date(task.due_at), TZ, 'HH:mm', { locale: es });
-              const isOverdue = isBefore(new Date(task.due_at), startOfDay(now));
-              
+              const dueDate = new Date(task.due_at);
+              const isOv = isBefore(dueDate, todayStart);
+              const timeStr = isOv
+                ? 'Vencida'
+                : formatInTimeZone(dueDate, TZ, 'HH:mm', { locale: es });
+
               return (
-                <li key={task.id} className="group">
-                  <Link href={`/prospects/${prospect?.id}`} className="block p-2 -mx-2 hover:bg-gray-50 rounded-sm transition-colors">
-                    <div className="flex gap-3">
-                      <span className={`text-xs font-mono mt-0.5 ${isOverdue ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
-                        {isOverdue ? 'Venc.' : formattedTime}
-                      </span>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-                          {prospect?.company_name || 'Sin empresa'}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{task.title}</p>
-                      </div>
+                <li key={task.id}>
+                  <Link
+                    href={`/prospects/${prospect?.id}`}
+                    className="flex items-start gap-3 px-5 py-3 hover:bg-gray-50 transition-colors group"
+                  >
+                    <span
+                      className={[
+                        'text-[11px] font-mono mt-0.5 shrink-0',
+                        isOv ? 'text-red-500 font-semibold' : 'text-gray-400',
+                      ].join(' ')}
+                    >
+                      {timeStr}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors truncate">
+                        {prospect?.company_name ?? 'Sin empresa'}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5 truncate">{task.title}</p>
                     </div>
                   </Link>
                 </li>
               );
             })}
           </ul>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

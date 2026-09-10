@@ -1,120 +1,115 @@
 'use client';
 
 import { useState } from 'react';
-import { ACTIVITY_RESULTS } from '@/lib/constants';
-import { X } from 'lucide-react';
 import Link from 'next/link';
+import { X } from 'lucide-react';
+import { ACTIVITY_RESULTS } from '@/lib/constants';
 
 export function ResultBreakdown({ results }: { results: any[] }) {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState('');
-  const [modalData, setModalData] = useState<any[]>([]);
+  const [modal, setModal] = useState<{ label: string; items: any[] } | null>(null);
 
-  if (!results || results.length === 0) {
-    return (
-      <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-sm p-6 shadow-sm h-full flex flex-col items-center justify-center text-center">
-        <p className="text-gray-400 font-light text-sm tracking-wide">No hay resultados registrados en este período.</p>
-      </div>
-    );
-  }
-
-  // Aggregate results by outcome
-  const aggregatedResults: Record<string, { count: number, activities: any[] }> = {};
-  results.forEach(r => {
-    if (!aggregatedResults[r.outcome]) {
-      aggregatedResults[r.outcome] = { count: 0, activities: [] };
-    }
-    aggregatedResults[r.outcome].count++;
-    aggregatedResults[r.outcome].activities.push(r);
+  // Aggregate raw activities by outcome
+  const aggregated: Record<string, { count: number; activities: any[] }> = {};
+  (results ?? []).forEach((r) => {
+    if (!r.outcome) return;
+    if (!aggregated[r.outcome]) aggregated[r.outcome] = { count: 0, activities: [] };
+    aggregated[r.outcome].count++;
+    aggregated[r.outcome].activities.push(r);
   });
 
-  const resultsArray = Object.entries(aggregatedResults)
-    .map(([outcome, data]) => ({ outcome, count: data.count, activities: data.activities }))
+  const sorted = Object.entries(aggregated)
+    .map(([outcome, { count, activities }]) => ({ outcome, count, activities }))
     .sort((a, b) => b.count - a.count);
 
-  const total = results.length;
+  const total = sorted.reduce((s, r) => s + r.count, 0);
 
-  const handleOutcomeClick = (outcome: string, label: string, activities: any[]) => {
-    setModalTitle(label);
-    
-    // Remove duplicates by prospect_id
-    const unique = new Map();
-    activities.forEach(act => {
-      if (!unique.has(act.prospect_id)) {
-        unique.set(act.prospect_id, act);
-      }
+  const openModal = (outcome: string, activities: any[]) => {
+    const label = ACTIVITY_RESULTS[outcome as keyof typeof ACTIVITY_RESULTS] || outcome;
+    // deduplicate by prospect_id
+    const seen = new Map<string, any>();
+    activities.forEach((a) => {
+      if (!seen.has(a.prospect_id)) seen.set(a.prospect_id, a);
     });
-    
-    setModalData(Array.from(unique.values()));
-    setModalOpen(true);
+    setModal({ label, items: Array.from(seen.values()) });
   };
 
   return (
     <>
-      <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-sm p-6 shadow-sm h-full hover:shadow-lg transition-all duration-300">
-        <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-5 border-b border-gray-100 pb-3">Resultados</h2>
-        <div className="space-y-4">
-          {resultsArray.map((r) => {
-            const percentage = Math.round((r.count / total) * 100);
-            const label = ACTIVITY_RESULTS[r.outcome as keyof typeof ACTIVITY_RESULTS] || r.outcome;
-            
-            return (
-              <div 
-                key={r.outcome} 
-                className="group cursor-pointer" 
-                onClick={() => handleOutcomeClick(r.outcome, label, r.activities)}
-              >
-                <div className="flex justify-between text-sm mb-1 group-hover:bg-gray-50 -mx-2 px-2 py-0.5 rounded-sm transition-colors">
-                  <span className="font-medium text-gray-700 group-hover:text-gray-900">{label}</span>
-                  <span className="text-gray-500 font-bold">{r.count} <span className="font-normal text-xs ml-1 opacity-70">({percentage}%)</span></span>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-1.5">
-                  <div 
-                    className="bg-blue-600 h-1.5 rounded-full transition-all duration-500" 
-                    style={{ width: `${percentage}%` }}
-                  ></div>
-                </div>
-              </div>
-            );
-          })}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h2 className="text-[10px] font-bold tracking-[0.2em] text-gray-400 uppercase">Resultados</h2>
         </div>
+
+        {sorted.length === 0 ? (
+          <div className="px-5 py-8 text-center">
+            <p className="text-sm text-gray-400">Sin resultados registrados.</p>
+          </div>
+        ) : (
+          <div className="px-5 py-4 space-y-3">
+            {sorted.map(({ outcome, count, activities }) => {
+              const label = ACTIVITY_RESULTS[outcome as keyof typeof ACTIVITY_RESULTS] || outcome;
+              const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+              return (
+                <button
+                  key={outcome}
+                  onClick={() => openModal(outcome, activities)}
+                  className="w-full text-left group"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">{label}</span>
+                    <span className="text-sm font-semibold text-gray-900 tabular-nums">{count}</span>
+                  </div>
+                  <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gray-900 rounded-full transition-all duration-500 group-hover:bg-blue-600"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md transition-all duration-300">
-          <div className="bg-white/90 backdrop-blur-xl rounded-sm w-full max-w-xl max-h-[85vh] flex flex-col shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border border-white/50 border-gray-100 overflow-hidden ring-1 ring-black/5">
-            <div className="flex justify-between items-center px-6 py-5 border-b border-gray-100/50 bg-white/50">
+      {/* Modal */}
+      {modal && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/25 backdrop-blur-[2px] animate-in fade-in duration-200"
+          onClick={(e) => e.target === e.currentTarget && setModal(null)}
+        >
+          <div className="bg-white w-full sm:max-w-lg max-h-[85vh] flex flex-col rounded-t-2xl sm:rounded-xl shadow-2xl ring-1 ring-black/8 animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <div>
-                <h3 className="font-light text-2xl text-gray-900 tracking-tight">{modalTitle}</h3>
-                <p className="text-xs font-medium uppercase tracking-widest text-gray-400 mt-1">Prospectos únicos con este resultado</p>
+                <p className="text-[10px] font-semibold tracking-[0.15em] text-gray-400 uppercase mb-0.5">Prospectos únicos</p>
+                <h3 className="text-lg font-semibold text-gray-900">{modal.label}</h3>
               </div>
-              <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 p-2 rounded-sm transition-colors">
-                <X className="w-5 h-5" strokeWidth={1.5} />
+              <button
+                onClick={() => setModal(null)}
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="px-2 py-4 overflow-y-auto flex-1 custom-scrollbar">
-              <ul className="space-y-1">
-                {modalData.map((item, idx) => {
+            <div className="overflow-y-auto flex-1 py-2">
+              <ul>
+                {modal.items.map((item, idx) => {
                   const prospect = Array.isArray(item.prospects) ? item.prospects[0] : item.prospects;
                   if (!prospect) return null;
-                  
                   return (
-                    <li key={idx} className="group">
-                      <Link 
-                        href={`/prospects/${prospect.id}`} 
-                        onClick={() => setModalOpen(false)} 
-                        className="block px-4 py-3 hover:bg-gray-50/80 rounded-sm transition-all duration-200 border border-transparent hover:border-gray-100"
+                    <li key={idx}>
+                      <Link
+                        href={`/prospects/${prospect.id}`}
+                        onClick={() => setModal(null)}
+                        className="flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-colors group"
                       >
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">{prospect.company_name}</p>
-                            <div className="flex items-center text-xs text-gray-500 gap-3 mt-1 font-medium">
-                              {prospect.city && <span>📍 {prospect.city}</span>}
-                            </div>
-                          </div>
-                          <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-sm uppercase tracking-wider">
-                            Ver ficha
-                          </span>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                            {prospect.company_name}
+                          </p>
+                          {prospect.city && (
+                            <p className="text-xs text-gray-400 mt-0.5">{prospect.city}</p>
+                          )}
                         </div>
                       </Link>
                     </li>
