@@ -3,8 +3,8 @@ import { ACTIVITY_RESULTS } from '@/lib/constants';
 export function ResultBreakdown({ results }: { results: any[] }) {
   if (!results || results.length === 0) {
     return (
-      <div className="bg-white border rounded-lg p-5 shadow-sm h-full flex flex-col items-center justify-center text-center">
-        <p className="text-gray-500 text-sm">No hay resultados registrados en este período.</p>
+      <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-sm p-6 shadow-sm h-full flex flex-col items-center justify-center text-center">
+        <p className="text-gray-400 font-light text-sm tracking-wide">No hay resultados registrados.</p>
       </div>
     );
   }
@@ -12,8 +12,8 @@ export function ResultBreakdown({ results }: { results: any[] }) {
   const total = results.reduce((acc, curr) => acc + curr.count, 0);
 
   return (
-    <div className="bg-white border rounded-lg p-5 shadow-sm h-full">
-      <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">Resultados</h2>
+    <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-sm p-6 shadow-sm h-full hover:shadow-lg transition-all duration-300">
+      <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-5 border-b border-gray-100 pb-3">Resultados</h2>
       <div className="space-y-4">
         {results.map((r) => {
           const percentage = Math.round((r.count / total) * 100);

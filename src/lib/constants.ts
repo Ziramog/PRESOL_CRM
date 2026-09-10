@@ -1,13 +1,18 @@
 export const ACTIVITY_RESULTS = {
   no_answer: "No respondió",
   not_available: "No estaba",
+  decision_maker_unavailable: "Responsable no disponible",
   contact_made: "Contacto conseguido",
   interested: "Interesado",
   requested_info: "Pidió información",
   requested_quote: "Pidió cotización",
   follow_up: "Seguimiento",
+  follow_up_required: "Requiere seguimiento",
   not_interested: "Sin interés",
   invalid_data: "Datos incorrectos",
+  wrong_contact: "Contacto equivocado",
+  data_updated: "Datos actualizados",
+  opportunity_detected: "Oportunidad detectada",
   other: "Otro",
 } as const;
 

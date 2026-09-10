@@ -6,16 +6,16 @@ import { ACTIVITY_RESULTS } from '@/lib/constants';
 export function RecentActivity({ activities }: { activities: any[] }) {
   if (!activities || activities.length === 0) {
     return (
-      <div className="bg-white border rounded-lg p-5 shadow-sm h-full flex flex-col items-center justify-center text-center min-h-[300px]">
-        <p className="text-gray-500 text-sm">No hay actividades recientes en este período.</p>
+      <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-sm p-6 shadow-sm h-full flex flex-col items-center justify-center text-center min-h-[300px]">
+        <p className="text-gray-400 font-light text-sm tracking-wide">No hay actividades recientes.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border rounded-lg shadow-sm h-full flex flex-col">
-      <div className="p-5 border-b">
-        <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Actividad Reciente</h2>
+    <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-sm shadow-sm h-full flex flex-col hover:shadow-lg transition-all duration-300">
+      <div className="px-6 py-5 border-b border-gray-100">
+        <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Actividad Reciente</h2>
       </div>
       <div className="p-0 overflow-y-auto max-h-[400px]">
         <ul className="divide-y divide-gray-100">
