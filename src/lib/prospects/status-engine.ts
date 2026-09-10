@@ -2,10 +2,8 @@ import { ProspectStatus, ActivityResult } from '../constants';
 
 const STATUS_RANKING: Record<ProspectStatus, number> = {
   pending: 10,
-  attempted: 15,
-  contacted: 20,
-  visited: 30,
-  follow_up: 35,
+  in_progress: 20,
+  interested: 30,
   opportunity: 40,
   quote: 50,
   customer: 60,
@@ -22,27 +20,13 @@ export function calculateNewStatus(
   outcome: string | null
 ): ProspectStatus | null {
   const current = (currentStatus as ProspectStatus) || 'pending';
-  let candidateStatus: ProspectStatus | null = null;
+  let candidateStatus: ProspectStatus | null = 'in_progress'; // Cualquier actividad válida => in_progress (como base)
 
-  if (activityType === 'visit') {
-    candidateStatus = 'visited';
-  } else if (activityType === 'call' || activityType === 'whatsapp' || activityType === 'email') {
-    if (outcome === 'contact_made' || outcome === 'requested_info') {
-      candidateStatus = 'contacted';
-    } else if (outcome === 'interested' || outcome === 'follow_up') {
-      candidateStatus = 'follow_up';
-    } else if (outcome === 'requested_quote') {
-      candidateStatus = 'quote';
-    } else if (outcome === 'no_answer' || outcome === 'not_available') {
-      candidateStatus = 'attempted';
-    }
-  }
-
-  if (outcome === 'invalid_data') {
-    candidateStatus = 'discarded'; // Example rule, maybe just not_interested
-  }
-  
-  if (outcome === 'not_interested') {
+  if (outcome === 'interested') {
+    candidateStatus = 'interested';
+  } else if (outcome === 'requested_quote') {
+    candidateStatus = 'quote';
+  } else if (outcome === 'not_interested' || outcome === 'invalid_data') {
     candidateStatus = 'discarded';
   }
 

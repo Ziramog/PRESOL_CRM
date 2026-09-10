@@ -3,6 +3,7 @@ import { KPIGrid } from '@/components/dashboard/KPIGrid';
 import { ResultBreakdown } from '@/components/dashboard/ResultBreakdown';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
+import { DashboardCalendar } from '@/components/dashboard/DashboardCalendar';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +34,8 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
       <KPIGrid data={data} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-6">
+          <DashboardCalendar />
           <ResultBreakdown results={data.results} />
         </div>
         <div className="lg:col-span-2">

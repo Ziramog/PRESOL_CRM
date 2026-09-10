@@ -43,7 +43,7 @@ export function KPIGrid({ data }: { data: any }) {
     <>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card kpiKey="visited" title="Visitados" icon={Users} value={data.visited_unique} colorClass="text-blue-500" />
-        <Card kpiKey="contacted" title="Contactados" icon={PhoneCall} value={data.contacted_unique} colorClass="text-amber-500" />
+        <Card kpiKey="effective_contacts" title="Contactos Efectivos" icon={PhoneCall} value={data.effective_contacts_unique ?? data.contacted_unique} colorClass="text-amber-500" />
         <Card kpiKey="interested" title="Interesados" icon={HeartHandshake} value={data.interested_unique} colorClass="text-emerald-500" />
         <Card kpiKey="opportunities" title="Oportunidades" icon={Briefcase} value={data.opportunities} colorClass="text-indigo-500" />
         

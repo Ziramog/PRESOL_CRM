@@ -1,20 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createActivity, updateActivity } from '@/app/actions/activities';
 import { updateStopStatus } from '@/app/actions/trips';
 import { X } from 'lucide-react';
-
-const OUTCOMES = [
-  { id: 'contacted', label: 'Contactado' },
-  { id: 'no_answer', label: 'No atendió' },
-  { id: 'decision_maker_unavailable', label: 'Decisor ausente' },
-  { id: 'interested', label: 'Interesado' },
-  { id: 'quote_requested', label: 'Pidió cotización' },
-  { id: 'follow_up_required', label: 'Requiere seguimiento' },
-  { id: 'not_interested', label: 'Sin interés' },
-  { id: 'opportunity_detected', label: 'Oportunidad detectada' },
-];
+import { ACTIVITY_RESULTS, OUTCOMES_BY_ACTIVITY, ActivityResult } from '@/lib/constants';
 
 const formatDateTimeLocal = (dateStr?: string) => {
   if (!dateStr) return '';
@@ -35,11 +25,25 @@ export function ActivityForm({
   activityToEdit?: any
 }) {
   const [isPending, setIsPending] = useState(false);
+  const [activityType, setActivityType] = useState(activityToEdit?.type || 'visit');
   const [outcome, setOutcome] = useState(activityToEdit?.outcome || '');
   const [error, setError] = useState<string | null>(null);
 
+  // If activityType changes and the current outcome is not valid for this type, clear it.
+  useEffect(() => {
+    const validOutcomes = OUTCOMES_BY_ACTIVITY[activityType] || [];
+    if (outcome && !validOutcomes.includes(outcome as ActivityResult)) {
+      setOutcome('');
+    }
+  }, [activityType, outcome]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!outcome) {
+      setError('Por favor, selecciona un resultado.');
+      return;
+    }
+    
     setIsPending(true);
     setError(null);
     
@@ -70,6 +74,8 @@ export function ActivityForm({
     }
   };
 
+  const validOutcomes = OUTCOMES_BY_ACTIVITY[activityType] || [];
+
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-white/60 backdrop-blur-md transition-all">
       <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-sm w-full max-w-lg shadow-2xl overflow-hidden ring-1 ring-black/5 animate-in fade-in zoom-in-95">
@@ -94,7 +100,8 @@ export function ActivityForm({
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tipo de interacción</label>
             <select 
               name="type" 
-              defaultValue={activityToEdit?.type || 'visit'}
+              value={activityType}
+              onChange={(e) => setActivityType(e.target.value)}
               required 
               className="w-full text-sm rounded-sm border border-gray-200 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 py-2.5 px-3 bg-white outline-none"
             >
@@ -110,18 +117,18 @@ export function ActivityForm({
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Resultado</label>
             <div className="grid grid-cols-2 gap-2">
-              {OUTCOMES.map((o) => (
+              {validOutcomes.map((o) => (
                 <button
-                  key={o.id}
+                  key={o}
                   type="button"
-                  onClick={() => setOutcome(o.id)}
+                  onClick={() => setOutcome(o)}
                   className={`text-xs px-3 py-2 border rounded-sm font-medium transition-colors text-center cursor-pointer ${
-                    outcome === o.id 
+                    outcome === o 
                       ? 'bg-blue-50 border-blue-600 text-blue-700 font-semibold' 
                       : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
                   }`}
                 >
-                  {o.label}
+                  {ACTIVITY_RESULTS[o as ActivityResult] || o}
                 </button>
               ))}
             </div>

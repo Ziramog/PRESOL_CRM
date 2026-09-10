@@ -42,12 +42,11 @@ export async function getDashboardKPIList(kpi: string, period: string) {
         .lte('activity_at', toIso);
       break;
     
-    case 'contacted':
+    case 'effective_contacts':
       query = supabase
         .from('activities')
         .select('prospect_id, prospects(id, company_name, city)')
-        .in('type', ['visit', 'call', 'email', 'whatsapp'])
-        .not('outcome', 'in', '("no_answer","invalid_data","not_available","wrong_contact","decision_maker_unavailable")')
+        .not('outcome', 'in', '("no_answer","closed","not_available","invalid_data")')
         .gte('activity_at', fromIso)
         .lte('activity_at', toIso);
       break;
@@ -56,7 +55,7 @@ export async function getDashboardKPIList(kpi: string, period: string) {
       query = supabase
         .from('activities')
         .select('prospect_id, prospects(id, company_name, city)')
-        .in('outcome', ['interested', 'requested_info', 'requested_quote', 'follow_up', 'opportunity_detected', 'follow_up_required'])
+        .in('outcome', ['interested', 'requested_info', 'requested_quote', 'follow_up'])
         .gte('activity_at', fromIso)
         .lte('activity_at', toIso);
       break;
@@ -97,7 +96,7 @@ export async function getDashboardKPIList(kpi: string, period: string) {
   }
 
   // Deduplicate by prospect_id (unless it's opportunities or tasks where multiple per prospect makes sense)
-  if (['visited', 'contacted', 'interested'].includes(kpi)) {
+  if (['visited', 'effective_contacts', 'interested'].includes(kpi)) {
     const unique = new Map();
     data.forEach(item => {
       if (!unique.has(item.prospect_id)) {
@@ -108,4 +107,38 @@ export async function getDashboardKPIList(kpi: string, period: string) {
   }
 
   return data;
+}
+
+export async function getActiveDates(year: number, month: number) {
+  const supabase = await createAdminClient();
+  
+  const startDate = new Date(year, month, 1);
+  const endDate = endOfMonth(startDate);
+  
+  const fromIso = fromZonedTime(startOfDay(startDate), TZ).toISOString();
+  const toIso = fromZonedTime(endOfDay(endDate), TZ).toISOString();
+  
+  const { data, error } = await supabase
+    .from('activities')
+    .select('activity_at')
+    .is('deleted_at', null)
+    .gte('activity_at', fromIso)
+    .lte('activity_at', toIso);
+    
+  if (error) {
+    console.error('Error fetching active dates:', error);
+    return [];
+  }
+  
+  const uniqueDates = new Set<string>();
+  data.forEach((row) => {
+    if (row.activity_at) {
+      const zonedDate = toZonedTime(new Date(row.activity_at), TZ);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const dateStr = `${zonedDate.getFullYear()}-${pad(zonedDate.getMonth() + 1)}-${pad(zonedDate.getDate())}`;
+      uniqueDates.add(dateStr);
+    }
+  });
+  
+  return Array.from(uniqueDates);
 }

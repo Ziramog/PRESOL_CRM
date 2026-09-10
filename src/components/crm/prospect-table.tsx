@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PROSPECT_STATUS } from '@/lib/constants';
 
 export function ProspectTable({ prospects }: { prospects: any[] }) {
   return (
@@ -50,7 +51,7 @@ export function ProspectTable({ prospects }: { prospects: any[] }) {
                 </td>
                 <td className="px-6 py-4">
                   <span className="text-xs px-2 py-1 bg-gray-100 rounded-md text-gray-600 font-medium">
-                    {prospect.contact_status}
+                    {PROSPECT_STATUS[prospect.contact_status as keyof typeof PROSPECT_STATUS] || prospect.contact_status}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">

@@ -7,18 +7,9 @@ import { ActivityForm } from './activity-form';
 import { TaskForm } from './task-form';
 import { updateProspectStatus, deleteProspect } from '@/app/actions/prospects';
 
-const STATUS_OPTIONS = [
-  { value: 'pending', label: 'Pendiente' },
-  { value: 'attempted', label: 'Intentado' },
-  { value: 'contacted', label: 'Contactado' },
-  { value: 'visited', label: 'Visitado' },
-  { value: 'follow_up', label: 'En Seguimiento' },
-  { value: 'opportunity', label: 'Con Oportunidad' },
-  { value: 'customer', label: 'Cliente Activo' },
-  { value: 'not_interested', label: 'No Interesado' },
-  { value: 'discarded', label: 'Descartado' },
-  { value: 'wrong_contact', label: 'Dato Erróneo' }
-];
+import { PROSPECT_STATUS } from '@/lib/constants';
+
+const STATUS_OPTIONS = Object.entries(PROSPECT_STATUS).map(([value, label]) => ({ value, label }));
 
 export function ProspectHeader({ prospect }: { prospect: any }) {
   const router = useRouter();
@@ -84,10 +75,12 @@ export function ProspectHeader({ prospect }: { prospect: any }) {
                   disabled={isPending}
                   className={`text-xs px-2 py-0.5 pl-2 pr-6 rounded font-medium appearance-none cursor-pointer border transition-colors outline-none
                     ${isPending ? 'opacity-50' : ''}
-                    ${prospect.contact_status === 'visited' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                    ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                      prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                      prospect.contact_status === 'opportunity' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                      prospect.contact_status === 'quote' ? 'bg-purple-50 text-purple-700 border-purple-200' :
                       prospect.contact_status === 'customer' ? 'bg-green-50 text-green-700 border-green-200' :
-                      prospect.contact_status === 'contacted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                      prospect.contact_status === 'discarded' ? 'bg-red-50 text-red-700 border-red-200' :
+                      prospect.contact_status === 'discarded' ? 'bg-rose-50 text-rose-700 border-rose-200' :
                       'bg-gray-50 text-gray-700 border-gray-200'
                     }
                   `}

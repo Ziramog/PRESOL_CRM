@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { MapPin, Phone } from 'lucide-react';
+import { PROSPECT_STATUS } from '@/lib/constants';
 
 export function ProspectCard({ prospect }: { prospect: any }) {
   return (
@@ -38,10 +39,7 @@ export function ProspectCard({ prospect }: { prospect: any }) {
           {prospect.commercial_category || 'Sin categoría'}
         </span>
         <span className="text-xs px-2 py-1 bg-gray-100 rounded-md text-gray-600 font-medium">
-          {prospect.contact_status === 'pending' ? 'Pendiente' : 
-           prospect.contact_status === 'visited' ? 'Visitado' :
-           prospect.contact_status === 'contacted' ? 'Contactado' :
-           prospect.contact_status}
+          {PROSPECT_STATUS[prospect.contact_status as keyof typeof PROSPECT_STATUS] || prospect.contact_status}
         </span>
       </div>
     </Link>
