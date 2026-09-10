@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Map, Users, CheckSquare, MoreHorizontal, Home } from 'lucide-react';
+import { Map, Users, CheckSquare, MoreHorizontal, Home, BarChart3 } from 'lucide-react';
 
 const items = [
   { name: 'Inicio', href: '/dashboard', icon: Home },
   { name: 'Ruta', href: '/trips', icon: Map },
-  { name: 'Prospectos', href: '/prospects', icon: Users },
-  { name: 'Tareas', href: '/tasks', icon: CheckSquare },
+  { name: 'CRM', href: '/prospects', icon: Users },
+  { name: 'Dir.', href: '/direction', icon: BarChart3 },
   { name: 'Más', href: '/settings', icon: MoreHorizontal },
 ];
 

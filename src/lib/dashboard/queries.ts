@@ -58,3 +58,37 @@ export async function getDashboardData(params: DashboardParams) {
 
   return data;
 }
+
+export async function getDirectionData(params: DashboardParams) {
+  const supabase = await createAdminClient();
+  
+  const now = new Date();
+  const zonedNow = toZonedTime(now, TZ);
+  
+  let fromDate = startOfDay(zonedNow);
+  let toDate = endOfDay(zonedNow);
+
+  if (params.period === 'yesterday') {
+    const yesterday = subDays(zonedNow, 1);
+    fromDate = startOfDay(yesterday);
+    toDate = endOfDay(yesterday);
+  } else if (params.period === 'week') {
+    fromDate = startOfWeek(zonedNow, { weekStartsOn: 1 });
+    toDate = endOfWeek(zonedNow, { weekStartsOn: 1 });
+  } else if (params.period === 'month') {
+    fromDate = startOfMonth(zonedNow);
+    toDate = endOfMonth(zonedNow);
+  }
+
+  const { data, error } = await supabase.rpc('get_direction_dashboard', {
+    from_date: fromDate.toISOString(),
+    to_date: toDate.toISOString(),
+  });
+
+  if (error) {
+    console.error('Error fetching direction data:', error);
+    throw new Error('Error fetching direction data');
+  }
+
+  return data;
+}

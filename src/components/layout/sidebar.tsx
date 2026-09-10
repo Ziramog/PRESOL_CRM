@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Map, Users, CheckSquare, Settings, Home, Target } from 'lucide-react';
+import { Map, Users, CheckSquare, Settings, Home, Target, BarChart3 } from 'lucide-react';
 import Image from 'next/image';
 
 const items = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Prospectos', href: '/prospects', icon: Users },
   { name: 'Giras', href: '/trips', icon: Map },
+  { name: 'Dirección', href: '/direction', icon: BarChart3 },
   { name: 'Tareas', href: '/tasks', icon: CheckSquare },
   { name: 'Oportunidades', href: '/opportunities', icon: Target },
   { name: 'Configuración', href: '/settings', icon: Settings },
