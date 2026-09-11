@@ -17,25 +17,25 @@ export default async function QuotesListPage() {
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Cotizaciones</h1>
           <p className="text-sm text-gray-500">Gestión de cotizaciones del Cost Engine</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Link 
             href="/quotes/settings" 
-            className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+            className="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 whitespace-nowrap"
           >
             <Settings className="w-4 h-4 mr-2" />
             Configuración
           </Link>
           <Link 
             href="/quotes/new" 
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 whitespace-nowrap"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Nueva Cotización
+            Nueva
           </Link>
         </div>
       </div>
