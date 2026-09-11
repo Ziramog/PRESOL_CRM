@@ -83,12 +83,18 @@ export function ProspectForm({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Rubro / Sector</label>
-              <select name="sector" className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white">
-                <option value="">Seleccionar rubro (opcional)...</option>
+              <input 
+                type="text" 
+                name="sector" 
+                list="sectors-list"
+                placeholder="Ej: Agro, Minería, Construcción..."
+                className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white"
+              />
+              <datalist id="sectors-list">
                 {availableSectors.map(s => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s} />
                 ))}
-              </select>
+              </datalist>
             </div>
 
             <div>

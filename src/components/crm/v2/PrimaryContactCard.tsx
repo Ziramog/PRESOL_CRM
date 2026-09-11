@@ -1,4 +1,4 @@
-import { User, Phone, Mail } from 'lucide-react';
+import { User, Phone, Mail, MessageCircle } from 'lucide-react';
 
 export function PrimaryContactCard({ contacts, prospect }: { contacts: any[], prospect: any }) {
   const primaryContact = contacts.find((c) => c.is_primary) || contacts[0];
@@ -21,9 +21,20 @@ export function PrimaryContactCard({ contacts, prospect }: { contacts: any[], pr
           
           <div className="space-y-3 mt-5 text-sm font-medium text-gray-600 pl-[3.25rem]">
             {primaryContact.phone && (
-              <div className="flex items-center">
-                <Phone className="w-4 h-4 mr-3 text-gray-400" strokeWidth={1.5} />
-                <a href={`tel:${primaryContact.phone}`} className="hover:text-blue-600 transition-colors">{primaryContact.phone}</a>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Phone className="w-4 h-4 mr-3 text-gray-400" strokeWidth={1.5} />
+                  <a href={`tel:${primaryContact.phone}`} className="hover:text-blue-600 transition-colors">{primaryContact.phone}</a>
+                </div>
+                <a 
+                  href={`https://wa.me/${primaryContact.phone.replace(/\\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs text-green-600 bg-green-50/80 border border-green-100 px-2 py-1 rounded-sm hover:bg-green-100 transition-colors"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" strokeWidth={2} />
+                  WhatsApp
+                </a>
               </div>
             )}
             {primaryContact.email && (
@@ -37,9 +48,20 @@ export function PrimaryContactCard({ contacts, prospect }: { contacts: any[], pr
       ) : (
         <div>
           {prospect.primary_phone ? (
-            <div className="flex items-center text-sm font-medium text-gray-600">
-              <Phone className="w-4 h-4 mr-3 text-gray-400" strokeWidth={1.5} />
-              <a href={`tel:${prospect.primary_phone}`} className="hover:text-blue-600 transition-colors">{prospect.primary_phone}</a>
+            <div className="flex items-center justify-between text-sm font-medium text-gray-600">
+              <div className="flex items-center">
+                <Phone className="w-4 h-4 mr-3 text-gray-400" strokeWidth={1.5} />
+                <a href={`tel:${prospect.primary_phone}`} className="hover:text-blue-600 transition-colors">{prospect.primary_phone}</a>
+              </div>
+              <a 
+                href={`https://wa.me/${prospect.primary_phone.replace(/\\D/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs text-green-600 bg-green-50/80 border border-green-100 px-2 py-1 rounded-sm hover:bg-green-100 transition-colors"
+              >
+                <MessageCircle className="w-3.5 h-3.5" strokeWidth={2} />
+                WhatsApp
+              </a>
             </div>
           ) : (
             <p className="text-sm font-light text-gray-400">No hay contactos registrados.</p>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Mail, UserPlus, Info } from 'lucide-react';
+import { Phone, Mail, UserPlus, Info, MessageCircle } from 'lucide-react';
 import { ContactForm } from './contact-form';
 
 export function ProspectContacts({ contacts, prospect }: { contacts: any[], prospect: any }) {
@@ -64,9 +64,20 @@ export function ProspectContacts({ contacts, prospect }: { contacts: any[], pros
                 
                 <div className="space-y-1.5 mt-3">
                   {contact.phone && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Phone className="w-3.5 h-3.5 text-gray-400" />
-                      <a href={`tel:${contact.phone}`} className="hover:text-blue-600">{contact.phone}</a>
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-3.5 h-3.5 text-gray-400" />
+                        <a href={`tel:${contact.phone}`} className="hover:text-blue-600">{contact.phone}</a>
+                      </div>
+                      <a 
+                        href={`https://wa.me/${contact.phone.replace(/\\D/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded hover:bg-green-100 transition-colors"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        WhatsApp
+                      </a>
                     </div>
                   )}
                   {contact.email && (
