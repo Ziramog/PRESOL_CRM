@@ -156,7 +156,7 @@ export function ProspectHeader({
         </div>
         
         {/* Acciones de gestión */}
-        <div className="flex items-center overflow-x-auto pb-2 -mx-5 px-5 md:mx-0 md:px-0 gap-2 mt-6 border-t border-gray-100 pt-5 scrollbar-hide">
+        <div className="flex flex-wrap items-center gap-2 mt-6 border-t border-gray-100 pt-5">
           <button 
             onClick={() => setShowActivityForm(true)}
             className="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-sm text-xs font-semibold tracking-wider uppercase hover:bg-blue-700 transition-colors shadow-sm active:scale-95"
