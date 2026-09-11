@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { ConfigurationCostSnapshot, PricingParametersSnapshot } from './types';
 
 // Utility to create a supabase client inside actions/API
 export async function getCostEngineClient() {
-  return await createClient();
+  return createAdminClient();
 }
 
 export async function getPricingParameters(): Promise<PricingParametersSnapshot> {
