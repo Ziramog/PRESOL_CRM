@@ -89,7 +89,7 @@ export function QuoteForm({ configurations, clients }: { configurations: any[], 
 
         <div>
           <h3 className="text-lg font-medium mb-4">Datos Comerciales</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Cliente</label>
               <select 
@@ -117,7 +117,7 @@ export function QuoteForm({ configurations, clients }: { configurations: any[], 
 
         <div>
           <h3 className="text-lg font-medium mb-4">Rutas y Distancias (Km)</h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Base → Retiro</label>
               <input type="number" className="w-full border rounded p-2" value={formData.kmBaseToPickup} onChange={e => handleChange('kmBaseToPickup', Number(e.target.value))} />
@@ -135,7 +135,7 @@ export function QuoteForm({ configurations, clients }: { configurations: any[], 
 
         <div>
           <h3 className="text-lg font-medium mb-4">Tiempos (Horas)</h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Carga</label>
               <input type="number" className="w-full border rounded p-2" value={formData.loadingHours} onChange={e => handleChange('loadingHours', Number(e.target.value))} />
@@ -153,7 +153,7 @@ export function QuoteForm({ configurations, clients }: { configurations: any[], 
 
         <div>
           <h3 className="text-lg font-medium mb-4">Carga y Dimensiones</h3>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Peso (kg)</label>
               <input type="number" className="w-full border rounded p-2" value={formData.cargoWeightKg} onChange={e => handleChange('cargoWeightKg', Number(e.target.value))} />
@@ -167,7 +167,7 @@ export function QuoteForm({ configurations, clients }: { configurations: any[], 
               <input type="number" step="0.1" className="w-full border rounded p-2" value={formData.cargoWidthM} onChange={e => handleChange('cargoWidthM', Number(e.target.value))} />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Alto Total (m)</label>
+              <label className="block text-sm font-medium mb-1">Alto (m)</label>
               <input type="number" step="0.1" className="w-full border rounded p-2" value={formData.totalTransportHeightM} onChange={e => handleChange('totalTransportHeightM', Number(e.target.value))} />
             </div>
           </div>
@@ -175,7 +175,7 @@ export function QuoteForm({ configurations, clients }: { configurations: any[], 
 
         <div>
           <h3 className="text-lg font-medium mb-4">Servicios Adicionales</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="flex items-center space-x-2">
                 <input type="checkbox" checked={formData.craneLoading} onChange={e => handleChange('craneLoading', e.target.checked)} />
