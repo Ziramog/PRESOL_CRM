@@ -217,25 +217,27 @@ function PeriodCard({
   return (
     <div
       className={[
-        'flex flex-col rounded-none transition-all duration-300',
+        'flex flex-col rounded-none transition-all duration-300 relative',
         isPrimary
-          ? 'bg-[#0f172a] border-[#1e293b] text-white shadow-2xl' // slate-950/900 for a premium dark look
+          ? 'bg-white border-gray-200 shadow-[0_8px_30px_rgb(0,0,0,0.08)] ring-1 ring-blue-600/10' 
           : 'bg-white border-gray-200 shadow-sm hover:shadow-md',
         'border'
       ].join(' ')}
     >
+      {isPrimary && <div className="absolute top-0 left-0 w-full h-1 bg-blue-600" />}
+      
       {/* Card header */}
-      <div className={['px-6 pt-6 pb-4 border-b', isPrimary ? 'border-[#1e293b]' : 'border-gray-100'].join(' ')}>
+      <div className={['px-6 pt-6 pb-4 border-b', isPrimary ? 'border-gray-100' : 'border-gray-100'].join(' ')}>
         <div className="flex items-start justify-between">
           <div>
-            <p className={['text-[11px] font-bold tracking-[0.25em] uppercase mb-1.5', isPrimary ? 'text-blue-400' : 'text-gray-400'].join(' ')}>
+            <p className={['text-[11px] font-bold tracking-[0.25em] uppercase mb-1.5', isPrimary ? 'text-blue-600' : 'text-gray-400'].join(' ')}>
               {title}
             </p>
-            <p className={['text-sm font-medium capitalize', isPrimary ? 'text-gray-300' : 'text-gray-600'].join(' ')}>
+            <p className={['text-sm font-medium capitalize', isPrimary ? 'text-gray-900' : 'text-gray-600'].join(' ')}>
               {dateLabel}
             </p>
           </div>
-          {isPrimary && <TrendingUp className="w-5 h-5 text-blue-400" strokeWidth={1.5} />}
+          {isPrimary && <TrendingUp className="w-5 h-5 text-blue-600" strokeWidth={1.5} />}
         </div>
       </div>
 
@@ -248,14 +250,14 @@ function PeriodCard({
             className={[
               'w-full flex items-center justify-between py-2 px-3 rounded-none text-left transition-colors group',
               isPrimary
-                ? 'hover:bg-slate-800 active:bg-slate-700'
+                ? 'hover:bg-blue-50 active:bg-blue-100'
                 : 'hover:bg-gray-50 active:bg-gray-100',
             ].join(' ')}
           >
-            <span className={['text-sm transition-colors', isPrimary ? 'text-slate-300 group-hover:text-white' : 'text-gray-500 group-hover:text-gray-900'].join(' ')}>
+            <span className={['text-sm transition-colors', isPrimary ? 'text-gray-600 group-hover:text-blue-700' : 'text-gray-500 group-hover:text-gray-900'].join(' ')}>
               {label}
             </span>
-            <span className={['text-sm font-bold tabular-nums', isPrimary ? 'text-white' : 'text-gray-900'].join(' ')}>
+            <span className={['text-sm font-bold tabular-nums', isPrimary ? 'text-gray-900 group-hover:text-blue-900' : 'text-gray-900'].join(' ')}>
               {value}
             </span>
           </button>
@@ -263,11 +265,11 @@ function PeriodCard({
       </div>
 
       {/* Rate footer */}
-      <div className={['px-6 py-4 border-t flex items-center justify-between', isPrimary ? 'border-[#1e293b] bg-slate-900' : 'border-gray-100 bg-gray-50/50'].join(' ')}>
-        <span className={['text-[10px] font-bold tracking-[0.2em] uppercase', isPrimary ? 'text-slate-400' : 'text-gray-400'].join(' ')}>
+      <div className={['px-6 py-4 border-t flex items-center justify-between', isPrimary ? 'border-gray-100 bg-blue-50/30' : 'border-gray-100 bg-gray-50/50'].join(' ')}>
+        <span className={['text-[10px] font-bold tracking-[0.2em] uppercase', isPrimary ? 'text-blue-600/70' : 'text-gray-400'].join(' ')}>
           Tasa de contacto
         </span>
-        <span className={['text-sm font-bold', isPrimary ? 'text-emerald-400' : 'text-emerald-600'].join(' ')}>
+        <span className={['text-sm font-bold', isPrimary ? 'text-blue-600' : 'text-emerald-600'].join(' ')}>
           {rate(d.effective_contacts, d.visited)}
         </span>
       </div>

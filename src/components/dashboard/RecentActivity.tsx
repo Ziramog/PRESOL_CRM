@@ -30,8 +30,13 @@ const TYPE_DOT: Record<string, string> = {
 export function RecentActivity({ activities }: { activities: any[] }) {
   if (!activities || activities.length === 0) {
     return (
-      <div className="bg-white border border-gray-200 rounded-none shadow-sm px-6 py-10 text-center h-full">
-        <p className="text-sm text-gray-400">Todavía no hay actividad en este período.</p>
+      <div className="bg-white border border-gray-200 rounded-none shadow-sm h-full flex flex-col">
+        <div className="px-6 py-4 border-b border-gray-100">
+          <h2 className="text-xs font-bold tracking-[0.15em] text-gray-900 uppercase">Actividad reciente</h2>
+        </div>
+        <div className="px-6 py-10 text-center flex-1 flex flex-col items-center justify-center">
+          <p className="text-sm text-gray-400">Todavía no hay actividad en este período.</p>
+        </div>
       </div>
     );
   }
