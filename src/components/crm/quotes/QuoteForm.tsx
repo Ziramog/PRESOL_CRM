@@ -120,15 +120,15 @@ export function QuoteForm({ configurations, clients }: { configurations: any[], 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Base → Retiro</label>
-              <input type="number" className="w-full border rounded p-2" value={formData.kmBaseToPickup} onChange={e => handleChange('kmBaseToPickup', Number(e.target.value))} />
+              <input type="number" inputMode="decimal" className="w-full border rounded p-2" value={formData.kmBaseToPickup} onChange={e => handleChange('kmBaseToPickup', Number(e.target.value))} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Retiro → Entrega</label>
-              <input type="number" className="w-full border rounded p-2" value={formData.kmPickupToDelivery} onChange={e => handleChange('kmPickupToDelivery', Number(e.target.value))} />
+              <input type="number" inputMode="decimal" className="w-full border rounded p-2" value={formData.kmPickupToDelivery} onChange={e => handleChange('kmPickupToDelivery', Number(e.target.value))} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Entrega → Base</label>
-              <input type="number" className="w-full border rounded p-2" value={formData.kmDeliveryToBase} onChange={e => handleChange('kmDeliveryToBase', Number(e.target.value))} />
+              <input type="number" inputMode="decimal" className="w-full border rounded p-2" value={formData.kmDeliveryToBase} onChange={e => handleChange('kmDeliveryToBase', Number(e.target.value))} />
             </div>
           </div>
         </div>
@@ -138,15 +138,15 @@ export function QuoteForm({ configurations, clients }: { configurations: any[], 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Carga</label>
-              <input type="number" className="w-full border rounded p-2" value={formData.loadingHours} onChange={e => handleChange('loadingHours', Number(e.target.value))} />
+              <input type="number" inputMode="decimal" className="w-full border rounded p-2" value={formData.loadingHours} onChange={e => handleChange('loadingHours', Number(e.target.value))} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Descarga</label>
-              <input type="number" className="w-full border rounded p-2" value={formData.unloadingHours} onChange={e => handleChange('unloadingHours', Number(e.target.value))} />
+              <input type="number" inputMode="decimal" className="w-full border rounded p-2" value={formData.unloadingHours} onChange={e => handleChange('unloadingHours', Number(e.target.value))} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Espera</label>
-              <input type="number" className="w-full border rounded p-2" value={formData.waitingHours} onChange={e => handleChange('waitingHours', Number(e.target.value))} />
+              <input type="number" inputMode="decimal" className="w-full border rounded p-2" value={formData.waitingHours} onChange={e => handleChange('waitingHours', Number(e.target.value))} />
             </div>
           </div>
         </div>
@@ -156,19 +156,19 @@ export function QuoteForm({ configurations, clients }: { configurations: any[], 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Peso (kg)</label>
-              <input type="number" className="w-full border rounded p-2" value={formData.cargoWeightKg} onChange={e => handleChange('cargoWeightKg', Number(e.target.value))} />
+              <input type="number" inputMode="decimal" className="w-full border rounded p-2" value={formData.cargoWeightKg} onChange={e => handleChange('cargoWeightKg', Number(e.target.value))} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Largo (m)</label>
-              <input type="number" step="0.1" className="w-full border rounded p-2" value={formData.cargoLengthM} onChange={e => handleChange('cargoLengthM', Number(e.target.value))} />
+              <input type="number" inputMode="decimal" step="0.1" className="w-full border rounded p-2" value={formData.cargoLengthM} onChange={e => handleChange('cargoLengthM', Number(e.target.value))} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Ancho (m)</label>
-              <input type="number" step="0.1" className="w-full border rounded p-2" value={formData.cargoWidthM} onChange={e => handleChange('cargoWidthM', Number(e.target.value))} />
+              <input type="number" inputMode="decimal" step="0.1" className="w-full border rounded p-2" value={formData.cargoWidthM} onChange={e => handleChange('cargoWidthM', Number(e.target.value))} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Alto (m)</label>
-              <input type="number" step="0.1" className="w-full border rounded p-2" value={formData.totalTransportHeightM} onChange={e => handleChange('totalTransportHeightM', Number(e.target.value))} />
+              <input type="number" inputMode="decimal" step="0.1" className="w-full border rounded p-2" value={formData.totalTransportHeightM} onChange={e => handleChange('totalTransportHeightM', Number(e.target.value))} />
             </div>
           </div>
         </div>
@@ -186,7 +186,7 @@ export function QuoteForm({ configurations, clients }: { configurations: any[], 
                 <span>Descarga con hidrogrúa</span>
               </label>
               <label className="block text-sm font-medium">Horas Hidrogrúa</label>
-              <input type="number" className="w-full border rounded p-2" value={formData.craneHours} onChange={e => handleChange('craneHours', Number(e.target.value))} />
+              <input type="number" inputMode="decimal" className="w-full border rounded p-2" value={formData.craneHours} onChange={e => handleChange('craneHours', Number(e.target.value))} />
             </div>
             <div className="space-y-2">
               <label className="flex items-center space-x-2">
@@ -194,7 +194,7 @@ export function QuoteForm({ configurations, clients }: { configurations: any[], 
                 <span>Uso de malacate</span>
               </label>
               <label className="block text-sm font-medium">Horas Malacate</label>
-              <input type="number" className="w-full border rounded p-2" value={formData.winchHours} onChange={e => handleChange('winchHours', Number(e.target.value))} />
+              <input type="number" inputMode="decimal" className="w-full border rounded p-2" value={formData.winchHours} onChange={e => handleChange('winchHours', Number(e.target.value))} />
             </div>
           </div>
         </div>
@@ -235,6 +235,7 @@ export function QuoteForm({ configurations, clients }: { configurations: any[], 
                 <label className="block text-sm font-medium mb-1">Precio Final (Vendedor)</label>
                 <input 
                   type="number" 
+                  inputMode="decimal"
                   className="w-full border rounded p-2 text-lg font-bold" 
                   value={formData.finalSellerPrice || calculation.recommendedPrice} 
                   onChange={e => handleChange('finalSellerPrice', Number(e.target.value))} 
