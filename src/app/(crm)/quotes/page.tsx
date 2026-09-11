@@ -1,11 +1,19 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import { Plus, FileText, CheckCircle, XCircle, Settings } from 'lucide-react';
+import { Plus, FileText, Settings, Search } from 'lucide-react';
+import { QuoteCard } from '@/components/crm/quotes/QuoteCard';
 
-export default async function QuotesListPage() {
+export default async function QuotesListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const supabase = await createClient();
+  const params = await searchParams;
+  const search = typeof params.search === 'string' ? params.search : '';
+  const status = typeof params.status === 'string' ? params.status : '';
   
-  const { data: quotes, error } = await supabase
+  let query = supabase
     .from('quotes')
     .select(`
       id, quote_number, quote_date, status, valid_until, 
@@ -15,9 +23,28 @@ export default async function QuotesListPage() {
     `)
     .order('quote_date', { ascending: false });
 
+  if (search) {
+    // We search by quote_number. If we wanted to search by prospect company_name, we'd need an inner join or ilike on prospects
+    query = query.ilike('quote_number', `%${search}%`);
+  }
+
+  if (status) {
+    query = query.eq('status', status);
+  }
+
+  const { data: quotes, error } = await query;
+
+  // Filter in memory for client company name if search exists
+  const filteredQuotes = search 
+    ? quotes?.filter((q: any) => 
+        q.quote_number.toLowerCase().includes(search.toLowerCase()) || 
+        q.client?.company_name.toLowerCase().includes(search.toLowerCase())
+      )
+    : quotes;
+
   return (
-    <div className="p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div className="p-4 md:p-6 pb-24 md:pb-6 space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Cotizaciones</h1>
           <p className="text-sm text-gray-500">Gestión de cotizaciones del Cost Engine</p>
@@ -40,7 +67,56 @@ export default async function QuotesListPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-x-auto">
+      {/* Filters */}
+      <div className="bg-white p-3 md:p-4 rounded-xl border border-gray-100 shadow-sm">
+        <form className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              name="search"
+              defaultValue={search}
+              placeholder="Buscar por Nº o cliente..."
+              className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <select
+            name="status"
+            defaultValue={status}
+            className="block w-full sm:w-48 pl-3 pr-10 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 rounded-md"
+            onChange={(e) => e.target.form?.submit()}
+          >
+            <option value="">Todos los estados</option>
+            <option value="draft">Borrador</option>
+            <option value="calculated">Calculada</option>
+            <option value="sent">Enviada</option>
+            <option value="accepted">Aceptada</option>
+            <option value="rejected">Rechazada</option>
+          </select>
+          <button type="submit" className="hidden sm:block px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200">
+            Filtrar
+          </button>
+        </form>
+      </div>
+
+      {/* Mobile view (Cards) */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {(!filteredQuotes || filteredQuotes.length === 0) ? (
+          <div className="text-center py-10 text-gray-500 text-sm bg-white rounded-xl border border-gray-100">
+            <FileText className="w-10 h-10 mx-auto text-gray-300 mb-2" />
+            No se encontraron cotizaciones
+          </div>
+        ) : (
+          filteredQuotes.map((q: any) => (
+            <QuoteCard key={q.id} quote={q} />
+          ))
+        )}
+      </div>
+
+      {/* Desktop view (Table) */}
+      <div className="hidden md:block bg-white rounded-lg border border-gray-200 shadow-sm overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -54,7 +130,7 @@ export default async function QuotesListPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {(!quotes || quotes.length === 0) && (
+            {(!filteredQuotes || filteredQuotes.length === 0) && (
               <tr>
                 <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                   <FileText className="w-12 h-12 mx-auto text-gray-300 mb-3" />
@@ -63,7 +139,7 @@ export default async function QuotesListPage() {
               </tr>
             )}
             
-            {quotes?.map((q: any) => (
+            {filteredQuotes?.map((q: any) => (
               <tr key={q.id} className="hover:bg-gray-50 cursor-pointer">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                   <Link href={`/quotes/${q.id}`}>{q.quote_number}</Link>
