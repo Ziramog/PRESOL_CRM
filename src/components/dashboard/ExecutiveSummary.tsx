@@ -135,34 +135,44 @@ export function ExecutiveSummary({ summary }: { summary: any }) {
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4">
-        <PeriodCard
-          title="Ayer"
-          dateLabel={yesterdayLabel}
-          data={summary?.yesterday}
-          periodCode="yesterday"
-          isPrimary={false}
-          rate={rate}
-          onMetricClick={openModal}
-        />
-        <PeriodCard
-          title="Hoy"
-          dateLabel={todayLabel}
-          data={summary?.today}
-          periodCode="today"
-          isPrimary={true}
-          rate={rate}
-          onMetricClick={openModal}
-        />
-        <PeriodCard
-          title="Esta semana"
-          dateLabel={weekLabel}
-          data={summary?.week}
-          periodCode="week"
-          isPrimary={false}
-          rate={rate}
-          onMetricClick={openModal}
-        />
+      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-3 lg:gap-4">
+        {/* On mobile, order-1 means it comes first. order-2 means second. 
+            On lg (desktop), we reset order to default (which is DOM order or order-none) 
+            But grid order works best with classes like lg:order-1. 
+            Actually, let's just use grid and order classes carefully. */}
+        <div className="order-2 lg:order-1">
+          <PeriodCard
+            title="Ayer"
+            dateLabel={yesterdayLabel}
+            data={summary?.yesterday}
+            periodCode="yesterday"
+            isPrimary={false}
+            rate={rate}
+            onMetricClick={openModal}
+          />
+        </div>
+        <div className="order-1 lg:order-2">
+          <PeriodCard
+            title="Hoy"
+            dateLabel={todayLabel}
+            data={summary?.today}
+            periodCode="today"
+            isPrimary={true}
+            rate={rate}
+            onMetricClick={openModal}
+          />
+        </div>
+        <div className="order-3 lg:order-3">
+          <PeriodCard
+            title="Esta semana"
+            dateLabel={weekLabel}
+            data={summary?.week}
+            periodCode="week"
+            isPrimary={false}
+            rate={rate}
+            onMetricClick={openModal}
+          />
+        </div>
       </div>
 
       <KpiModal
@@ -207,41 +217,42 @@ function PeriodCard({
   return (
     <div
       className={[
-        'flex flex-col rounded-xl border transition-all duration-200',
+        'flex flex-col rounded-none transition-all duration-300',
         isPrimary
-          ? 'bg-gray-900 border-gray-800 text-white shadow-xl'
-          : 'bg-white border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200',
+          ? 'bg-[#0f172a] border-[#1e293b] text-white shadow-2xl' // slate-950/900 for a premium dark look
+          : 'bg-white border-gray-200 shadow-sm hover:shadow-md',
+        'border'
       ].join(' ')}
     >
       {/* Card header */}
-      <div className={['px-5 pt-5 pb-4 border-b', isPrimary ? 'border-gray-800' : 'border-gray-100'].join(' ')}>
+      <div className={['px-6 pt-6 pb-4 border-b', isPrimary ? 'border-[#1e293b]' : 'border-gray-100'].join(' ')}>
         <div className="flex items-start justify-between">
           <div>
-            <p className={['text-[10px] font-bold tracking-[0.2em] uppercase mb-1', isPrimary ? 'text-gray-400' : 'text-gray-400'].join(' ')}>
+            <p className={['text-[11px] font-bold tracking-[0.25em] uppercase mb-1.5', isPrimary ? 'text-blue-400' : 'text-gray-400'].join(' ')}>
               {title}
             </p>
-            <p className={['text-sm font-medium capitalize', isPrimary ? 'text-gray-200' : 'text-gray-600'].join(' ')}>
+            <p className={['text-sm font-medium capitalize', isPrimary ? 'text-gray-300' : 'text-gray-600'].join(' ')}>
               {dateLabel}
             </p>
           </div>
-          {isPrimary && <TrendingUp className="w-4 h-4 text-gray-500" strokeWidth={1.5} />}
+          {isPrimary && <TrendingUp className="w-5 h-5 text-blue-400" strokeWidth={1.5} />}
         </div>
       </div>
 
       {/* Metrics */}
-      <div className="flex-1 px-5 py-3 space-y-0.5">
+      <div className="flex-1 px-4 py-3 space-y-1">
         {metrics.map(({ key, label, value }) => (
           <button
             key={key}
             onClick={() => onMetricClick(key, label, periodCode, title)}
             className={[
-              'w-full flex items-center justify-between py-2 px-2 -mx-2 rounded-lg text-left transition-colors group',
+              'w-full flex items-center justify-between py-2 px-3 rounded-none text-left transition-colors group',
               isPrimary
-                ? 'hover:bg-white/10 active:bg-white/15'
+                ? 'hover:bg-slate-800 active:bg-slate-700'
                 : 'hover:bg-gray-50 active:bg-gray-100',
             ].join(' ')}
           >
-            <span className={['text-sm transition-colors', isPrimary ? 'text-gray-300 group-hover:text-white' : 'text-gray-500 group-hover:text-gray-800'].join(' ')}>
+            <span className={['text-sm transition-colors', isPrimary ? 'text-slate-300 group-hover:text-white' : 'text-gray-500 group-hover:text-gray-900'].join(' ')}>
               {label}
             </span>
             <span className={['text-sm font-bold tabular-nums', isPrimary ? 'text-white' : 'text-gray-900'].join(' ')}>
@@ -252,8 +263,8 @@ function PeriodCard({
       </div>
 
       {/* Rate footer */}
-      <div className={['px-5 py-3 border-t flex items-center justify-between', isPrimary ? 'border-gray-800' : 'border-gray-100'].join(' ')}>
-        <span className={['text-[10px] font-semibold tracking-widest uppercase', isPrimary ? 'text-gray-500' : 'text-gray-400'].join(' ')}>
+      <div className={['px-6 py-4 border-t flex items-center justify-between', isPrimary ? 'border-[#1e293b] bg-slate-900' : 'border-gray-100 bg-gray-50/50'].join(' ')}>
+        <span className={['text-[10px] font-bold tracking-[0.2em] uppercase', isPrimary ? 'text-slate-400' : 'text-gray-400'].join(' ')}>
           Tasa de contacto
         </span>
         <span className={['text-sm font-bold', isPrimary ? 'text-emerald-400' : 'text-emerald-600'].join(' ')}>

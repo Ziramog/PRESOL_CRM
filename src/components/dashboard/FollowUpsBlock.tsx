@@ -40,9 +40,9 @@ export function FollowUpsBlock({ followups }: { followups: any[] }) {
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-100">
-        <h2 className="text-[10px] font-bold tracking-[0.2em] text-gray-400 uppercase">Seguimientos</h2>
+    <div className="bg-white border border-gray-200 rounded-none shadow-sm flex flex-col h-full">
+      <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h2 className="text-xs font-bold tracking-[0.15em] text-gray-900 uppercase">Seguimientos</h2>
       </div>
 
       {/* Summary chips */}
