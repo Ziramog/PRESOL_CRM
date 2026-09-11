@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Plus, FileText, Settings, Search } from 'lucide-react';
 import { QuoteCard } from '@/components/crm/quotes/QuoteCard';
+import { QuoteFilters } from '@/components/crm/quotes/QuoteFilters';
 
 export default async function QuotesListPage({
   searchParams,
@@ -68,38 +69,7 @@ export default async function QuotesListPage({
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-3 md:p-4 rounded-xl border border-gray-100 shadow-sm">
-        <form className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1 relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              name="search"
-              defaultValue={search}
-              placeholder="Buscar por Nº o cliente..."
-              className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <select
-            name="status"
-            defaultValue={status}
-            className="block w-full sm:w-48 pl-3 pr-10 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 rounded-md"
-            onChange={(e) => e.target.form?.submit()}
-          >
-            <option value="">Todos los estados</option>
-            <option value="draft">Borrador</option>
-            <option value="calculated">Calculada</option>
-            <option value="sent">Enviada</option>
-            <option value="accepted">Aceptada</option>
-            <option value="rejected">Rechazada</option>
-          </select>
-          <button type="submit" className="hidden sm:block px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200">
-            Filtrar
-          </button>
-        </form>
-      </div>
+      <QuoteFilters initialSearch={search} initialStatus={status} />
 
       {/* Mobile view (Cards) */}
       <div className="grid grid-cols-1 gap-4 md:hidden">
