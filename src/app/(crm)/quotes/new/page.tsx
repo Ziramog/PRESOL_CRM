@@ -1,8 +1,8 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { QuoteForm } from '@/components/crm/quotes/QuoteForm';
 
 export default async function NewQuotePage() {
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
   
   // Load initial data needed for the form
   const [{ data: configurations }, { data: clients }] = await Promise.all([
