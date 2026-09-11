@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import { Plus, FileText, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, FileText, CheckCircle, XCircle, Settings } from 'lucide-react';
 
 export default async function QuotesListPage() {
   const supabase = await createClient();
@@ -24,9 +24,10 @@ export default async function QuotesListPage() {
         </div>
         <div className="flex space-x-3">
           <Link 
-            href="/settings" 
+            href="/quotes/settings" 
             className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
           >
+            <Settings className="w-4 h-4 mr-2" />
             Configuración
           </Link>
           <Link 
