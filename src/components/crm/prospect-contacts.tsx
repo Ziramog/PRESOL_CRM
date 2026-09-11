@@ -70,9 +70,7 @@ export function ProspectContacts({ contacts, prospect }: { contacts: any[], pros
                         <a href={`tel:${contact.phone}`} className="hover:text-blue-600">{contact.phone}</a>
                       </div>
                       <a 
-                        href={`https://api.whatsapp.com/send?phone=${contact.phone.replace(/\\D/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href={`whatsapp://send?phone=${contact.phone.replace(/\\D/g, '')}`}
                         className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded hover:bg-green-100 transition-colors"
                       >
                         <MessageCircle className="w-3.5 h-3.5" />

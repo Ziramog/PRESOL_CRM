@@ -27,9 +27,7 @@ export function PrimaryContactCard({ contacts, prospect }: { contacts: any[], pr
                   <a href={`tel:${primaryContact.phone}`} className="hover:text-blue-600 transition-colors">{primaryContact.phone}</a>
                 </div>
                 <a 
-                  href={`https://api.whatsapp.com/send?phone=${primaryContact.phone.replace(/\\D/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={`whatsapp://send?phone=${primaryContact.phone.replace(/\\D/g, '')}`}
                   className="flex items-center gap-1 text-xs text-green-600 bg-green-50/80 border border-green-100 px-2 py-1 rounded-sm hover:bg-green-100 transition-colors"
                 >
                   <MessageCircle className="w-3.5 h-3.5" strokeWidth={2} />
@@ -54,9 +52,7 @@ export function PrimaryContactCard({ contacts, prospect }: { contacts: any[], pr
                 <a href={`tel:${prospect.primary_phone}`} className="hover:text-blue-600 transition-colors">{prospect.primary_phone}</a>
               </div>
               <a 
-                href={`https://api.whatsapp.com/send?phone=${prospect.primary_phone.replace(/\\D/g, '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={`whatsapp://send?phone=${prospect.primary_phone.replace(/\\D/g, '')}`}
                 className="flex items-center gap-1 text-xs text-green-600 bg-green-50/80 border border-green-100 px-2 py-1 rounded-sm hover:bg-green-100 transition-colors"
               >
                 <MessageCircle className="w-3.5 h-3.5" strokeWidth={2} />
