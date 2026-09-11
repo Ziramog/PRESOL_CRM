@@ -3,7 +3,7 @@ import { FileText, Calendar, DollarSign, Tag, ArrowRight } from 'lucide-react';
 
 export function QuoteCard({ quote }: { quote: any }) {
   return (
-    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3">
+    <div className="bg-white p-4 rounded-none shadow-sm border border-gray-100 flex flex-col gap-3">
       <div className="flex justify-between items-start">
         <div>
           <Link href={`/quotes/${quote.id}`} className="text-sm font-semibold text-blue-600 hover:underline">
@@ -52,7 +52,7 @@ export function QuoteCard({ quote }: { quote: any }) {
       </div>
 
       <div className="mt-1 flex justify-end">
-        <Link href={`/quotes/${quote.id}`} className="text-xs font-semibold text-blue-600 flex items-center gap-1 bg-blue-50 px-3 py-1.5 rounded-md hover:bg-blue-100 transition-colors">
+        <Link href={`/quotes/${quote.id}`} className="text-xs font-semibold text-blue-600 flex items-center gap-1 bg-blue-50 px-3 py-1.5 rounded-none hover:bg-blue-100 transition-colors">
           Ver detalles <ArrowRight className="w-3 h-3" />
         </Link>
       </div>

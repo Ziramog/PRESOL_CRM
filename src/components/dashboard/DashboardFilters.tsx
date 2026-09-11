@@ -59,7 +59,7 @@ export function DashboardFilters({ currentParams }: { currentParams?: Record<str
           className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center bg-black/30 backdrop-blur-[2px] animate-in fade-in duration-200"
           onClick={(e) => e.target === e.currentTarget && setShowCalendar(false)}
         >
-          <div className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-xl shadow-2xl ring-1 ring-black/8 animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 overflow-hidden">
+          <div className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-none shadow-2xl ring-1 ring-black/8 animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 overflow-hidden">
             <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100">
               <h3 className="text-sm font-semibold text-gray-900">Seleccionar fecha</h3>
               <button

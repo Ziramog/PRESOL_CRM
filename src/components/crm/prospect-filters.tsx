@@ -247,7 +247,7 @@ export function ProspectFilters({
             onClick={() => setShowFilters(false)}
           />
 
-          <div className="fixed inset-x-0 bottom-0 top-20 sm:absolute sm:top-full sm:bottom-auto sm:inset-x-auto sm:mt-2 sm:right-0 sm:w-[340px] bg-white rounded-t-2xl sm:rounded-xl shadow-2xl ring-1 ring-black/8 z-[100] flex flex-col overflow-hidden">
+          <div className="fixed inset-x-0 bottom-0 top-20 sm:absolute sm:top-full sm:bottom-auto sm:inset-x-auto sm:mt-2 sm:right-0 sm:w-[340px] bg-white rounded-t-2xl sm:rounded-none shadow-2xl ring-1 ring-black/8 z-[100] flex flex-col overflow-hidden">
             {/* Panel header */}
             <div className="px-4 py-3.5 border-b border-gray-100 flex items-center justify-between shrink-0">
               <h3 className="text-sm font-semibold text-gray-900">Filtros</h3>

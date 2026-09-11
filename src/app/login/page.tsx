@@ -39,7 +39,7 @@ export default function LoginPage() {
 
       <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100">
+          <div className="bg-white p-4 rounded-none shadow-md border border-gray-100">
             <Image 
               src="/logo-presol.png" 
               alt="PRESOL Logo" 

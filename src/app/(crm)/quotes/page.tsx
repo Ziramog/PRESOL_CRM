@@ -74,7 +74,7 @@ export default async function QuotesListPage({
       {/* Mobile view (Cards) */}
       <div className="grid grid-cols-1 gap-4 md:hidden">
         {(!filteredQuotes || filteredQuotes.length === 0) ? (
-          <div className="text-center py-10 text-gray-500 text-sm bg-white rounded-xl border border-gray-100">
+          <div className="text-center py-10 text-gray-500 text-sm bg-white rounded-none border border-gray-100">
             <FileText className="w-10 h-10 mx-auto text-gray-300 mb-2" />
             No se encontraron cotizaciones
           </div>

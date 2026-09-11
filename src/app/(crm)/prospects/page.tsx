@@ -117,7 +117,7 @@ export default async function ProspectsPage({
       </div>
 
       {/* Desktop view (Table) */}
-      <div className="hidden md:block bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="hidden md:block bg-white rounded-none border border-gray-100 shadow-sm overflow-hidden">
         <ProspectTable
           prospects={prospectsWithFlags}
           currentSort={sortCol}

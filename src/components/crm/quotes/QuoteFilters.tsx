@@ -32,7 +32,7 @@ export function QuoteFilters({ initialSearch = '', initialStatus = '' }) {
   };
 
   return (
-    <div className="bg-white p-3 md:p-4 rounded-xl border border-gray-100 shadow-sm">
+    <div className="bg-white p-3 md:p-4 rounded-none border border-gray-100 shadow-sm">
       <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

@@ -6,7 +6,7 @@ export function ProspectCard({ prospect }: { prospect: any }) {
   return (
     <Link 
       href={`/prospects/${prospect.id}`}
-      className="block bg-white border border-gray-200 rounded-lg p-4 shadow-sm active:bg-gray-50 transition-colors"
+      className="block bg-white border border-gray-200 rounded-none p-4 shadow-sm active:bg-gray-50 transition-colors"
     >
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-1.5 min-w-0">
@@ -48,7 +48,7 @@ export function ProspectCard({ prospect }: { prospect: any }) {
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
           {prospect.commercial_category || 'Sin categoría'}
         </span>
-        <span className="text-xs px-2 py-1 bg-gray-100 rounded-md text-gray-600 font-medium">
+        <span className="text-xs px-2 py-1 bg-gray-100 rounded-none text-gray-600 font-medium">
           {PROSPECT_STATUS[prospect.contact_status as keyof typeof PROSPECT_STATUS] || prospect.contact_status}
         </span>
       </div>

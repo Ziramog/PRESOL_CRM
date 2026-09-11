@@ -64,7 +64,7 @@ export function TripStopCard({
         </div>
       </div>
 
-      <div className={`flex-1 bg-white rounded-lg border ${isNext ? 'border-blue-400 shadow-md ring-1 ring-blue-400/50' : 'border-gray-200'} p-4 transition-all`}>
+      <div className={`flex-1 bg-white rounded-none border ${isNext ? 'border-blue-400 shadow-md ring-1 ring-blue-400/50' : 'border-gray-200'} p-4 transition-all`}>
         <div className="flex justify-between items-start mb-2">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -100,21 +100,21 @@ export function TripStopCard({
           <div className="mt-4 flex flex-col sm:flex-row gap-2">
             <button 
               onClick={openMaps}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors shadow-sm"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-300 rounded-none text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors shadow-sm"
             >
               <Navigation className="w-4 h-4 text-blue-600" />
               Navegar
             </button>
             <button 
               onClick={() => setShowActivityForm(true)}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white rounded-none text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
             >
               <CheckCircle2 className="w-4 h-4" />
               Registrar Visita
             </button>
             <button 
               onClick={handleSkip}
-              className="flex-none sm:w-auto px-4 flex items-center justify-center py-2.5 bg-white border border-red-200 text-red-600 rounded-md text-sm font-medium hover:bg-red-50 transition-colors"
+              className="flex-none sm:w-auto px-4 flex items-center justify-center py-2.5 bg-white border border-red-200 text-red-600 rounded-none text-sm font-medium hover:bg-red-50 transition-colors"
             >
               Saltar
             </button>

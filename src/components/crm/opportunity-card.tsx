@@ -22,7 +22,7 @@ export function OpportunityCard({ opportunity, stages, inProspectContext = false
   };
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-4 shadow-sm transition-opacity relative ${isUpdating ? 'opacity-50' : 'opacity-100'}`}>
+    <div className={`bg-white rounded-none border border-gray-200 p-4 shadow-sm transition-opacity relative ${isUpdating ? 'opacity-50' : 'opacity-100'}`}>
       {isUpdating && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
