@@ -64,7 +64,34 @@ export default async function SettingsPage() {
         </div>
       </div>
 
-      <div className="bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden p-6">
+      <div className="bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden mt-6">
+        <div className="px-4 py-5 sm:px-6 border-b border-gray-200 bg-gray-50/50">
+          <h3 className="text-lg leading-6 font-medium text-gray-900">Motor de Costos</h3>
+          <p className="mt-1 max-w-2xl text-sm text-gray-500">
+            Configuración global de activos, personal y parámetros de cotización.
+          </p>
+        </div>
+        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <a href="/settings/costs/parameters" className="block p-4 border rounded-md hover:bg-gray-50 transition">
+            <h4 className="font-semibold text-blue-600">Parámetros y Márgenes</h4>
+            <p className="text-sm text-gray-500">Costos de grúa, espera, márgenes por operación...</p>
+          </a>
+          <a href="/settings/costs/assets" className="block p-4 border rounded-md hover:bg-gray-50 transition">
+            <h4 className="font-semibold text-blue-600">Activos Físicos</h4>
+            <p className="text-sm text-gray-500">Camiones, carretones, depreciación, consumos...</p>
+          </a>
+          <a href="/settings/costs/personnel" className="block p-4 border rounded-md hover:bg-gray-50 transition">
+            <h4 className="font-semibold text-blue-600">Personal Operativo</h4>
+            <p className="text-sm text-gray-500">Choferes, escoltas, costo empresa...</p>
+          </a>
+          <a href="/settings/costs/configurations" className="block p-4 border rounded-md hover:bg-gray-50 transition">
+            <h4 className="font-semibold text-blue-600">Configuraciones</h4>
+            <p className="text-sm text-gray-500">Armado de equipos (Tractor + Carretón, etc)...</p>
+          </a>
+        </div>
+      </div>
+
+      <div className="bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden p-6 mt-6">
         <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Sesión</h3>
         <form action={logout}>
           <button 

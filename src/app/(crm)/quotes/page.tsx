@@ -22,13 +22,21 @@ export default async function QuotesListPage() {
           <h1 className="text-2xl font-semibold text-gray-900">Cotizaciones</h1>
           <p className="text-sm text-gray-500">Gestión de cotizaciones del Cost Engine</p>
         </div>
-        <Link 
-          href="/quotes/new" 
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nueva Cotización
-        </Link>
+        <div className="flex space-x-3">
+          <Link 
+            href="/settings" 
+            className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+          >
+            Configuración
+          </Link>
+          <Link 
+            href="/quotes/new" 
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nueva Cotización
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
