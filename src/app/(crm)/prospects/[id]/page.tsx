@@ -26,14 +26,18 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
     activitiesResponse,
     commentsResponse,
     tasksResponse,
-    opportunitiesResponse
+    opportunitiesResponse,
+    citiesResponse,
+    sectorsResponse
   ] = await Promise.all([
     supabase.from('prospects').select('*').eq('id', id).single(),
     supabase.from('contacts').select('*').eq('prospect_id', id),
     supabase.from('activities').select('id, activity_at, created_at, type, outcome, summary, notes, profiles(full_name)').eq('prospect_id', id),
     supabase.from('comments').select('id, body, is_direction_note, created_at, profiles(full_name)').eq('prospect_id', id),
     supabase.from('tasks').select('*').eq('prospect_id', id).eq('status', 'pending').order('due_at', { ascending: true }),
-    supabase.from('opportunities').select('*').eq('prospect_id', id).neq('stage', 'won').neq('stage', 'lost').order('created_at', { ascending: false })
+    supabase.from('opportunities').select('*').eq('prospect_id', id).neq('stage', 'won').neq('stage', 'lost').order('created_at', { ascending: false }),
+    supabase.from('prospects').select('city').not('city', 'is', null),
+    supabase.from('prospects').select('sector').not('sector', 'is', null)
   ]);
 
   const { data: prospect, error } = prospectResponse;
@@ -47,6 +51,8 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
   const { data: comments } = commentsResponse;
   const { data: pendingTasks } = tasksResponse;
   const { data: opportunities } = opportunitiesResponse;
+  const cities = Array.from(new Set(citiesResponse.data?.map(c => c.city).filter(Boolean))).sort() as string[];
+  const sectors = Array.from(new Set(sectorsResponse.data?.map(s => s.sector).filter(Boolean))).sort() as string[];
 
   // Unify and sort
   const timelineItems = [
@@ -83,7 +89,11 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
           <ChevronLeft className="w-4 h-4 mr-1" />
           Volver
         </Link>
-        <ProspectHeader prospect={prospect} />
+        <ProspectHeader 
+          prospect={prospect} 
+          availableCities={cities} 
+          availableSectors={sectors} 
+        />
       </div>
 
       {/* MOBILE FIRST V2 LAYOUT */}

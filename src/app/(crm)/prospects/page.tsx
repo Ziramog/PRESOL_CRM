@@ -12,6 +12,8 @@ const SORTABLE_COLUMNS: Record<string, string> = {
   class: 'class',
   commercial_category: 'commercial_category',
   contact_status: 'contact_status',
+  created_at: 'created_at',
+  last_contact_date: 'last_contact_date',
 };
 
 export default async function ProspectsPage({
@@ -96,7 +98,12 @@ export default async function ProspectsPage({
           <h1 className="text-xl font-semibold text-gray-900 tracking-tight">Prospectos</h1>
           <NewProspectButton availableCities={cities} availableSectors={sectors} />
         </div>
-        <ProspectFilters availableCities={cities} availableSectors={sectors} />
+        <ProspectFilters 
+          availableCities={cities} 
+          availableSectors={sectors} 
+          currentSort={sortCol}
+          currentDir={sortDir ? 'asc' : 'desc'}
+        />
       </div>
 
       {/* Mobile view (Cards) */}

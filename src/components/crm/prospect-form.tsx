@@ -3,16 +3,18 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
-import { createProspect } from '@/app/actions/prospects';
+import { createProspect, updateProspect } from '@/app/actions/prospects';
 
 export function ProspectForm({ 
   onClose,
   availableCities = [],
-  availableSectors = []
+  availableSectors = [],
+  prospect = null
 }: { 
   onClose: () => void,
   availableCities?: string[],
-  availableSectors?: string[]
+  availableSectors?: string[],
+  prospect?: any
 }) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
@@ -24,7 +26,13 @@ export function ProspectForm({
     setError(null);
     
     const formData = new FormData(e.currentTarget);
-    const result = await createProspect(formData);
+    
+    let result;
+    if (prospect) {
+      result = await updateProspect(prospect.id, formData);
+    } else {
+      result = await createProspect(formData);
+    }
     
     if (result.error) {
       setError(result.error);
@@ -39,7 +47,7 @@ export function ProspectForm({
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
       <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50/50 shrink-0">
-          <h3 className="text-lg font-semibold text-gray-900">Nuevo Prospecto</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{prospect ? 'Editar Prospecto' : 'Nuevo Prospecto'}</h3>
           <button onClick={onClose} className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100">
             <X className="w-5 h-5" />
           </button>
@@ -53,6 +61,7 @@ export function ProspectForm({
                 type="text" 
                 name="company_name" 
                 required
+                defaultValue={prospect?.company_name || ''}
                 placeholder="Ej: Metalúrgica San Martín"
                 className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white"
               />
@@ -61,7 +70,7 @@ export function ProspectForm({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Clase</label>
-                <select name="class" className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white">
+                <select name="class" defaultValue={prospect?.class || ''} className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white">
                   <option value="">Seleccionar...</option>
                   <option value="A">Clase A</option>
                   <option value="B">Clase B</option>
@@ -71,7 +80,7 @@ export function ProspectForm({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Prioridad Visita</label>
-                <select name="visit_priority" className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white">
+                <select name="visit_priority" defaultValue={prospect?.visit_priority || ''} className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white">
                   <option value="">Seleccionar...</option>
                   <option value="Baja">Baja</option>
                   <option value="Media">Media</option>
@@ -81,20 +90,34 @@ export function ProspectForm({
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Rubro / Sector</label>
-              <input 
-                type="text" 
-                name="sector" 
-                list="sectors-list"
-                placeholder="Ej: Agro, Minería, Construcción..."
-                className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white"
-              />
-              <datalist id="sectors-list">
-                {availableSectors.map(s => (
-                  <option key={s} value={s} />
-                ))}
-              </datalist>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rubro / Sector</label>
+                <input 
+                  type="text" 
+                  name="sector" 
+                  defaultValue={prospect?.sector || ''}
+                  list="sectors-list"
+                  placeholder="Ej: Agro, Minería..."
+                  className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white"
+                />
+                <datalist id="sectors-list">
+                  {availableSectors.map(s => (
+                    <option key={s} value={s} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Categoría Comercial</label>
+                <select name="commercial_category" defaultValue={prospect?.commercial_category || ''} className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white">
+                  <option value="">Seleccionar...</option>
+                  <option value="Cliente">Cliente</option>
+                  <option value="Proveedor">Proveedor</option>
+                  <option value="Comisionista">Comisionista</option>
+                  <option value="Competencia">Competencia</option>
+                </select>
+              </div>
             </div>
 
             <div>
@@ -102,6 +125,7 @@ export function ProspectForm({
               <input 
                 type="text" 
                 name="city" 
+                defaultValue={prospect?.city || ''}
                 list="cities-list"
                 placeholder="Ej: Río Tercero"
                 className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white"
@@ -118,6 +142,7 @@ export function ProspectForm({
               <textarea 
                 name="pending_data" 
                 rows={2}
+                defaultValue={prospect?.pending_data || ''}
                 placeholder="Ej: Visto sobre ruta 9, parece tener galpón grande..."
                 className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white"
               ></textarea>

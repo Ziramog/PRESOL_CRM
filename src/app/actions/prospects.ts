@@ -59,6 +59,46 @@ export async function createProspect(formData: FormData) {
   return { success: true, prospect: data };
 }
 
+export async function updateProspect(id: string, formData: FormData) {
+  const supabase = await createAdminClient();
+  
+  const company_name = formData.get('company_name') as string;
+  const prospectClass = formData.get('class') as string;
+  const visit_priority = formData.get('visit_priority') as string;
+  const sector = formData.get('sector') as string;
+  const city = formData.get('city') as string;
+  const commercial_category = formData.get('commercial_category') as string;
+  const pending_data = formData.get('pending_data') as string;
+
+  if (!company_name) {
+    return { error: 'El nombre de la empresa es obligatorio' };
+  }
+
+  const { data, error } = await supabase
+    .from('prospects')
+    .update({
+      company_name,
+      class: prospectClass || null,
+      visit_priority: visit_priority || null,
+      sector: sector || null,
+      city: city || null,
+      commercial_category: commercial_category || null,
+      pending_data: pending_data || null,
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating prospect:', error);
+    return { error: 'Error al actualizar el prospecto' };
+  }
+
+  revalidatePath(`/prospects/${id}`);
+  revalidatePath('/prospects');
+  return { success: true, prospect: data };
+}
+
 export async function updateProspectStatus(prospectId: string, status: string) {
   const supabase = await createAdminClient();
   

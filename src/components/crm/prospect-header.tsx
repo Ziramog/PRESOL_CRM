@@ -2,19 +2,29 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapPin, Navigation, Phone, MessageCircle, PlusCircle, CalendarPlus, Target, Trash2, AlertTriangle, X } from 'lucide-react';
+import { MapPin, Navigation, Phone, MessageCircle, PlusCircle, CalendarPlus, Target, Trash2, AlertTriangle, X, Edit } from 'lucide-react';
 import { ActivityForm } from './activity-form';
 import { TaskForm } from './task-form';
+import { ProspectForm } from './prospect-form';
 import { updateProspectStatus, deleteProspect } from '@/app/actions/prospects';
 
 import { PROSPECT_STATUS } from '@/lib/constants';
 
 const STATUS_OPTIONS = Object.entries(PROSPECT_STATUS).map(([value, label]) => ({ value, label }));
 
-export function ProspectHeader({ prospect }: { prospect: any }) {
+export function ProspectHeader({ 
+  prospect, 
+  availableCities = [], 
+  availableSectors = [] 
+}: { 
+  prospect: any, 
+  availableCities?: string[], 
+  availableSectors?: string[] 
+}) {
   const router = useRouter();
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -134,9 +144,7 @@ export function ProspectHeader({ prospect }: { prospect: any }) {
                   Llamar
                 </a>
                 <a 
-                  href={`https://wa.me/${cleanPhone.replace('+', '')}`}
-                  target="_blank"
-                  rel="noreferrer"
+                  href={`whatsapp://send?phone=${cleanPhone.replace('+', '')}`}
                   className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
                 >
                   <MessageCircle className="w-4 h-4 text-green-500" />
@@ -168,6 +176,14 @@ export function ProspectHeader({ prospect }: { prospect: any }) {
             Crear oportunidad
           </button>
           
+          <button 
+            onClick={() => setShowEditModal(true)}
+            className="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-sm text-xs font-semibold tracking-wider uppercase hover:bg-gray-50 transition-colors"
+          >
+            <Edit className="w-4 h-4 text-gray-500" />
+            Editar
+          </button>
+          
           <button
             onClick={() => setShowDeleteModal(true)}
             title="Eliminar prospecto permanentemente"
@@ -178,6 +194,15 @@ export function ProspectHeader({ prospect }: { prospect: any }) {
           </button>
         </div>
       </div>
+      
+      {showEditModal && (
+        <ProspectForm 
+          prospect={prospect}
+          availableCities={availableCities}
+          availableSectors={availableSectors}
+          onClose={() => setShowEditModal(false)} 
+        />
+      )}
       
       {showActivityForm && (
         <ActivityForm 
