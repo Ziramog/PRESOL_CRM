@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getAssets } from '@/app/actions/costs/admin';
 import { AssetsAdminClient } from '@/components/crm/settings/AssetsAdminClient';
 import Link from 'next/link';

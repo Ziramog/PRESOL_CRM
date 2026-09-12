@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getAdminConfigurations } from '@/app/actions/costs/admin';
 import { getConfigurationCost } from '@/lib/presol-cost-engine/repository';
 import Link from 'next/link';

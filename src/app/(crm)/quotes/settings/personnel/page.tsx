@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getPersonnelCosts } from '@/app/actions/costs/admin';
 import { PersonnelAdminClient } from '@/components/crm/settings/PersonnelAdminClient';
 import Link from 'next/link';

@@ -40,7 +40,6 @@ export default async function DashboardPage(props: {
           <h1 className="text-xl font-semibold text-gray-900 tracking-tight">Dashboard</h1>
           <p className="text-sm text-gray-400 mt-0.5">Actividad comercial en tiempo real</p>
         </div>
-        <DashboardFilters currentParams={searchParams} />
       </div>
 
       {/* Executive 3-card summary — always fixed to yesterday/today/week */}
@@ -48,9 +47,12 @@ export default async function DashboardPage(props: {
 
       {/* Detail section — reacts to selected period */}
       <div>
-        <div className="flex items-center gap-3 mb-5">
-          <h2 className="text-[11px] font-bold tracking-[0.2em] text-gray-400 uppercase">{periodTitle}</h2>
-          <div className="flex-1 h-px bg-gray-100" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+          <div className="flex items-center gap-3 flex-1">
+            <h2 className="text-[11px] font-bold tracking-[0.2em] text-gray-400 uppercase whitespace-nowrap">Detalle: {periodTitle}</h2>
+            <div className="flex-1 h-px bg-gray-100" />
+          </div>
+          <DashboardFilters currentParams={searchParams} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5">

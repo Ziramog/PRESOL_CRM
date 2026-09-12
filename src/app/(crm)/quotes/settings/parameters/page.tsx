@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getAdminParameters, getAdminOperationMargins } from '@/app/actions/costs/admin';
 import { ParametersAdminClient } from '@/components/crm/settings/ParametersAdminClient';
 import Link from 'next/link';
