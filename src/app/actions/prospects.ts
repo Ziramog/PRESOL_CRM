@@ -26,27 +26,30 @@ export async function createProspect(formData: FormData) {
   const supabase = await createAdminClient();
   
   const company_name = formData.get('company_name') as string;
-  const prospectClass = formData.get('class') as string;
-  const visit_priority = formData.get('visit_priority') as string;
-  const sector = formData.get('sector') as string;
-  const city = formData.get('city') as string;
-  const pending_data = formData.get('pending_data') as string;
-
   if (!company_name) {
     return { error: 'El nombre de la empresa es obligatorio' };
   }
 
+  const payload: any = {
+    external_id: `MAN-${Date.now()}`,
+    company_name,
+  };
+
+  const fields = [
+    'class', 'visit_priority', 'sector', 'city', 'commercial_category', 
+    'pending_data', 'corridor', 'microzone', 'primary_phone', 'phones_raw', 
+    'google_maps_url', 'ask_for', 'probable_need', 'presol_offer', 
+    'sales_hook', 'suggested_action', 'evidence'
+  ];
+
+  for (const field of fields) {
+    const val = formData.get(field) as string;
+    if (val) payload[field === 'class' ? 'class' : field] = val;
+  }
+
   const { data, error } = await supabase
     .from('prospects')
-    .insert([{
-      external_id: `MAN-${Date.now()}`,
-      company_name,
-      class: prospectClass || null,
-      visit_priority: visit_priority || null,
-      sector: sector || null,
-      city: city || null,
-      pending_data: pending_data || null,
-    }])
+    .insert([payload])
     .select()
     .single();
 
@@ -56,35 +59,34 @@ export async function createProspect(formData: FormData) {
   }
 
   revalidatePath('/prospects');
-  return { success: true, prospect: data };
+  return { prospect: data };
 }
 
 export async function updateProspect(id: string, formData: FormData) {
   const supabase = await createAdminClient();
   
   const company_name = formData.get('company_name') as string;
-  const prospectClass = formData.get('class') as string;
-  const visit_priority = formData.get('visit_priority') as string;
-  const sector = formData.get('sector') as string;
-  const city = formData.get('city') as string;
-  const commercial_category = formData.get('commercial_category') as string;
-  const pending_data = formData.get('pending_data') as string;
-
   if (!company_name) {
     return { error: 'El nombre de la empresa es obligatorio' };
   }
 
+  const payload: any = { company_name };
+
+  const fields = [
+    'class', 'visit_priority', 'sector', 'city', 'commercial_category', 
+    'pending_data', 'corridor', 'microzone', 'primary_phone', 'phones_raw', 
+    'google_maps_url', 'ask_for', 'probable_need', 'presol_offer', 
+    'sales_hook', 'suggested_action', 'evidence'
+  ];
+
+  for (const field of fields) {
+    const val = formData.get(field) as string;
+    payload[field === 'class' ? 'class' : field] = val || null;
+  }
+
   const { data, error } = await supabase
     .from('prospects')
-    .update({
-      company_name,
-      class: prospectClass || null,
-      visit_priority: visit_priority || null,
-      sector: sector || null,
-      city: city || null,
-      commercial_category: commercial_category || null,
-      pending_data: pending_data || null,
-    })
+    .update(payload)
     .eq('id', id)
     .select()
     .single();
@@ -96,7 +98,7 @@ export async function updateProspect(id: string, formData: FormData) {
 
   revalidatePath(`/prospects/${id}`);
   revalidatePath('/prospects');
-  return { success: true, prospect: data };
+  return { prospect: data };
 }
 
 export async function updateProspectStatus(prospectId: string, status: string) {
