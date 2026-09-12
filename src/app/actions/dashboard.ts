@@ -70,7 +70,6 @@ export async function getDashboardKPIList(
       query = applyFilters(supabase
         .from('activities')
         .select(prospectSelect)
-        .eq('type', 'visit')
         .is('deleted_at', null)
         .gte('activity_at', fromIso)
         .lte('activity_at', toIso));

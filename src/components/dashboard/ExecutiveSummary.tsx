@@ -207,7 +207,7 @@ function PeriodCard({
   const d = data ?? { visited: 0, effective_contacts: 0, interested: 0, opportunities: 0, followups: 0 };
 
   const metrics = [
-    { key: 'visited', label: 'Visitados', value: d.visited },
+    { key: 'visited', label: 'Gestiones', value: d.visited },
     { key: 'effective_contacts', label: 'Contactos efectivos', value: d.effective_contacts },
     { key: 'interested', label: 'Interesados', value: d.interested },
     { key: 'opportunities', label: 'Oportunidades', value: d.opportunities },

@@ -33,18 +33,58 @@ export async function getDashboardData(params: DashboardParams) {
   const weekFrom = fromZonedTime(startOfWeek(zonedNow, { weekStartsOn: 1 }), TZ).toISOString();
   const weekTo = fromZonedTime(endOfWeek(zonedNow, { weekStartsOn: 1 }), TZ).toISOString();
 
-  // Fetch the 3-period summary
-  const summaryPromise = supabase.rpc('get_dashboard_summary_v2', {
-    yesterday_from: yesterdayFrom,
-    yesterday_to: yesterdayTo,
-    today_from: todayFrom,
-    today_to: todayTo,
-    week_from: weekFrom,
-    week_to: weekTo,
-    p_user_id: params.user_id || null,
-    p_trip_id: params.trip_id || null,
-    p_city: params.city || null,
-    p_category: params.category || null
+  // Fetch the 3-period summary manually to fix rate mismatches
+  const minFrom = yesterdayFrom < weekFrom ? yesterdayFrom : weekFrom;
+  const maxTo = weekTo > todayTo ? weekTo : todayTo;
+
+  // Helper to apply filters to JS queries
+  const applyFilters = (q: any, isTask = false) => {
+    if (params.user_id) q = q.eq(isTask ? 'assigned_to' : 'created_by', params.user_id);
+    if (params.trip_id) q = q.eq('trip_id', params.trip_id);
+    if (params.city) q = q.eq('prospects.city', params.city);
+    if (params.category) q = q.eq('prospects.commercial_category', params.category);
+    return q;
+  };
+
+  const summaryActsP = applyFilters(supabase.from('activities').select('prospect_id, outcome, activity_at, prospects!inner(id)').gte('activity_at', minFrom).lte('activity_at', maxTo).is('deleted_at', null));
+  const summaryOppsP = applyFilters(supabase.from('opportunities').select('id, created_at, prospects!inner(id)').gte('created_at', minFrom).lte('created_at', maxTo).is('deleted_at', null));
+  const summaryTasksP = applyFilters(supabase.from('tasks').select('id, due_at, prospects!inner(id)').eq('status', 'pending').gte('due_at', minFrom).lte('due_at', maxTo).is('deleted_at', null), true);
+
+  const summaryPromise = Promise.all([summaryActsP, summaryOppsP, summaryTasksP]).then(([sActs, sOpps, sTasks]) => {
+    const calcPeriod = (from: string, to: string) => {
+      const acts = (sActs.data || []).filter((a: any) => a.activity_at >= from && a.activity_at <= to);
+      const opps = (sOpps.data || []).filter((o: any) => o.created_at >= from && o.created_at <= to);
+      const tasks = (sTasks.data || []).filter((t: any) => t.due_at >= from && t.due_at <= to);
+
+      const uniqueVisited = new Set();
+      const uniqueEffective = new Set();
+      const uniqueInterested = new Set();
+
+      acts.forEach((a: any) => {
+        uniqueVisited.add(a.prospect_id);
+        const effectiveOutcomes = ['reception_only', 'decision_maker_contact', 'contact_made', 'interested', 'requested_info', 'requested_quote', 'follow_up', 'not_interested'];
+        if (effectiveOutcomes.includes(a.outcome)) uniqueEffective.add(a.prospect_id);
+        const interestedOutcomes = ['interested', 'requested_info', 'requested_quote', 'follow_up'];
+        if (interestedOutcomes.includes(a.outcome)) uniqueInterested.add(a.prospect_id);
+      });
+
+      return {
+        visited: uniqueVisited.size,
+        effective_contacts: uniqueEffective.size,
+        interested: uniqueInterested.size,
+        opportunities: opps.length,
+        followups: tasks.length
+      };
+    };
+
+    return {
+      data: {
+        yesterday: calcPeriod(yesterdayFrom, yesterdayTo),
+        today: calcPeriod(todayFrom, todayTo),
+        week: calcPeriod(weekFrom, weekTo)
+      },
+      error: null
+    };
   });
 
   // Calculate selected period boundaries for the Details section
@@ -61,15 +101,6 @@ export async function getDashboardData(params: DashboardParams) {
     periodFromIso = fromZonedTime(params.from_date + 'T00:00:00', TZ).toISOString();
     periodToIso = fromZonedTime(params.to_date + 'T23:59:59.999', TZ).toISOString();
   }
-
-  // Helper to apply filters to JS queries
-  const applyFilters = (q: any, isTask = false) => {
-    if (params.user_id) q = q.eq(isTask ? 'assigned_to' : 'created_by', params.user_id);
-    if (params.trip_id) q = q.eq('trip_id', params.trip_id);
-    if (params.city) q = q.eq('prospects.city', params.city);
-    if (params.category) q = q.eq('prospects.commercial_category', params.category);
-    return q;
-  };
 
   // Fetch Results (Raw activities to aggregate and show in modal)
   const resultsPromise = applyFilters(
