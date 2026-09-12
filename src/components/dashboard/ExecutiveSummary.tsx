@@ -98,7 +98,7 @@ function KpiModal({
   );
 }
 
-export function ExecutiveSummary({ summary }: { summary: any }) {
+export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate?: string }) {
   const [modal, setModal] = useState<{ open: boolean; title: string; period: string; periodLabel: string } | null>(null);
   const [modalData, setModalData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -109,8 +109,7 @@ export function ExecutiveSummary({ summary }: { summary: any }) {
   const category = searchParams.get('category') || undefined;
   const tripId = searchParams.get('trip_id') || undefined;
 
-  const now = new Date();
-  const zonedNow = toZonedTime(now, TZ);
+  const zonedNow = baseDate ? new Date(baseDate) : toZonedTime(new Date(), TZ);
   const yesterday = subDays(zonedNow, 1);
 
   const todayLabel = format(zonedNow, "EEEE d MMM", { locale: es });
@@ -123,7 +122,8 @@ export function ExecutiveSummary({ summary }: { summary: any }) {
     setModal({ open: true, title, period: periodCode, periodLabel });
     setLoading(true);
     setModalData([]);
-    const list = await getDashboardKPIList(kpiKey, periodCode, undefined, undefined, userId, city, category, tripId);
+    // Pass the shifted baseDate to the action so it resolves 'today', 'yesterday' relative to the time-traveled date
+    const list = await getDashboardKPIList(kpiKey, periodCode, baseDate, undefined, userId, city, category, tripId);
     setModalData(list);
     setLoading(false);
   };

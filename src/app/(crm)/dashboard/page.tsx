@@ -40,10 +40,11 @@ export default async function DashboardPage(props: {
           <h1 className="text-xl font-semibold text-gray-900 tracking-tight">Dashboard</h1>
           <p className="text-sm text-gray-400 mt-0.5">Actividad comercial en tiempo real</p>
         </div>
+        <DashboardFilters currentParams={searchParams} />
       </div>
 
-      {/* Executive 3-card summary — always fixed to yesterday/today/week */}
-      <ExecutiveSummary summary={data.summary} />
+      {/* Executive 3-card summary — always fixed to yesterday/today/week relative to base date */}
+      <ExecutiveSummary summary={data.summary} baseDate={data.baseDate} />
 
       {/* Detail section — reacts to selected period */}
       <div>
@@ -52,7 +53,6 @@ export default async function DashboardPage(props: {
             <h2 className="text-[11px] font-bold tracking-[0.2em] text-gray-400 uppercase whitespace-nowrap">Detalle: {periodTitle}</h2>
             <div className="flex-1 h-px bg-gray-100" />
           </div>
-          <DashboardFilters currentParams={searchParams} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5">

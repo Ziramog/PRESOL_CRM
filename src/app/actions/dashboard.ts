@@ -18,7 +18,12 @@ export async function getDashboardKPIList(
 ) {
   const supabase = await createAdminClient();
   
-  const now = new Date();
+  let now = new Date();
+  // If a baseDate is passed via fromDateParam (when time-traveling the dashboard), use it as the reference 'now'
+  if (fromDateParam && period !== 'custom') {
+    now = new Date(fromDateParam);
+  }
+  
   const zonedNow = toZonedTime(now, TZ);
   
   let fromDate = startOfDay(zonedNow);

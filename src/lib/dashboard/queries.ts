@@ -17,7 +17,13 @@ export interface DashboardParams {
 export async function getDashboardData(params: DashboardParams) {
   const supabase = await createAdminClient();
   
-  const now = new Date();
+  let now = new Date();
+  if (params.period === 'custom' && params.from_date) {
+    now = new Date(params.from_date + 'T12:00:00'); // Use noon to avoid timezone shift to previous day
+  } else if (params.period === 'yesterday') {
+    now = subDays(new Date(), 1);
+  }
+  
   const zonedNow = toZonedTime(now, TZ);
   
   // Calculate Yesterday boundaries
@@ -91,15 +97,9 @@ export async function getDashboardData(params: DashboardParams) {
   let periodFromIso: string = todayFrom;
   let periodToIso: string = todayTo;
 
-  if (params.period === 'yesterday') {
-    periodFromIso = yesterdayFrom;
-    periodToIso = yesterdayTo;
-  } else if (params.period === 'week') {
+  if (params.period === 'week') {
     periodFromIso = weekFrom;
     periodToIso = weekTo;
-  } else if (params.period === 'custom' && params.from_date && params.to_date) {
-    periodFromIso = fromZonedTime(params.from_date + 'T00:00:00', TZ).toISOString();
-    periodToIso = fromZonedTime(params.to_date + 'T23:59:59.999', TZ).toISOString();
   }
 
   // Fetch Results (Raw activities to aggregate and show in modal)
@@ -153,7 +153,8 @@ export async function getDashboardData(params: DashboardParams) {
     followups: tasksRes.data || [],
     recent_activity: recentRes.data || [],
     periodFrom: periodFromIso,
-    periodTo: periodToIso
+    periodTo: periodToIso,
+    baseDate: zonedNow.toISOString()
   };
 }
 
