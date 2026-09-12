@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { getDashboardKPIList } from '@/app/actions/dashboard';
 import { useSearchParams } from 'next/navigation';
-import { format, subDays, startOfWeek, endOfWeek } from 'date-fns';
+import { format, subDays, startOfWeek, endOfWeek, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toZonedTime } from 'date-fns-tz';
 
@@ -109,8 +109,27 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   const category = searchParams.get('category') || undefined;
   const tripId = searchParams.get('trip_id') || undefined;
 
-  const zonedNow = baseDate ? new Date(baseDate) : toZonedTime(new Date(), TZ);
+  const realToday = toZonedTime(new Date(), TZ);
+  const zonedNow = baseDate ? new Date(baseDate) : realToday;
   const yesterday = subDays(zonedNow, 1);
+
+  const isTodayDate = isSameDay(zonedNow, realToday);
+  const isYesterdayDate = isSameDay(zonedNow, subDays(realToday, 1));
+
+  let titleYesterday = "Ayer";
+  let titleToday = "Hoy";
+  let titleWeek = "Esta semana";
+
+  if (!isTodayDate) {
+    if (isYesterdayDate) {
+      titleYesterday = "Anteayer";
+      titleToday = "Ayer";
+    } else {
+      titleYesterday = "Día anterior";
+      titleToday = "Día seleccionado";
+      titleWeek = "Semana seleccionada";
+    }
+  }
 
   const todayLabel = format(zonedNow, "EEEE d MMM", { locale: es });
   const yesterdayLabel = format(yesterday, "d MMM", { locale: es });
@@ -142,7 +161,7 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
             Actually, let's just use grid and order classes carefully. */}
         <div className="order-2 lg:order-1">
           <PeriodCard
-            title="Ayer"
+            title={titleYesterday}
             dateLabel={yesterdayLabel}
             data={summary?.yesterday}
             periodCode="yesterday"
@@ -153,7 +172,7 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
         </div>
         <div className="order-1 lg:order-2">
           <PeriodCard
-            title="Hoy"
+            title={titleToday}
             dateLabel={todayLabel}
             data={summary?.today}
             periodCode="today"
@@ -164,7 +183,7 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
         </div>
         <div className="order-3 lg:order-3">
           <PeriodCard
-            title="Esta semana"
+            title={titleWeek}
             dateLabel={weekLabel}
             data={summary?.week}
             periodCode="week"
