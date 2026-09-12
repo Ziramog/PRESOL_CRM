@@ -143,3 +143,19 @@ export async function deleteProspect(prospectId: string) {
   return { success: true };
 }
 
+export async function enrichProspectManual(id: string, updates: any) {
+  const supabase = await createAdminClient();
+  
+  const { error } = await supabase
+    .from('prospects')
+    .update(updates)
+    .eq('id', id);
+
+  if (error) {
+    throw new Error('Error al enriquecer el prospecto: ' + error.message);
+  }
+
+  revalidatePath(`/prospects/${id}`);
+  revalidatePath('/prospects');
+  return { success: true };
+}
