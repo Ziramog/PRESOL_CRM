@@ -35,7 +35,9 @@ export default async function DashboardPage(props: {
   
   // Create funnel object matching the current period summary
   // "data.summary[period]" has visited, effective_contacts, interested, opportunities, followups
-  const funnelData = data.summary[period as keyof typeof data.summary] || { visited: 0, effective_contacts: 0, interested: 0, opportunities: 0 };
+  // When period is 'custom' or 'yesterday', getDashboardData overrides 'now' so 'today' contains the selected day's data
+  const summaryKey = (period === 'custom' || period === 'yesterday') ? 'today' : period;
+  const funnelData = data.summary[summaryKey as keyof typeof data.summary] || { visited: 0, effective_contacts: 0, interested: 0, opportunities: 0 };
   
   // Group activities for ResultsBarChart
   const aggregated: Record<string, number> = {};
