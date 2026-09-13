@@ -244,18 +244,17 @@ function PeriodCard({
       className={[
         'flex flex-col rounded-xl transition-all duration-300 relative',
         isPrimary
-          ? 'bg-white border-blue-200 shadow-sm ring-1 ring-blue-600/10' 
-          : 'bg-white border-gray-200 shadow-sm',
-        'border'
+          ? 'bg-white border-2 border-blue-500 shadow-sm' 
+          : 'bg-white border border-gray-200 shadow-sm',
       ].join(' ')}
     >
       {/* Card header */}
-      <div className={['px-6 pt-6 pb-4 border-b flex justify-between', isPrimary ? 'border-blue-100 bg-blue-50/50 rounded-t-xl' : 'border-gray-100'].join(' ')}>
+      <div className={['px-6 pt-6 pb-4 border-b flex justify-between', isPrimary ? 'border-blue-100 bg-blue-50/20 rounded-t-xl' : 'border-gray-100'].join(' ')}>
         <div className="flex flex-col">
-          <p className="flex items-center text-xs font-bold tracking-[0.1em] uppercase mb-1 text-gray-900">
+          <p className={['flex items-center text-[13px] font-bold tracking-[0.05em] uppercase mb-1', isPrimary ? 'text-blue-600' : 'text-gray-900'].join(' ')}>
             {title}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className={['text-[11px]', isPrimary ? 'text-blue-500' : 'text-gray-500'].join(' ')}>
             {dateLabel}
           </p>
         </div>
