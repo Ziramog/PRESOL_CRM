@@ -5,6 +5,8 @@ import { ChevronLeft, Map, Play, CheckCircle } from 'lucide-react';
 import { TripStopCard } from '@/components/crm/trip-stop-card';
 import { TripBuilder } from '@/components/crm/trip-builder';
 
+import { TripPlanVsActual } from '@/components/charts/TripPlanVsActual';
+
 export default async function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createAdminClient();
@@ -26,8 +28,6 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
     .order('stop_order', { ascending: true });
 
   const isRouteMode = trip.status === 'in_progress';
-  const completedStops = (stops || []).filter(s => s.status === 'visited' || s.status === 'skipped');
-  const progress = stops && stops.length > 0 ? Math.round((completedStops.length / stops.length) * 100) : 0;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-20 md:pb-0">
@@ -76,20 +76,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
         )}
       </div>
 
-      {stops && stops.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-          <div className="flex justify-between text-sm font-medium mb-2">
-            <span className="text-gray-700">Progreso de la gira</span>
-            <span className="text-blue-600">{progress}%</span>
-          </div>
-          <div className="w-full bg-gray-100 rounded-full h-2.5">
-            <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
-          </div>
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            {completedStops.length} de {stops.length} paradas completadas
-          </p>
-        </div>
-      )}
+      <TripPlanVsActual stops={stops || []} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
