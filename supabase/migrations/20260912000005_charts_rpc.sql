@@ -44,10 +44,10 @@ BEGIN
       COALESCE(da.visited, 0) as visited,
       COALESCE(da.effective_contacts, 0) as effective_contacts,
       COALESCE(da.interested, 0) as interested,
-      COALESCE(do.opportunities, 0) as opportunities
+      COALESCE(d_opps.opportunities, 0) as opportunities
     FROM dates
     LEFT JOIN daily_acts da ON dates.d = da.d
-    LEFT JOIN daily_opps do ON dates.d = do.d
+    LEFT JOIN daily_opps d_opps ON dates.d = d_opps.d
     ORDER BY dates.d ASC
   ) res;
 
