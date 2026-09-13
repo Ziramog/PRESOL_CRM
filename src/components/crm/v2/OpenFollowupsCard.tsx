@@ -1,10 +1,10 @@
-﻿'use client';
+'use client';
 
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CheckSquare, Square } from 'lucide-react';
-import { useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useState, useTransition } from 'react';
+import { completeTask } from '@/app/actions/tasks';
 
 interface OpenFollowupsCardProps {
   tasks: any[];
@@ -12,12 +12,14 @@ interface OpenFollowupsCardProps {
 
 export function OpenFollowupsCard({ tasks }: OpenFollowupsCardProps) {
   const [localTasks, setLocalTasks] = useState(tasks || []);
-  const supabase = createClientComponentClient();
+  const [isPending, startTransition] = useTransition();
 
-  const handleComplete = async (taskId: string) => {
+  const handleComplete = (taskId: string) => {
     // Optimistic update
     setLocalTasks(prev => prev.filter(t => t.id !== taskId));
-    await supabase.from('tasks').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', taskId);
+    startTransition(async () => {
+      await completeTask(taskId);
+    });
   };
 
   return (
