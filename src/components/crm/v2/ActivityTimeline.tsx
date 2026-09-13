@@ -60,10 +60,10 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
               return (
                 <div key={activity.id || index} className="relative flex items-start group">
                   <div className="w-[45px] pt-1.5 shrink-0 text-right pr-3">
-                    <span className="text-[11px] font-medium text-gray-500">
+                    <span className="text-[11px] font-medium text-gray-500" suppressHydrationWarning>
                       {activityDate ? format(activityDate, 'HH:mm') : ''}
                     </span>
-                    <div className="text-[9px] text-gray-400 mt-0.5 leading-tight">
+                    <div className="text-[9px] text-gray-400 mt-0.5 leading-tight" suppressHydrationWarning>
                       {activityDate ? format(activityDate, 'd MMM', { locale: es }) : ''}
                     </div>
                   </div>

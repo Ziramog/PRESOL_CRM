@@ -56,7 +56,7 @@ export function OpenFollowupsCard({ tasks }: OpenFollowupsCardProps) {
                       <p className="text-[13px] text-gray-900 font-semibold line-clamp-2 leading-tight">{task.title}</p>
                     </div>
                     {dateObj && (
-                      <span className={`text-[12px] font-bold shrink-0 ${isOverdue ? 'text-red-600' : 'text-gray-900'}`}>
+                      <span suppressHydrationWarning className={`text-[12px] font-bold shrink-0 ${isOverdue ? 'text-red-600' : 'text-gray-900'}`}>
                         {format(dateObj, 'd MMM', { locale: es })}
                       </span>
                     )}

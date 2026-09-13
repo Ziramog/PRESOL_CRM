@@ -98,7 +98,7 @@ export function LastInteractionCard({ activities, prospectId }: { activities: an
           )}
           
           <div className="flex items-center justify-between text-[11px] font-medium text-gray-500 mt-1 pt-3 border-t border-gray-100">
-            <div className="flex items-center">
+            <div className="flex items-center" suppressHydrationWarning>
               <Clock className="w-3.5 h-3.5 mr-1.5 text-gray-400" />
               {lastActivity.activity_at ? format(new Date(lastActivity.activity_at), "d MMM, HH:mm", { locale: es }) : '—'}
             </div>

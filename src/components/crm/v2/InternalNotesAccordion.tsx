@@ -35,7 +35,7 @@ export function InternalNotesAccordion({ comments }: InternalNotesAccordionProps
                 <div key={comment.id} className="bg-yellow-50/60 p-3 rounded-lg border border-yellow-100">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-[11px] font-bold text-gray-900">{comment.user_full_name || 'Usuario'}</span>
-                    <span className="text-[10px] text-gray-500">{format(parseISO(comment.created_at), 'dd MMM, HH:mm', { locale: es })}</span>
+                    <span className="text-[10px] text-gray-500" suppressHydrationWarning>{format(parseISO(comment.created_at), 'dd MMM, HH:mm', { locale: es })}</span>
                   </div>
                   <p className="text-[12px] text-gray-700 whitespace-pre-wrap leading-relaxed">{comment.body}</p>
                 </div>
