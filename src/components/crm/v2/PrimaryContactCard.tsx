@@ -1,4 +1,4 @@
-import { User, Phone, Mail, MessageCircle, Building } from 'lucide-react';
+import { User, Phone, Mail, MessageCircle, Building, UserCircle } from 'lucide-react';
 
 export function PrimaryContactCard({ contacts, prospect, secondaryCount = 0 }: { contacts: any[], prospect: any, secondaryCount?: number }) {
   const primaryContact = contacts.find((c) => c.is_primary) || contacts[0];
@@ -6,7 +6,10 @@ export function PrimaryContactCard({ contacts, prospect, secondaryCount = 0 }: {
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col h-auto">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Contacto Principal</h3>
+        <div className="flex items-center gap-2">
+          <UserCircle className="w-5 h-5 text-gray-500" />
+          <h3 className="text-[15px] font-bold text-gray-900">Contacto principal</h3>
+        </div>
         <button className="text-[11px] text-blue-600 hover:underline font-medium">Editar</button>
       </div>
       

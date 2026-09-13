@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapPin, Navigation, Phone, MessageCircle, PlusCircle, CalendarPlus, Target, Trash2, AlertTriangle, X, Edit, MoreHorizontal } from 'lucide-react';
+import { MapPin, Navigation, Phone, MessageCircle, PlusCircle, CalendarPlus, Target, Trash2, AlertTriangle, X, Edit, MoreHorizontal, Building2, Factory, Users } from 'lucide-react';
 import { ActivityForm } from './activity-form';
 import { TaskForm } from './task-form';
 import { ProspectForm } from './prospect-form';
@@ -64,63 +64,76 @@ export function ProspectHeader({
   return (
     <>
       <div className="bg-white rounded-[10px] border border-[#e6eaf0] p-4 md:px-5 md:py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] mb-3">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-          <div>
-            <h1 className="text-[24px] font-bold text-gray-900 leading-[1.2] mb-1">
-              {prospect.company_name}
-            </h1>
-            
-            <div className="flex flex-wrap items-center gap-3 text-[12px] text-gray-500 mb-3">
-              <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                {prospect.city || 'Ciudad no registrada'}
-              </div>
-              {prospect.commercial_category && (
-                <div className="flex items-center gap-1.5 before:content-['•'] before:text-gray-300 before:mr-1.5">
-                  {prospect.commercial_category}
-                </div>
-              )}
+        <div className="flex flex-col xl:flex-row xl:justify-between xl:items-start gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="w-[42px] h-[42px] rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+              <Building2 className="w-5 h-5 text-blue-600" />
             </div>
-
-            <div className="flex items-center gap-2">
-              <span className="h-[22px] px-2 flex items-center text-[10px] font-medium text-gray-400 bg-gray-50 border border-gray-100 rounded-full">
-                {prospect.external_id}
-              </span>
-              {prospect.class && (
-                <span className={`h-[22px] px-2 flex items-center text-[11px] font-semibold rounded-full
-                  ${prospect.class === 'A' ? 'bg-green-50 text-green-700 border border-green-100' : 
-                    prospect.class === 'B' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 
-                    'bg-gray-50 text-gray-700 border border-gray-100'}`
-                }>
-                  Clase {prospect.class}
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2.5 mb-2">
+                <h1 className="text-[22px] md:text-[24px] font-bold text-gray-900 leading-none">
+                  {prospect.company_name}
+                </h1>
+                
+                <span className="h-[22px] px-2 flex items-center text-[10px] font-medium text-gray-400 bg-gray-50 border border-gray-100 rounded-full">
+                  {prospect.external_id}
                 </span>
-              )}
-              <div className="relative">
-                <select
-                  value={prospect.contact_status || 'pending'}
-                  onChange={handleStatusChange}
-                  disabled={isPending}
-                  className={`h-[22px] text-[11px] px-2 pl-2 pr-6 rounded-full font-semibold appearance-none cursor-pointer border transition-colors outline-none
-                    ${isPending ? 'opacity-50' : ''}
-                    ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                      prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                      prospect.contact_status === 'opportunity' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
-                      prospect.contact_status === 'quote' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                      prospect.contact_status === 'customer' ? 'bg-green-50 text-green-700 border-green-200' :
-                      prospect.contact_status === 'discarded' ? 'bg-rose-50 text-rose-700 border-rose-200' :
-                      'bg-gray-50 text-gray-700 border-gray-200'
-                    }
-                  `}
-                >
-                  {STATUS_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-current opacity-70">
-                  <svg className="h-3 w-3 fill-current" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
-                  </svg>
+                {prospect.class && (
+                  <span className={`h-[22px] px-2 flex items-center text-[11px] font-semibold rounded-full
+                    ${prospect.class === 'A' ? 'bg-green-50 text-green-700 border border-green-100' : 
+                      prospect.class === 'B' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 
+                      'bg-gray-50 text-gray-700 border border-gray-100'}`
+                  }>
+                    Clase {prospect.class}
+                  </span>
+                )}
+                <div className="relative">
+                  <select
+                    value={prospect.contact_status || 'pending'}
+                    onChange={handleStatusChange}
+                    disabled={isPending}
+                    className={`h-[22px] text-[11px] px-2 pl-2 pr-6 rounded-full font-semibold appearance-none cursor-pointer border transition-colors outline-none
+                      ${isPending ? 'opacity-50' : ''}
+                      ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                        prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                        prospect.contact_status === 'opportunity' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                        prospect.contact_status === 'quote' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                        prospect.contact_status === 'customer' ? 'bg-green-50 text-green-700 border-green-200' :
+                        prospect.contact_status === 'discarded' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                        'bg-yellow-50 text-yellow-700 border-yellow-200'
+                      }
+                    `}
+                  >
+                    {STATUS_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-current opacity-70">
+                    <svg className="h-3 w-3 fill-current" viewBox="0 0 20 20">
+                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                    </svg>
+                  </div>
                 </div>
+              </div>
+              
+              <div className="flex flex-wrap items-center gap-3.5 text-[12px] text-gray-500">
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                  {prospect.city || 'Ubicación no registrada'}
+                </div>
+                {prospect.commercial_category && (
+                  <div className="flex items-center gap-1.5 before:content-[none] md:before:content-[''] border-l border-gray-200 pl-3 md:pl-0 md:border-l-0">
+                    <Factory className="w-3.5 h-3.5 text-gray-400" />
+                    {prospect.commercial_category}
+                  </div>
+                )}
+                {prospect.employee_count && (
+                  <div className="flex items-center gap-1.5 border-l border-gray-200 pl-3">
+                    <Users className="w-3.5 h-3.5 text-gray-400" />
+                    {prospect.employee_count} empleados
+                  </div>
+                )}
               </div>
             </div>
           </div>

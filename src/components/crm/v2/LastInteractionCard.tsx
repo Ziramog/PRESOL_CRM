@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Clock, Trash2, AlertTriangle, Pencil, MoreHorizontal } from 'lucide-react';
+import { Clock, Trash2, AlertTriangle, Pencil, MoreHorizontal, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ACTIVITY_RESULTS } from '@/lib/constants';
@@ -15,8 +15,11 @@ export function LastInteractionCard({ activities, prospectId }: { activities: an
 
   if (!activities || activities.length === 0) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 h-full flex flex-col">
-        <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Última Interacción</h3>
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 h-auto flex flex-col">
+        <div className="flex items-center gap-2 mb-4">
+          <Phone className="w-5 h-5 text-gray-500" />
+          <h3 className="text-[15px] font-bold text-gray-900">Última interacción</h3>
+        </div>
         <div className="flex-1 flex flex-col items-center justify-center text-center py-6">
           <p className="text-sm text-gray-500 mb-3">Todavía no hay interacciones registradas.</p>
           <button className="text-xs font-medium text-blue-600 hover:underline">Registrar primera gestión</button>
@@ -41,8 +44,11 @@ export function LastInteractionCard({ activities, prospectId }: { activities: an
   return (
     <>
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col h-auto relative">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Última Interacción</h3>
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-2">
+            <Phone className="w-5 h-5 text-gray-500" />
+            <h3 className="text-[15px] font-bold text-gray-900">Última interacción</h3>
+          </div>
           
           <div className="relative">
             <button

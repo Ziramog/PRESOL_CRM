@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Phone, Mail, MessageSquare, MapPin, FileText, Activity } from 'lucide-react';
+import { Phone, Mail, MessageSquare, MapPin, FileText, Activity, Clock } from 'lucide-react';
 
 interface ActivityTimelineProps {
   activities: any[];
@@ -27,7 +27,10 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 h-auto flex flex-col">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Actividad Reciente</h3>
+        <div className="flex items-center gap-2">
+          <Clock className="w-5 h-5 text-gray-500" />
+          <h3 className="text-[15px] font-bold text-gray-900">Actividad reciente</h3>
+        </div>
         <select 
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
@@ -49,32 +52,43 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
             <button className="text-[12px] font-medium text-blue-600 hover:underline">+ Registrar primera gestión</button>
           </div>
         ) : (
-          <div className="space-y-4 before:absolute before:inset-0 before:ml-[0.9rem] before:-translate-x-px before:h-full before:w-[2px] before:bg-gradient-to-b before:from-gray-200 before:to-transparent">
+          <div className="relative before:absolute before:inset-0 before:ml-[44.5px] before:-translate-x-px before:h-full before:w-[2px] before:bg-gray-100">
             {displayActivities.map((activity, index) => {
               const { icon: Icon, bgColor, color } = getActivityIcon(activity.type);
+              const activityDate = activity.activity_at ? parseISO(activity.activity_at) : null;
+              
               return (
-                <div key={activity.id || index} className="relative flex items-start gap-3">
-                  <div className={`relative z-10 w-[30px] h-[30px] flex items-center justify-center rounded-full ${bgColor} ${color} border-[3px] border-white shadow-sm shrink-0`}>
-                    <Icon className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="flex-1 min-w-0 pt-1">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <h4 className="text-[12px] font-bold text-gray-900">{getActivityTitle(activity.type)}</h4>
-                      <span className="text-[11px] text-gray-500 whitespace-nowrap ml-2">
-                        {activity.activity_at ? format(parseISO(activity.activity_at), 'dd MMM, HH:mm', { locale: es }) : ''}
-                      </span>
+                <div key={activity.id || index} className="relative flex items-start group">
+                  <div className="w-[45px] pt-1.5 shrink-0 text-right pr-3">
+                    <span className="text-[11px] font-medium text-gray-500">
+                      {activityDate ? format(activityDate, 'HH:mm') : ''}
+                    </span>
+                    <div className="text-[9px] text-gray-400 mt-0.5 leading-tight">
+                      {activityDate ? format(activityDate, 'd MMM', { locale: es }) : ''}
                     </div>
-                    {activity.outcome && (
-                      <span className="inline-block bg-gray-100 text-gray-600 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm mb-1">
-                        {activity.outcome.replace(/_/g, ' ')}
-                      </span>
-                    )}
+                  </div>
+                  
+                  <div className="relative flex flex-col items-center">
+                    <div className={`relative z-10 w-[24px] h-[24px] mt-1 flex items-center justify-center rounded-full ${bgColor} ${color} border-2 border-white shadow-sm shrink-0`}>
+                      <Icon className="w-3 h-3" />
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 min-w-0 pt-1 pl-3 pb-5">
+                    <h4 className="text-[13px] font-bold text-gray-900 mb-0.5 flex items-center gap-2">
+                      {getActivityTitle(activity.type)}
+                      {activity.outcome && (
+                        <span className="inline-block text-gray-500 text-[11px] font-normal">
+                          {activity.outcome.replace(/_/g, ' ')}
+                        </span>
+                      )}
+                    </h4>
+                    <p className="text-[11px] text-blue-600 font-medium mb-1.5">{activity.user_full_name || 'Usuario'}</p>
                     {(activity.notes || activity.summary) && (
                       <p className="text-[12px] text-gray-600 line-clamp-2 leading-relaxed">
                         {activity.summary || activity.notes}
                       </p>
                     )}
-                    <p className="text-[11px] text-gray-400 mt-1 truncate">{activity.user_full_name || 'Usuario'}</p>
                   </div>
                 </div>
               );

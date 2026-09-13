@@ -26,6 +26,8 @@ const STATUS_COLORS: Record<string, string> = {
   discarded: 'bg-red-100 text-red-800'
 };
 
+import { BarChart2 } from 'lucide-react';
+
 export function CommercialStatusCard({ prospect, latestActivity }: CommercialStatusCardProps) {
   const statusLabel = STATUS_LABELS[prospect.contact_status] || 'Desconocido';
   const statusColor = STATUS_COLORS[prospect.contact_status] || 'bg-gray-100 text-gray-800';
@@ -34,7 +36,13 @@ export function CommercialStatusCard({ prospect, latestActivity }: CommercialSta
   
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col h-auto">
-      <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Estado Comercial</h3>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-2">
+          <BarChart2 className="w-5 h-5 text-gray-500" />
+          <h3 className="text-[15px] font-bold text-gray-900">Estado comercial</h3>
+        </div>
+        <button className="text-[11px] text-blue-600 hover:underline font-medium">Editar</button>
+      </div>
       
       <div className="grid grid-cols-[90px_1fr] gap-y-2 items-center text-[12px]">
         <span className="text-gray-500 font-medium">Etapa</span>
