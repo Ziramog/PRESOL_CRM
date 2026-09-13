@@ -1,4 +1,4 @@
-﻿import { CheckCircle2, Circle } from 'lucide-react';
+import { CheckCircle2, Circle } from 'lucide-react';
 
 interface DataQualityCardProps {
   dataQuality: {
@@ -45,7 +45,7 @@ export function DataQualityCard({ dataQuality }: DataQualityCardProps) {
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 h-full flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Calidad de Datos</h3>
-        <span className={\	ext-xs font-bold \\}>{dataQuality?.status || 'Desconocido'}</span>
+        <span className={`text-xs font-bold ${colorClass}`}>{dataQuality?.status || 'Desconocido'}</span>
       </div>
       
       <div className="mb-4">
@@ -54,7 +54,7 @@ export function DataQualityCard({ dataQuality }: DataQualityCardProps) {
           <span className="text-gray-900">{score}%</span>
         </div>
         <div className="w-full bg-gray-100 rounded-full h-2">
-          <div className={\h-2 rounded-full \\} style={{ width: \\%\ }}></div>
+          <div className={`h-2 rounded-full ${barColor}`} style={{ width: `${score}%` }}></div>
         </div>
       </div>
       

@@ -1,4 +1,4 @@
-﻿import { format, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface CommercialStatusCardProps {
@@ -39,7 +39,7 @@ export function CommercialStatusCard({ prospect, latestActivity }: CommercialSta
       <div className="flex-1 space-y-4">
         <div>
           <span className="text-xs text-gray-500 block mb-1">Etapa actual</span>
-          <span className={\inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium \\}>
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}`}>
             {statusLabel}
           </span>
         </div>

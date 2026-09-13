@@ -1,4 +1,4 @@
-﻿import { MapPin, Phone, Globe, Mail, Briefcase, Building, ExternalLink } from 'lucide-react';
+import { MapPin, Phone, Globe, Mail, Briefcase, Building, ExternalLink } from 'lucide-react';
 
 interface CompanyInfoCardProps {
   prospect: any;
@@ -44,7 +44,7 @@ function InfoRow({ icon, label, value, link }: { icon: React.ReactNode; label: s
       <div className="flex-1">
         <span className="text-gray-500 font-medium block">{label}</span>
         {link ? (
-          <a href={link.startsWith('http') ? link : \https://\\} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
+          <a href={link.startsWith('http') ? link : `https://${link}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
             {value}
             <ExternalLink className="w-3 h-3" />
           </a>

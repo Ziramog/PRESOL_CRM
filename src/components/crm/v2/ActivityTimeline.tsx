@@ -1,4 +1,4 @@
-﻿import { format, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Phone, Mail, MessageSquare, MapPin, FileText, Activity } from 'lucide-react';
 
@@ -31,7 +31,7 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
               const { icon: Icon, bgColor, color } = getActivityIcon(activity.type);
               return (
                 <div key={activity.id || index} className="relative flex items-start gap-4">
-                  <div className={\elative z-10 w-9 h-9 flex items-center justify-center rounded-full \ \ border-2 border-white shadow-sm shrink-0\}>
+                  <div className={`relative z-10 w-9 h-9 flex items-center justify-center rounded-full ${bgColor} ${color} border-2 border-white shadow-sm shrink-0`}>
                     <Icon className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0 pt-1.5">
