@@ -1,6 +1,7 @@
 import { getDashboardData } from '@/lib/dashboard/queries';
 import { ExecutiveSummary } from '@/components/dashboard/ExecutiveSummary';
-import { ResultBreakdown } from '@/components/dashboard/ResultBreakdown';
+import { ResultsBarChart } from '@/components/charts/ResultsBarChart';
+import { ConversionFunnel } from '@/components/charts/ConversionFunnel';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { FollowUpsBlock } from '@/components/dashboard/FollowUpsBlock';
 import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
@@ -31,6 +32,18 @@ export default async function DashboardPage(props: {
   });
 
   const periodTitle = PERIOD_TITLES[period] ?? 'Período';
+  
+  // Create funnel object matching the current period summary
+  // "data.summary[period]" has visited, effective_contacts, interested, opportunities, followups
+  const funnelData = data.summary[period as keyof typeof data.summary] || { visited: 0, effective_contacts: 0, interested: 0, opportunities: 0 };
+  
+  // Group activities for ResultsBarChart
+  const aggregated: Record<string, number> = {};
+  (data.results ?? []).forEach((r: any) => {
+    if (!r.outcome) return;
+    aggregated[r.outcome] = (aggregated[r.outcome] || 0) + 1;
+  });
+  const resultsData = Object.entries(aggregated).map(([outcome, count]) => ({ outcome, count }));
 
   return (
     <div className="space-y-8 pb-24 md:pb-8">
@@ -43,10 +56,10 @@ export default async function DashboardPage(props: {
         <DashboardFilters currentParams={searchParams} />
       </div>
 
-      {/* Executive 3-card summary — always fixed to yesterday/today/week relative to base date */}
+      {/* Executive 3-card summary */}
       <ExecutiveSummary summary={data.summary} baseDate={data.baseDate} />
 
-      {/* Detail section — reacts to selected period */}
+      {/* Detail section */}
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
           <div className="flex items-center gap-3 flex-1">
@@ -55,14 +68,20 @@ export default async function DashboardPage(props: {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5">
-          <div className="space-y-4 lg:space-y-5">
-            <ResultBreakdown results={data.results} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 mb-5">
+          <div className="lg:col-span-1">
+            <ResultsBarChart data={resultsData} />
+          </div>
+          <div className="lg:col-span-1">
+            <ConversionFunnel data={funnelData as any} />
+          </div>
+          <div className="lg:col-span-1">
             <FollowUpsBlock followups={data.followups} />
           </div>
-          <div className="lg:col-span-2">
-            <RecentActivity activities={data.recent_activity} />
-          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 gap-4 lg:gap-5">
+          <RecentActivity activities={data.recent_activity} />
         </div>
       </div>
     </div>
