@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Phone, Mail, MessageSquare, MapPin, FileText, Activity } from 'lucide-react';
@@ -7,17 +10,35 @@ interface ActivityTimelineProps {
 }
 
 export function ActivityTimeline({ activities }: ActivityTimelineProps) {
-  const displayActivities = activities ? activities.slice(0, 5) : [];
+  const [filterType, setFilterType] = useState('Todas');
+  
+  const filteredActivities = activities?.filter(a => {
+    if (filterType === 'Todas') return true;
+    if (filterType === 'Visitas' && a.type === 'visit') return true;
+    if (filterType === 'Llamadas' && a.type === 'call') return true;
+    if (filterType === 'WhatsApp' && a.type === 'whatsapp') return true;
+    if (filterType === 'Email' && a.type === 'email') return true;
+    if (filterType === 'Cotizaciones' && a.type === 'quote') return true;
+    return false;
+  }) || [];
+
+  const displayActivities = filteredActivities.slice(0, 5);
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 h-auto flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Actividad Reciente</h3>
-        <select className="text-[11px] bg-gray-50 border border-gray-100 rounded text-gray-600 py-1 px-1.5 outline-none">
-          <option>Todas</option>
-          <option>Visitas</option>
-          <option>Llamadas</option>
-          <option>WhatsApp</option>
+        <select 
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+          className="text-[11px] bg-gray-50 border border-gray-100 rounded text-gray-600 py-1 px-1.5 outline-none cursor-pointer hover:bg-gray-100 transition-colors"
+        >
+          <option value="Todas">Todas</option>
+          <option value="Visitas">Visitas</option>
+          <option value="Llamadas">Llamadas</option>
+          <option value="WhatsApp">WhatsApp</option>
+          <option value="Email">Email</option>
+          <option value="Cotizaciones">Cotizaciones</option>
         </select>
       </div>
       
@@ -62,7 +83,7 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
         )}
       </div>
       
-      {activities && activities.length > 5 && (
+      {filteredActivities && filteredActivities.length > 5 && (
         <div className="pt-3 mt-4 border-t border-gray-100 text-center">
           <button className="text-[11px] font-medium text-blue-600 hover:underline">Ver todas →</button>
         </div>
