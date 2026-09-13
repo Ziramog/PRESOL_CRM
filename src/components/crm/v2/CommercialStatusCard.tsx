@@ -33,42 +33,32 @@ export function CommercialStatusCard({ prospect, latestActivity }: CommercialSta
   const priorityLabel = prospect.visit_priority === 'high' ? 'Alta' : prospect.visit_priority === 'medium' ? 'Media' : 'Baja';
   
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 h-full flex flex-col">
-      <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Estado Comercial</h3>
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col h-auto">
+      <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Estado Comercial</h3>
       
-      <div className="flex-1 space-y-4">
+      <div className="grid grid-cols-[90px_1fr] gap-y-2 items-center text-[12px]">
+        <span className="text-gray-500 font-medium">Etapa</span>
         <div>
-          <span className="text-xs text-gray-500 block mb-1">Etapa actual</span>
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}`}>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${statusColor}`}>
             {statusLabel}
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <span className="text-xs text-gray-500 block mb-1">Prioridad</span>
-            <span className="text-sm font-medium text-gray-900">{priorityLabel}</span>
-          </div>
-          <div>
-            <span className="text-xs text-gray-500 block mb-1">Origen</span>
-            <span className="text-sm font-medium text-gray-900">{prospect.source_name || '—'}</span>
-          </div>
-        </div>
+        <span className="text-gray-500 font-medium">Prioridad</span>
+        <span className="text-gray-900 font-medium">{priorityLabel}</span>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <span className="text-xs text-gray-500 block mb-1">Fecha de alta</span>
-            <span className="text-sm text-gray-900">
-              {prospect.created_at ? format(parseISO(prospect.created_at), 'dd MMM yyyy', { locale: es }) : '—'}
-            </span>
-          </div>
-          <div>
-            <span className="text-xs text-gray-500 block mb-1">Última actividad</span>
-            <span className="text-sm text-gray-900">
-              {latestActivity ? format(parseISO(latestActivity.activity_at), 'dd MMM yyyy', { locale: es }) : '—'}
-            </span>
-          </div>
-        </div>
+        <span className="text-gray-500 font-medium">Origen</span>
+        <span className="text-gray-900">{prospect.source_name || '—'}</span>
+
+        <span className="text-gray-500 font-medium">Fecha alta</span>
+        <span className="text-gray-900">
+          {prospect.created_at ? format(parseISO(prospect.created_at), 'dd MMM yyyy', { locale: es }) : '—'}
+        </span>
+
+        <span className="text-gray-500 font-medium">Última act.</span>
+        <span className="text-gray-900">
+          {latestActivity ? format(parseISO(latestActivity.activity_at), 'dd MMM yyyy', { locale: es }) : '—'}
+        </span>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapPin, Navigation, Phone, MessageCircle, PlusCircle, CalendarPlus, Target, Trash2, AlertTriangle, X, Edit } from 'lucide-react';
+import { MapPin, Navigation, Phone, MessageCircle, PlusCircle, CalendarPlus, Target, Trash2, AlertTriangle, X, Edit, MoreHorizontal } from 'lucide-react';
 import { ActivityForm } from './activity-form';
 import { TaskForm } from './task-form';
 import { ProspectForm } from './prospect-form';
@@ -26,6 +26,7 @@ export function ProspectHeader({
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -62,18 +63,34 @@ export function ProspectHeader({
 
   return (
     <>
-      <div className="bg-white rounded-lg border border-gray-200 p-5 md:p-6 shadow-sm">
+      <div className="bg-white rounded-[10px] border border-[#e6eaf0] p-4 md:px-5 md:py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] mb-3">
         <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+            <h1 className="text-[24px] font-bold text-gray-900 leading-[1.2] mb-1">
+              {prospect.company_name}
+            </h1>
+            
+            <div className="flex flex-wrap items-center gap-3 text-[12px] text-gray-500 mb-3">
+              <div className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                {prospect.city || 'Ciudad no registrada'}
+              </div>
+              {prospect.commercial_category && (
+                <div className="flex items-center gap-1.5 before:content-['•'] before:text-gray-300 before:mr-1.5">
+                  {prospect.commercial_category}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="h-[22px] px-2 flex items-center text-[10px] font-medium text-gray-400 bg-gray-50 border border-gray-100 rounded-full">
                 {prospect.external_id}
               </span>
               {prospect.class && (
-                <span className={`px-2 py-0.5 rounded text-xs font-medium
-                  ${prospect.class === 'A' ? 'bg-green-100 text-green-800' : 
-                    prospect.class === 'B' ? 'bg-blue-100 text-blue-800' : 
-                    'bg-gray-100 text-gray-800'}`
+                <span className={`h-[22px] px-2 flex items-center text-[11px] font-semibold rounded-full
+                  ${prospect.class === 'A' ? 'bg-green-50 text-green-700 border border-green-100' : 
+                    prospect.class === 'B' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 
+                    'bg-gray-50 text-gray-700 border border-gray-100'}`
                 }>
                   Clase {prospect.class}
                 </span>
@@ -83,7 +100,7 @@ export function ProspectHeader({
                   value={prospect.contact_status || 'pending'}
                   onChange={handleStatusChange}
                   disabled={isPending}
-                  className={`text-xs px-2 py-0.5 pl-2 pr-6 rounded font-medium appearance-none cursor-pointer border transition-colors outline-none
+                  className={`h-[22px] text-[11px] px-2 pl-2 pr-6 rounded-full font-semibold appearance-none cursor-pointer border transition-colors outline-none
                     ${isPending ? 'opacity-50' : ''}
                     ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
                       prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
@@ -99,98 +116,93 @@ export function ProspectHeader({
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-current opacity-70">
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-current opacity-70">
                   <svg className="h-3 w-3 fill-current" viewBox="0 0 20 20">
                     <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
                   </svg>
                 </div>
               </div>
             </div>
-            
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              {prospect.company_name}
-            </h1>
-            
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-              <div className="flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-gray-400" />
-                {prospect.city || 'Ciudad no registrada'}
-              </div>
-              {prospect.commercial_category && (
-                <div className="flex items-center gap-1.5 before:content-['•'] before:text-gray-300 before:mr-2">
-                  {prospect.commercial_category}
-                </div>
-              )}
-            </div>
           </div>
 
-          {/* Acciones principales */}
-          <div className="flex flex-wrap gap-2 w-full md:w-auto mt-4 md:mt-0">
+          {/* Quick Actions */}
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto mt-2 md:mt-0 relative">
             {cleanPhone && (
               <a 
                 href={`tel:${cleanPhone}`}
-                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+                className="h-[34px] flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 bg-white border border-gray-200 rounded-md text-[12px] font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
               >
-                <Phone className="w-4 h-4 text-green-600" />
+                <Phone className="w-3.5 h-3.5 text-green-600" />
                 Llamar
               </a>
             )}
             {cleanPhone && (
               <a 
                 href={`whatsapp://send?phone=${cleanPhone.replace('+', '')}`}
-                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+                className="h-[34px] flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 bg-white border border-gray-200 rounded-md text-[12px] font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
               >
-                <MessageCircle className="w-4 h-4 text-green-500" />
+                <MessageCircle className="w-3.5 h-3.5 text-green-500" />
                 WhatsApp
               </a>
             )}
             <button 
               onClick={openMaps}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+              className="h-[34px] flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 bg-white border border-gray-200 rounded-md text-[12px] font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
             >
-              <Navigation className="w-4 h-4 text-blue-600" />
+              <Navigation className="w-3.5 h-3.5 text-blue-600" />
               Maps
             </button>
             <button 
               onClick={() => setShowActivityForm(true)}
-              className="hidden md:flex flex-1 md:flex-none items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white border border-blue-700 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+              className="h-[34px] hidden md:flex flex-1 md:flex-none items-center justify-center gap-1.5 px-3 bg-blue-600 text-white rounded-md text-[12px] font-medium hover:bg-blue-700 transition-colors shadow-sm"
             >
-              <PlusCircle className="w-4 h-4" />
+              <PlusCircle className="w-3.5 h-3.5" />
               Registrar gestión
             </button>
+
+            {/* Context Menu */}
+            <div className="relative">
+              <button 
+                onClick={() => setShowMenu(!showMenu)}
+                className="h-[34px] w-[34px] flex items-center justify-center bg-white border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+              
+              {showMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 py-1 flex flex-col">
+                    <button 
+                      onClick={() => { setShowTaskForm(true); setShowMenu(false); }}
+                      className="flex items-center gap-2 px-3 py-2 text-[12px] text-gray-700 hover:bg-gray-50 text-left"
+                    >
+                      <CalendarPlus className="w-3.5 h-3.5 text-gray-400" /> Crear tarea
+                    </button>
+                    <button 
+                      onClick={() => setShowMenu(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-[12px] text-gray-700 hover:bg-gray-50 text-left"
+                    >
+                      <Target className="w-3.5 h-3.5 text-gray-400" /> Crear oportunidad
+                    </button>
+                    <div className="h-px bg-gray-100 my-1"></div>
+                    <button 
+                      onClick={() => { setShowEditModal(true); setShowMenu(false); }}
+                      className="flex items-center gap-2 px-3 py-2 text-[12px] text-gray-700 hover:bg-gray-50 text-left"
+                    >
+                      <Edit className="w-3.5 h-3.5 text-gray-400" /> Editar prospecto
+                    </button>
+                    <button 
+                      onClick={() => { setShowDeleteModal(true); setShowMenu(false); }}
+                      className="flex items-center gap-2 px-3 py-2 text-[12px] text-red-600 hover:bg-red-50 text-left"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-red-500" /> Eliminar prospecto
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-        
-        {/* Acciones secundarias */}
-        <div className="flex flex-wrap items-center gap-2 mt-6 border-t border-gray-100 pt-5">
-          <button 
-            onClick={() => setShowTaskForm(true)}
-            className="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-sm text-xs font-semibold tracking-wider uppercase hover:bg-gray-50 transition-colors"
-          >
-            <CalendarPlus className="w-4 h-4 text-gray-500" />
-            Crear tarea
-          </button>
-          <button className="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-sm text-xs font-semibold tracking-wider uppercase hover:bg-gray-50 transition-colors">
-            <Target className="w-4 h-4 text-gray-500" />
-            Crear oportunidad
-          </button>
-          
-          <button 
-            onClick={() => setShowEditModal(true)}
-            className="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-sm text-xs font-semibold tracking-wider uppercase hover:bg-gray-50 transition-colors"
-          >
-            <Edit className="w-4 h-4 text-gray-500" />
-            Editar
-          </button>
-          
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            title="Eliminar prospecto permanentemente"
-            className="whitespace-nowrap flex items-center gap-1.5 px-3 py-2 text-rose-600 hover:text-rose-700 bg-rose-50/60 hover:bg-rose-100/60 border border-rose-200 rounded-sm text-xs font-semibold tracking-wider uppercase transition-colors ml-auto shadow-sm active:scale-95 cursor-pointer"
-          >
-            <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
-            Borrar
-          </button>
         </div>
       </div>
 

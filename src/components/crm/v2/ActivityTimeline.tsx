@@ -7,11 +7,13 @@ interface ActivityTimelineProps {
 }
 
 export function ActivityTimeline({ activities }: ActivityTimelineProps) {
+  const displayActivities = activities ? activities.slice(0, 5) : [];
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 h-full flex flex-col">
-      <div className="flex justify-between items-center mb-6">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 h-auto flex flex-col">
+      <div className="flex justify-between items-center mb-4">
         <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Actividad Reciente</h3>
-        <select className="text-xs bg-gray-50 border-gray-200 rounded text-gray-600 py-1 px-2">
+        <select className="text-[11px] bg-gray-50 border border-gray-100 rounded text-gray-600 py-1 px-1.5 outline-none">
           <option>Todas</option>
           <option>Visitas</option>
           <option>Llamadas</option>
@@ -19,39 +21,39 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
         </select>
       </div>
       
-      <div className="flex-1 relative">
-        {(!activities || activities.length === 0) ? (
-          <div className="text-center py-10">
-            <p className="text-sm text-gray-500 mb-2">Todavía no hay interacciones registradas.</p>
-            <button className="text-sm font-medium text-blue-600 hover:underline">Registrar primera gestión</button>
+      <div className="relative">
+        {displayActivities.length === 0 ? (
+          <div className="text-center py-6">
+            <p className="text-[12px] text-gray-500 mb-1.5">Todavía no hay interacciones registradas.</p>
+            <button className="text-[12px] font-medium text-blue-600 hover:underline">+ Registrar primera gestión</button>
           </div>
         ) : (
-          <div className="space-y-6 before:absolute before:inset-0 before:ml-[1.125rem] before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-gray-200 before:to-transparent">
-            {activities.map((activity, index) => {
+          <div className="space-y-4 before:absolute before:inset-0 before:ml-[0.9rem] before:-translate-x-px before:h-full before:w-[2px] before:bg-gradient-to-b before:from-gray-200 before:to-transparent">
+            {displayActivities.map((activity, index) => {
               const { icon: Icon, bgColor, color } = getActivityIcon(activity.type);
               return (
-                <div key={activity.id || index} className="relative flex items-start gap-4">
-                  <div className={`relative z-10 w-9 h-9 flex items-center justify-center rounded-full ${bgColor} ${color} border-2 border-white shadow-sm shrink-0`}>
-                    <Icon className="w-4 h-4" />
+                <div key={activity.id || index} className="relative flex items-start gap-3">
+                  <div className={`relative z-10 w-[30px] h-[30px] flex items-center justify-center rounded-full ${bgColor} ${color} border-[3px] border-white shadow-sm shrink-0`}>
+                    <Icon className="w-3.5 h-3.5" />
                   </div>
-                  <div className="flex-1 min-w-0 pt-1.5">
-                    <div className="flex items-center justify-between mb-1">
-                      <h4 className="text-sm font-bold text-gray-900">{getActivityTitle(activity.type)}</h4>
-                      <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                  <div className="flex-1 min-w-0 pt-1">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <h4 className="text-[12px] font-bold text-gray-900">{getActivityTitle(activity.type)}</h4>
+                      <span className="text-[11px] text-gray-500 whitespace-nowrap ml-2">
                         {activity.activity_at ? format(parseISO(activity.activity_at), 'dd MMM, HH:mm', { locale: es }) : ''}
                       </span>
                     </div>
                     {activity.outcome && (
-                      <span className="inline-block bg-gray-100 text-gray-700 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm mb-2">
+                      <span className="inline-block bg-gray-100 text-gray-600 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm mb-1">
                         {activity.outcome.replace(/_/g, ' ')}
                       </span>
                     )}
                     {(activity.notes || activity.summary) && (
-                      <p className="text-sm text-gray-600 line-clamp-2">
+                      <p className="text-[12px] text-gray-600 line-clamp-2 leading-relaxed">
                         {activity.summary || activity.notes}
                       </p>
                     )}
-                    <p className="text-xs text-gray-400 mt-2">{activity.user_full_name || 'Usuario'}</p>
+                    <p className="text-[11px] text-gray-400 mt-1 truncate">{activity.user_full_name || 'Usuario'}</p>
                   </div>
                 </div>
               );
@@ -60,9 +62,9 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
         )}
       </div>
       
-      {activities && activities.length > 0 && (
-        <div className="pt-4 mt-6 border-t border-gray-100 text-center">
-          <button className="text-xs text-blue-600 hover:underline">Ver todas</button>
+      {activities && activities.length > 5 && (
+        <div className="pt-3 mt-4 border-t border-gray-100 text-center">
+          <button className="text-[11px] font-medium text-blue-600 hover:underline">Ver todas →</button>
         </div>
       )}
     </div>

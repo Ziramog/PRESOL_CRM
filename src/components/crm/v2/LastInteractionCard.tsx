@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Clock, Trash2, AlertTriangle, Pencil } from 'lucide-react';
+import { Clock, Trash2, AlertTriangle, Pencil, MoreHorizontal } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ACTIVITY_RESULTS } from '@/lib/constants';
@@ -36,52 +36,72 @@ export function LastInteractionCard({ activities, prospectId }: { activities: an
     });
   };
 
+  const [showMenu, setShowMenu] = useState(false);
+
   return (
     <>
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 h-full flex flex-col">
-        <div className="flex justify-between items-center mb-4">
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col h-auto relative">
+        <div className="flex justify-between items-center mb-3">
           <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Última Interacción</h3>
-          <div className="flex items-center gap-2">
+          
+          <div className="relative">
             <button
-              type="button"
-              onClick={() => setShowEditModal(true)}
-              className="text-xs text-blue-600 hover:underline font-medium"
+              onClick={() => setShowMenu(!showMenu)}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1"
             >
-              Editar
+              <MoreHorizontal className="w-4 h-4" />
             </button>
-            <span className="text-gray-300">|</span>
-            <button
-              type="button"
-              onClick={() => setShowDeleteModal(true)}
-              className="text-xs text-red-600 hover:underline font-medium"
-            >
-              Eliminar
-            </button>
+            {showMenu && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)}></div>
+                <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-gray-200 rounded shadow-lg z-20 py-1">
+                  <button
+                    onClick={() => { setShowEditModal(true); setShowMenu(false); }}
+                    className="w-full text-left px-3 py-1.5 text-[11px] font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <Pencil className="w-3.5 h-3.5 text-gray-400" />
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => { setShowDeleteModal(true); setShowMenu(false); }}
+                    className="w-full text-left px-3 py-1.5 text-[11px] font-medium text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    Eliminar
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
         
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs uppercase tracking-wider font-bold bg-gray-100 text-gray-600">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-bold bg-gray-100 text-gray-600">
               {lastActivity.type === 'visit' ? 'Visita' : lastActivity.type === 'call' ? 'Llamada' : lastActivity.type}
             </span>
-            <span className="text-sm font-medium text-gray-900">{outcomeLabel}</span>
+            <span className="text-[13px] font-bold text-gray-900">{outcomeLabel}</span>
           </div>
           
           {lastActivity.notes || lastActivity.summary ? (
-            <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100 mb-3 line-clamp-3">
+            <p className="text-[13px] text-gray-700 bg-gray-50/50 p-3 rounded-lg border border-gray-100 mb-3 line-clamp-3 leading-relaxed">
               "{lastActivity.notes || lastActivity.summary}"
             </p>
           ) : (
-            <p className="text-sm text-gray-400 italic mb-3">Sin notas adicionales.</p>
+            <p className="text-[12px] text-gray-400 italic mb-3">Sin notas adicionales.</p>
           )}
           
-          <div className="flex items-center justify-between text-xs text-gray-500 mt-auto pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between text-[11px] font-medium text-gray-500 mt-1 pt-3 border-t border-gray-100">
             <div className="flex items-center">
-              <Clock className="w-3.5 h-3.5 mr-1" />
+              <Clock className="w-3.5 h-3.5 mr-1.5 text-gray-400" />
               {lastActivity.activity_at ? format(new Date(lastActivity.activity_at), "d MMM, HH:mm", { locale: es }) : '—'}
             </div>
-            <span>{lastActivity.profiles?.full_name || 'Usuario'}</span>
+            <span className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[8px] font-bold">
+                {lastActivity.profiles?.full_name?.charAt(0) || 'U'}
+              </div>
+              {lastActivity.profiles?.full_name || 'Usuario'}
+            </span>
           </div>
         </div>
       </div>

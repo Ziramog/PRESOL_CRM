@@ -1,32 +1,45 @@
-﻿interface CommercialSummaryCardProps {
+import { Lightbulb, Target, Briefcase } from 'lucide-react';
+
+interface CommercialSummaryCardProps {
   prospect: any;
 }
 
 export function CommercialSummaryCard({ prospect }: CommercialSummaryCardProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 h-full flex flex-col">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col h-auto">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Resumen Comercial</h3>
-        <button className="text-xs text-blue-600 hover:underline font-medium">Editar</button>
+        <button className="text-[11px] text-blue-600 hover:underline font-medium">Editar</button>
       </div>
       
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div>
-          <h4 className="text-xs font-semibold text-gray-900 mb-2">Necesidad probable</h4>
-          <p className="text-sm text-gray-600 whitespace-pre-wrap">
-            {prospect.probable_need || '—'}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-0 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+        <div className="flex flex-col py-3 md:py-0 md:pr-4">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <Lightbulb className="w-3.5 h-3.5 text-orange-500" />
+            <h4 className="text-[11px] font-bold text-gray-700 uppercase tracking-wide">Necesidad probable</h4>
+          </div>
+          <p className={`text-[13px] leading-relaxed ${prospect.probable_need ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+            {prospect.probable_need || 'Sin definir'}
           </p>
         </div>
-        <div>
-          <h4 className="text-xs font-semibold text-gray-900 mb-2">Enfoque comercial</h4>
-          <p className="text-sm text-gray-600 whitespace-pre-wrap">
-            {prospect.sales_hook || '—'}
+        
+        <div className="flex flex-col py-3 md:py-0 md:px-4">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <Target className="w-3.5 h-3.5 text-blue-500" />
+            <h4 className="text-[11px] font-bold text-gray-700 uppercase tracking-wide">Enfoque comercial</h4>
+          </div>
+          <p className={`text-[13px] leading-relaxed ${prospect.sales_hook ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+            {prospect.sales_hook || 'Sin definir'}
           </p>
         </div>
-        <div>
-          <h4 className="text-xs font-semibold text-gray-900 mb-2">Servicios a ofrecer</h4>
-          <p className="text-sm text-gray-600 whitespace-pre-wrap">
-            {prospect.presol_offer || '—'}
+        
+        <div className="flex flex-col py-3 md:py-0 md:pl-4">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <Briefcase className="w-3.5 h-3.5 text-green-500" />
+            <h4 className="text-[11px] font-bold text-gray-700 uppercase tracking-wide">Servicios a ofrecer</h4>
+          </div>
+          <p className={`text-[13px] leading-relaxed ${prospect.presol_offer ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+            {prospect.presol_offer || 'Sin definir'}
           </p>
         </div>
       </div>
