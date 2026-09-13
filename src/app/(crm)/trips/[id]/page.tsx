@@ -5,6 +5,9 @@ import { ChevronLeft, Map, Play, CheckCircle } from 'lucide-react';
 import { TripStopCard } from '@/components/crm/trip-stop-card';
 import { TripBuilder } from '@/components/crm/trip-builder';
 
+import { getDashboardData } from '@/lib/dashboard/queries';
+import { ResultsBarChart } from '@/components/charts/ResultsBarChart';
+import { ConversionFunnel } from '@/components/charts/ConversionFunnel';
 import { TripPlanVsActual } from '@/components/charts/TripPlanVsActual';
 
 export default async function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -28,6 +31,32 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
     .order('stop_order', { ascending: true });
 
   const isRouteMode = trip.status === 'in_progress';
+  
+  // Use custom date range large enough to encompass the trip's lifetime, but filtered by trip_id
+  const dashboardData = await getDashboardData({ 
+    trip_id: trip.id, 
+    period: 'custom', 
+    from_date: trip.created_at.split('T')[0]
+  });
+
+  const visitedCount = (stops || []).filter(s => s.status === 'visited').length;
+  let effectiveCount = 0;
+  let interestedCount = 0;
+
+  (dashboardData.results || []).forEach((r: any) => {
+    const outcome = r.raw_outcome || r.outcome || '';
+    const effectiveOutcomes = ['reception_only', 'decision_maker_contact', 'contact_made', 'interested', 'requested_info', 'requested_quote', 'follow_up', 'not_interested'];
+    if (effectiveOutcomes.includes(outcome)) effectiveCount++;
+    const interestedOutcomes = ['interested', 'requested_info', 'requested_quote', 'follow_up'];
+    if (interestedOutcomes.includes(outcome)) interestedCount++;
+  });
+
+  const funnelData = {
+    visited: visitedCount,
+    effective_contacts: effectiveCount,
+    interested: interestedCount,
+    opportunities: dashboardData.summary.week.opportunities, // Fallback for opportunities
+  };
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-20 md:pb-0">
@@ -77,6 +106,11 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
       </div>
 
       <TripPlanVsActual stops={stops || []} />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <ResultsBarChart data={dashboardData.results} />
+        <ConversionFunnel data={funnelData} />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
