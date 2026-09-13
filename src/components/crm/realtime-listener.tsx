@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 
-// Usamos el cliente estándar solo para suscripciones (solo lectura / notificaciones)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
@@ -15,46 +14,32 @@ export function RealtimeListener({ prospectId }: { prospectId: string }) {
 
   useEffect(() => {
     if (!supabase) return;
-    // Suscribirse a cambios en 'activities' para este prospecto
-    const activitiesSub = supabase
-      .channel('activities_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'activities',
-          filter: `prospect_id=eq.${prospectId}`,
-        },
-        () => {
-          // Cuando otro usuario inserta una actividad, refrescamos la página
-          router.refresh();
-        }
-      )
-      .subscribe();
+    
+    const channel = supabase.channel(`prospect_${prospectId}_changes`);
 
-    // Suscribirse a cambios en 'comments' para este prospecto
-    const commentsSub = supabase
-      .channel('comments_changes')
-      .on(
+    const tablesToWatch = ['activities', 'comments', 'tasks', 'opportunities', 'contacts', 'prospects'];
+
+    tablesToWatch.forEach(table => {
+      channel.on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
-          table: 'comments',
-          filter: `prospect_id=eq.${prospectId}`,
+          table: table,
+          filter: table === 'prospects' ? `id=eq.${prospectId}` : `prospect_id=eq.${prospectId}`,
         },
         () => {
           router.refresh();
         }
-      )
-      .subscribe();
+      );
+    });
+
+    channel.subscribe();
 
     return () => {
-      activitiesSub.unsubscribe();
-      commentsSub.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [prospectId, router]);
 
-  return null; // Componente invisible
+  return null;
 }

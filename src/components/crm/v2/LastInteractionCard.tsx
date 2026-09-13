@@ -15,9 +15,12 @@ export function LastInteractionCard({ activities, prospectId }: { activities: an
 
   if (!activities || activities.length === 0) {
     return (
-      <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-sm p-6 shadow-sm mb-6">
-        <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Qué pasó</h3>
-        <p className="text-sm font-light text-gray-400">No hay interacciones previas con este prospecto.</p>
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 h-full flex flex-col">
+        <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Última Interacción</h3>
+        <div className="flex-1 flex flex-col items-center justify-center text-center py-6">
+          <p className="text-sm text-gray-500 mb-3">Todavía no hay interacciones registradas.</p>
+          <button className="text-xs font-medium text-blue-600 hover:underline">Registrar primera gestión</button>
+        </div>
       </div>
     );
   }
@@ -35,56 +38,51 @@ export function LastInteractionCard({ activities, prospectId }: { activities: an
 
   return (
     <>
-      <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-sm p-6 shadow-sm mb-6 hover:shadow-lg transition-all duration-300">
-        <div className="flex justify-between items-center mb-5 border-b border-gray-100 pb-3">
-          <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Qué pasó</h3>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center text-[10px] uppercase tracking-wider text-gray-400 font-medium">
-              <Clock className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
-              {format(new Date(lastActivity.activity_at), "d MMM, HH:mm", { locale: es })}
-            </div>
-            {prospectId && (
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setShowEditModal(true)}
-                  className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-sm transition-colors cursor-pointer"
-                  title="Editar esta actividad"
-                >
-                  <Pencil className="w-3.5 h-3.5" strokeWidth={1.5} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteModal(true)}
-                  className="p-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-sm transition-colors cursor-pointer"
-                  title="Borrar esta actividad"
-                >
-                  <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
-                </button>
-              </div>
-            )}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 h-full flex flex-col">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Última Interacción</h3>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowEditModal(true)}
+              className="text-xs text-blue-600 hover:underline font-medium"
+            >
+              Editar
+            </button>
+            <span className="text-gray-300">|</span>
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              className="text-xs text-red-600 hover:underline font-medium"
+            >
+              Eliminar
+            </button>
           </div>
         </div>
         
-        <div className="mb-4 flex items-center">
-          <span className="inline-flex items-center px-2.5 py-1 rounded-sm text-[10px] uppercase tracking-wider font-bold bg-gray-50 border border-gray-100 text-gray-500 mr-3">
-            {lastActivity.type === 'visit' ? 'Visita' : lastActivity.type === 'call' ? 'Llamada' : lastActivity.type}
-          </span>
-          {outcomeLabel && (
-            <span className="text-base font-light tracking-tight text-gray-900">{outcomeLabel}</span>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs uppercase tracking-wider font-bold bg-gray-100 text-gray-600">
+              {lastActivity.type === 'visit' ? 'Visita' : lastActivity.type === 'call' ? 'Llamada' : lastActivity.type}
+            </span>
+            <span className="text-sm font-medium text-gray-900">{outcomeLabel}</span>
+          </div>
+          
+          {lastActivity.notes || lastActivity.summary ? (
+            <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100 mb-3 line-clamp-3">
+              "{lastActivity.notes || lastActivity.summary}"
+            </p>
+          ) : (
+            <p className="text-sm text-gray-400 italic mb-3">Sin notas adicionales.</p>
           )}
-        </div>
-        
-        {lastActivity.notes ? (
-          <p className="text-sm font-medium text-gray-600 bg-gray-50/50 p-4 rounded-sm mt-3 border-l-2 border-gray-200">
-            "{lastActivity.notes}"
-          </p>
-        ) : (
-          <p className="text-sm font-light text-gray-400 mt-3">Sin notas adicionales.</p>
-        )}
-        
-        <div className="mt-4 pt-4 border-t border-gray-50 text-[10px] uppercase tracking-wider text-gray-400 text-right font-medium">
-          Por {lastActivity.profiles?.full_name || 'Usuario'}
+          
+          <div className="flex items-center justify-between text-xs text-gray-500 mt-auto pt-3 border-t border-gray-100">
+            <div className="flex items-center">
+              <Clock className="w-3.5 h-3.5 mr-1" />
+              {lastActivity.activity_at ? format(new Date(lastActivity.activity_at), "d MMM, HH:mm", { locale: es }) : '—'}
+            </div>
+            <span>{lastActivity.profiles?.full_name || 'Usuario'}</span>
+          </div>
         </div>
       </div>
 

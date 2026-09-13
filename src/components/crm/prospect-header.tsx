@@ -126,44 +126,43 @@ export function ProspectHeader({
 
           {/* Acciones principales */}
           <div className="flex flex-wrap gap-2 w-full md:w-auto mt-4 md:mt-0">
+            {cleanPhone && (
+              <a 
+                href={`tel:${cleanPhone}`}
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                <Phone className="w-4 h-4 text-green-600" />
+                Llamar
+              </a>
+            )}
+            {cleanPhone && (
+              <a 
+                href={`whatsapp://send?phone=${cleanPhone.replace('+', '')}`}
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                <MessageCircle className="w-4 h-4 text-green-500" />
+                WhatsApp
+              </a>
+            )}
             <button 
               onClick={openMaps}
               className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
             >
               <Navigation className="w-4 h-4 text-blue-600" />
-              Navegar
+              Maps
             </button>
-            
-            {cleanPhone && (
-              <>
-                <a 
-                  href={`tel:${cleanPhone}`}
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
-                >
-                  <Phone className="w-4 h-4 text-green-600" />
-                  Llamar
-                </a>
-                <a 
-                  href={`whatsapp://send?phone=${cleanPhone.replace('+', '')}`}
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
-                >
-                  <MessageCircle className="w-4 h-4 text-green-500" />
-                  WhatsApp
-                </a>
-              </>
-            )}
+            <button 
+              onClick={() => setShowActivityForm(true)}
+              className="hidden md:flex flex-1 md:flex-none items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white border border-blue-700 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+            >
+              <PlusCircle className="w-4 h-4" />
+              Registrar gestión
+            </button>
           </div>
         </div>
         
-        {/* Acciones de gestión */}
+        {/* Acciones secundarias */}
         <div className="flex flex-wrap items-center gap-2 mt-6 border-t border-gray-100 pt-5">
-          <button 
-            onClick={() => setShowActivityForm(true)}
-            className="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-sm text-xs font-semibold tracking-wider uppercase hover:bg-blue-700 transition-colors shadow-sm active:scale-95"
-          >
-            <PlusCircle className="w-4 h-4" />
-            Registrar actividad
-          </button>
           <button 
             onClick={() => setShowTaskForm(true)}
             className="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-sm text-xs font-semibold tracking-wider uppercase hover:bg-gray-50 transition-colors"
@@ -193,6 +192,17 @@ export function ProspectHeader({
             Borrar
           </button>
         </div>
+      </div>
+
+      {/* FIXED MOBILE CTA */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50 shadow-[0_-4px_6px_-1px_rgb(0,0,0,0.1)]">
+        <button 
+          onClick={() => setShowActivityForm(true)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-blue-600 text-white rounded-lg text-base font-bold shadow-md active:scale-95 transition-transform"
+        >
+          <PlusCircle className="w-5 h-5" />
+          Registrar gestión
+        </button>
       </div>
       
       {showEditModal && (

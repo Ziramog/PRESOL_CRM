@@ -1,38 +1,76 @@
-import { PhoneCall, Calendar, CheckSquare } from 'lucide-react';
-import { format } from 'date-fns';
+import { PhoneCall, Calendar, CheckSquare, Clock } from 'lucide-react';
+import { format, isPast, isToday, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export function NextActionCard({ tasks }: { tasks: any[] }) {
   if (!tasks || tasks.length === 0) {
     return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 shadow-sm mb-6">
-        <h3 className="text-sm font-semibold text-yellow-800 uppercase tracking-wider mb-1">Próxima Acción</h3>
-        <p className="text-sm text-yellow-700">⚠️ No hay un próximo paso definido para este prospecto. Es recomendable crear una tarea.</p>
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 h-full flex flex-col">
+        <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Próxima Acción</h3>
+        <div className="flex-1 flex flex-col items-center justify-center text-center">
+          <p className="text-sm text-gray-500 mb-3">No hay seguimiento programado.</p>
+          <button className="text-xs font-medium text-blue-600 hover:underline">+ Crear seguimiento</button>
+        </div>
       </div>
     );
   }
 
   const nextTask = tasks[0];
+  const dueDate = nextTask.due_at ? new Date(nextTask.due_at) : null;
+  
+  let dateStatus = 'VENCIDA';
+  let dateColor = 'text-red-600 bg-red-50';
+  let dateText = 'Sin fecha';
+  
+  if (dueDate) {
+    if (isPast(dueDate) && !isToday(dueDate)) {
+      dateStatus = 'VENCIDA';
+      dateColor = 'text-red-600 bg-red-50 border-red-100';
+    } else if (isToday(dueDate)) {
+      dateStatus = 'HOY';
+      dateColor = 'text-orange-600 bg-orange-50 border-orange-100';
+    } else {
+      const days = differenceInDays(dueDate, new Date());
+      dateStatus = `EN ${days} DÍAS`;
+      dateColor = 'text-blue-600 bg-blue-50 border-blue-100';
+    }
+    dateText = format(dueDate, "d MMM", { locale: es });
+  }
 
   return (
-    <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-sm p-6 shadow-sm mb-6 flex items-start justify-between hover:shadow-lg transition-all duration-300">
-      <div>
-        <h3 className="text-[11px] font-bold text-blue-600 uppercase tracking-widest mb-3">Qué hacer ahora</h3>
-        <p className="text-xl font-light tracking-tight text-gray-900">{nextTask.title}</p>
-        <div className="flex items-center text-sm font-medium text-gray-500 mt-3">
-          {nextTask.type === 'call' ? <PhoneCall className="w-4 h-4 mr-2" strokeWidth={1.5} /> : nextTask.type === 'visit' ? <Calendar className="w-4 h-4 mr-2" strokeWidth={1.5} /> : <CheckSquare className="w-4 h-4 mr-2" strokeWidth={1.5} />}
+    <div className="bg-white border-2 border-blue-500 rounded-xl shadow-sm p-5 h-full flex flex-col relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-12 -mt-12 z-0"></div>
+      
+      <div className="relative z-10 flex justify-between items-start mb-4">
+        <h3 className="text-[11px] font-bold text-blue-600 uppercase tracking-widest flex items-center gap-1.5">
+          <Clock className="w-3.5 h-3.5" /> Próxima Acción
+        </h3>
+        {dueDate && (
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${dateColor}`}>
+            {dateStatus}
+          </span>
+        )}
+      </div>
+      
+      <div className="relative z-10 flex-1">
+        <p className="text-lg font-bold text-gray-900 mb-2 leading-tight">{nextTask.title}</p>
+        <div className="flex items-center text-sm font-medium text-gray-500">
+          {nextTask.type === 'call' ? <PhoneCall className="w-4 h-4 mr-1.5" /> : nextTask.type === 'visit' ? <Calendar className="w-4 h-4 mr-1.5" /> : <CheckSquare className="w-4 h-4 mr-1.5" />}
           <span className="capitalize">{nextTask.type}</span>
-          {nextTask.due_at && (
+          {dueDate && (
             <>
-              <span className="mx-3 text-gray-300">|</span>
-              <span>{format(new Date(nextTask.due_at), "d MMM yyyy", { locale: es })}</span>
+              <span className="mx-2 text-gray-300">•</span>
+              <span>{dateText}</span>
             </>
           )}
         </div>
       </div>
-      <button className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold tracking-wider uppercase px-4 py-2 rounded-sm transition-colors shadow-sm active:scale-95">
-        Completar
-      </button>
+      
+      <div className="relative z-10 mt-5">
+        <button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors flex justify-center items-center gap-2">
+          <CheckSquare className="w-4 h-4" /> Completar tarea
+        </button>
+      </div>
     </div>
   );
 }
