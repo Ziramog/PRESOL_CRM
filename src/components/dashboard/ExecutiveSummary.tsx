@@ -286,22 +286,30 @@ function PeriodCard({
 
       {/* Rate footer */}
       <div className={['px-6 py-4 border-t flex items-center justify-between', isPrimary ? 'border-blue-100' : 'border-gray-100'].join(' ')}>
-        <span className={['text-[10px] font-bold tracking-[0.1em] uppercase', isPrimary ? 'text-blue-600' : 'text-gray-400'].join(' ')}>
-          Tasa de contacto
-        </span>
-        <div className="flex items-center gap-3">
-          <span className={['text-lg font-bold', isPrimary ? 'text-blue-600' : 'text-emerald-600'].join(' ')}>
-            {rate(d.effective_contacts, d.visited)}
+        {d.visited > 0 ? (
+          <>
+            <span className={['text-[10px] font-bold tracking-[0.1em] uppercase', isPrimary ? 'text-blue-600' : 'text-gray-400'].join(' ')}>
+              Tasa de contacto
+            </span>
+            <div className="flex items-center gap-3">
+              <span className={['text-lg font-bold', isPrimary ? 'text-blue-600' : 'text-emerald-600'].join(' ')}>
+                {rate(d.effective_contacts, d.visited)}
+              </span>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-green-600 flex items-center">
+                  ▲ +12%
+                </span>
+                <span className="text-[9px] text-gray-400">
+                  {deltaText}
+                </span>
+              </div>
+            </div>
+          </>
+        ) : (
+          <span className="text-xs text-gray-400 italic">
+            Sin actividad todavía
           </span>
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-green-600 flex items-center">
-              ▲ +12%
-            </span>
-            <span className="text-[9px] text-gray-400">
-              {deltaText}
-            </span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
