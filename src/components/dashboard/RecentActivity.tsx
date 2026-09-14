@@ -68,7 +68,30 @@ export function RecentActivity({ activities }: { activities: any[] }) {
           <Clock className="w-5 h-5 text-blue-600" strokeWidth={2.5} />
           <h2 className="text-[15px] font-bold text-slate-900">Actividad reciente</h2>
         </div>
-        <button className="text-[12px] text-blue-600 font-medium hover:underline">Ver todas</button>
+        <button 
+          onClick={() => {
+            let reportText = `*Reporte de Actividad Diaria*\n\n`;
+            if (activities.length === 0) {
+              reportText += `No hubo actividad registrada hoy.\n`;
+            } else {
+              activities.forEach(a => {
+                const prospect = Array.isArray(a.prospects) ? a.prospects[0] : a.prospects;
+                const outcomeLabel = ACTIVITY_RESULTS[a.outcome as keyof typeof ACTIVITY_RESULTS] || a.outcome;
+                const typeLabel = TYPE_LABELS[a.type] ?? a.type;
+                const timeStr = formatInTimeZone(new Date(a.activity_at), TZ, 'HH:mm', { locale: es });
+                
+                reportText += `🕒 ${timeStr} | *${prospect?.company_name || 'Sin empresa'}*\n`;
+                reportText += `   👉 ${typeLabel} - ${outcomeLabel}\n\n`;
+              });
+            }
+            reportText += `Generado desde PRESOL CRM`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(reportText)}`, '_blank');
+          }}
+          className="text-[12px] flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md font-bold hover:bg-emerald-100 transition-colors"
+        >
+          <MessageCircle className="w-3.5 h-3.5" />
+          Compartir Reporte
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar relative z-0 max-h-[380px]">
@@ -130,13 +153,6 @@ export function RecentActivity({ activities }: { activities: any[] }) {
             );
           })}
         </div>
-      </div>
-      
-      <div className="px-5 py-3 border-t border-gray-50 z-10 bg-white rounded-b-xl">
-        <button className="flex items-center text-[13px] font-medium text-blue-600 hover:underline">
-          Ver más actividad
-          <ChevronRight className="w-4 h-4 ml-0.5" />
-        </button>
       </div>
     </div>
   );
