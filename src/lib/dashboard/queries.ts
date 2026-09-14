@@ -126,7 +126,7 @@ export async function getDashboardData(params: DashboardParams) {
   // Fetch Results (Raw activities to aggregate and show in modal)
   const resultsPromise = applyFilters(
     supabase.from('activities')
-      .select('id, type, outcome, activity_at, prospect_id, prospects!inner(id, company_name, city, commercial_category)')
+      .select('id, type, outcome, summary, activity_at, prospect_id, prospects!inner(id, company_name, city, commercial_category)')
       .gte('activity_at', periodFromIso)
       .lte('activity_at', periodToIso)
       .not('outcome', 'is', null)
@@ -148,7 +148,7 @@ export async function getDashboardData(params: DashboardParams) {
   // Fetch Recent Activity
   const recentPromise = applyFilters(
     supabase.from('activities')
-      .select('id, type, outcome, activity_at, notes, prospects!inner(id, company_name, city, commercial_category), profiles(full_name)')
+      .select('id, type, outcome, summary, activity_at, notes, prospects!inner(id, company_name, city, commercial_category), profiles(full_name)')
       .gte('activity_at', periodFromIso)
       .lte('activity_at', periodToIso)
       .is('deleted_at', null)

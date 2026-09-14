@@ -10,9 +10,9 @@ import { Phone, Building, MessageCircle, Mail, FileText, StickyNote, User, Clock
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
 const TYPE_LABELS: Record<string, string> = {
-  visit: 'Visita realizada',
-  call: 'Llamada realizada',
-  meeting: 'Reunión realizada',
+  visit: 'Visita presencial',
+  call: 'Llamada telefónica',
+  meeting: 'Reunión virtual',
   whatsapp: 'WhatsApp enviado',
   email: 'Email enviado',
   note: 'Nota agregada',
@@ -21,29 +21,39 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const TYPE_STYLES: Record<string, { icon: any, color: string, bg: string }> = {
+  visit: { icon: Building, color: 'text-blue-600', bg: 'bg-blue-50' },
   call: { icon: Phone, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  email: { icon: Mail, color: 'text-blue-600', bg: 'bg-blue-50' },
-  visit: { icon: User, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  meeting: { icon: Building, color: 'text-blue-600', bg: 'bg-blue-50' },
-  whatsapp: { icon: MessageCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  quote: { icon: FileText, color: 'text-purple-600', bg: 'bg-purple-50' },
+  email: { icon: Mail, color: 'text-purple-600', bg: 'bg-purple-50' },
+  whatsapp: { icon: MessageCircle, color: 'text-green-600', bg: 'bg-green-50' },
+  meeting: { icon: User, color: 'text-orange-600', bg: 'bg-orange-50' },
   note: { icon: StickyNote, color: 'text-amber-600', bg: 'bg-amber-50' },
-  other: { icon: StickyNote, color: 'text-slate-500', bg: 'bg-slate-50' },
+  quote: { icon: FileText, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  other: { icon: Clock, color: 'text-slate-600', bg: 'bg-slate-50' },
 };
 
 function getBadgeColors(outcome: string) {
-  const norm = outcome?.toLowerCase() || '';
-  if (norm.includes('interesado') || norm.includes('efectivo')) return 'bg-emerald-50 text-emerald-600';
-  if (norm.includes('cotiza') || norm.includes('oportunidad')) return 'bg-purple-50 text-purple-600';
-  if (norm.includes('seguimiento')) return 'bg-blue-50 text-blue-600';
-  if (norm.includes('sin') || norm.includes('no estaba')) return 'bg-amber-50 text-amber-600';
-  return 'bg-slate-50 text-slate-600';
+  if (!outcome) return 'bg-gray-100 text-gray-700';
+  const good = ['interested', 'requested_quote', 'contact_made', 'decision_maker_contact', 'opportunity', 'quote', 'customer'];
+  const neutral = ['requested_info', 'follow_up', 'in_progress', 'reception_only'];
+  
+  if (good.includes(outcome)) return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20';
+  if (neutral.includes(outcome)) return 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/20';
+  return 'bg-gray-100 text-gray-600 ring-1 ring-gray-500/20';
 }
 
-export function RecentActivity({ activities }: { activities: any[] }) {
+function getRichOutcomeLabel(a: any) {
+  const base = ACTIVITY_RESULTS[a.outcome as keyof typeof ACTIVITY_RESULTS] || a.outcome;
+  if (!a.summary) return base;
+  
+  if (a.summary === 'decision_maker') return `Resp: ${base}`;
+  if (a.summary === 'reception') return `Recep: ${base}`;
+  if (a.summary === 'no_contact') return base; // "No respondió" is clear enough
+  return base;
+}
+
+export function RecentActivity({ activities, showDate = false }: { activities: any[], showDate?: boolean }) {
   const searchParams = useSearchParams();
   const currentPeriod = searchParams.get('period') || 'today';
-  const showDate = currentPeriod !== 'today';
 
   if (!activities || activities.length === 0) {
     return (
@@ -76,7 +86,7 @@ export function RecentActivity({ activities }: { activities: any[] }) {
             } else {
               activities.forEach(a => {
                 const prospect = Array.isArray(a.prospects) ? a.prospects[0] : a.prospects;
-                const outcomeLabel = ACTIVITY_RESULTS[a.outcome as keyof typeof ACTIVITY_RESULTS] || a.outcome;
+                const outcomeLabel = getRichOutcomeLabel(a);
                 const typeLabel = TYPE_LABELS[a.type] ?? a.type;
                 const timeStr = formatInTimeZone(new Date(a.activity_at), TZ, 'HH:mm', { locale: es });
                 
@@ -103,7 +113,7 @@ export function RecentActivity({ activities }: { activities: any[] }) {
         <div className="relative z-10 flex flex-col gap-6">
           {activities.map((a, idx) => {
             const prospect = Array.isArray(a.prospects) ? a.prospects[0] : a.prospects;
-            const outcomeLabel = ACTIVITY_RESULTS[a.outcome as keyof typeof ACTIVITY_RESULTS] || a.outcome;
+            const outcomeLabel = getRichOutcomeLabel(a);
             const typeLabel = TYPE_LABELS[a.type] ?? a.type;
             const { icon: Icon, color, bg } = TYPE_STYLES[a.type] || TYPE_STYLES.other;
             
