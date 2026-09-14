@@ -1,8 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Mail, UserCircle, Linkedin, ArrowRight } from 'lucide-react';
+import { Phone, Mail, UserCircle, ArrowRight } from 'lucide-react';
 import { ContactForm } from '@/components/crm/contact-form';
+
+const LinkedinIcon = ({ className }: { className?: string }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+    <rect width="4" height="12" x="2" y="9" />
+    <circle cx="4" cy="4" r="2" />
+  </svg>
+);
 
 export function PrimaryContactCard({ contacts, prospect, secondaryCount = 0 }: { contacts: any[], prospect: any, secondaryCount?: number }) {
   const [showEditModal, setShowEditModal] = useState(false);
@@ -98,7 +115,7 @@ export function PrimaryContactCard({ contacts, prospect, secondaryCount = 0 }: {
                 <div className="flex items-center text-[13px] font-medium">
                   <div className="w-6 flex justify-center shrink-0 mr-3">
                     <div className="bg-[#0a66c2] text-white p-[3px] rounded-sm">
-                      <Linkedin className="w-[14px] h-[14px] fill-current" />
+                      <LinkedinIcon className="w-[14px] h-[14px] fill-current" />
                     </div>
                   </div>
                   <a href={primaryContact.linkedin_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline truncate">
