@@ -64,7 +64,7 @@ export function RecentActivity({ activities }: { activities: any[] }) {
         <button className="text-[12px] text-blue-600 font-medium hover:underline">Ver todas</button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar relative z-0">
+      <div className="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar relative z-0 max-h-[380px]">
         <div className="absolute left-[29px] top-6 bottom-4 w-px bg-slate-100 z-0"></div>
         <div className="relative z-10 flex flex-col gap-6">
           {activities.map((a, idx) => {

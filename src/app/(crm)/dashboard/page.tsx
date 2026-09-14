@@ -71,19 +71,19 @@ export default async function DashboardPage(props: {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6 mb-4 lg:mb-6">
-          <div className="flex flex-col h-full min-h-[350px]">
+          <div className="flex flex-col h-[420px]">
             <ResultsBarChart data={resultsData} />
           </div>
-          <div className="flex flex-col h-full min-h-[350px]">
+          <div className="flex flex-col h-[420px]">
             <RecentActivity activities={data.recent_activity} />
           </div>
         </div>
         
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
-          <div className="flex flex-col h-full min-h-[350px]">
+          <div className="flex flex-col h-[420px]">
             <FollowUpsBlock followups={data.followups} />
           </div>
-          <div className="flex flex-col h-full min-h-[350px]">
+          <div className="flex flex-col h-[420px]">
             <ConversionFunnel data={funnelData as any} />
           </div>
         </div>
