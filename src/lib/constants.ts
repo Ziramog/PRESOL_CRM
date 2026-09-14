@@ -16,6 +16,20 @@ export const ACTIVITY_RESULTS = {
 
 export type ActivityResult = keyof typeof ACTIVITY_RESULTS;
 
+export const CONTACT_LEVELS = {
+  no_contact: "No hubo contacto",
+  reception: "Contacto con Recepción / Filtro",
+  decision_maker: "Contacto con Responsable / Decisor"
+} as const;
+
+export type ContactLevel = keyof typeof CONTACT_LEVELS;
+
+export const OUTCOMES_BY_CONTACT_LEVEL: Record<string, ActivityResult[]> = {
+  no_contact: ['no_answer', 'closed', 'invalid_data', 'other'],
+  reception: ['reception_only', 'not_available', 'requested_info', 'other'],
+  decision_maker: ['decision_maker_contact', 'interested', 'requested_quote', 'requested_info', 'follow_up', 'not_interested', 'other']
+};
+
 export const OUTCOMES_BY_ACTIVITY: Record<string, ActivityResult[]> = {
   visit: [
     'closed', 'not_available', 'reception_only', 'decision_maker_contact',

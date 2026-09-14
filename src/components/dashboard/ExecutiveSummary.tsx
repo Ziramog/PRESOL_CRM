@@ -247,14 +247,16 @@ function PeriodCard({
   onMetricClick: (kpiKey: string, title: string, period: string, periodLabel: string) => void;
   onCardClick: (periodCode: string) => void;
 }) {
-  const d = data ?? { visited: 0, effective_contacts: 0, interested: 0, opportunities: 0, followups: 0 };
+  const d = data ?? { visited: 0, managed: 0, visits: 0, calls: 0, effective_contacts: 0, interested: 0, opportunities: 0, followups: 0 };
+  const totalManaged = d.managed !== undefined ? d.managed : d.visited;
 
   const metrics = [
-    { key: 'visited', label: 'Gestionados', value: d.visited },
-    { key: 'effective_contacts', label: 'Contactos efectivos', value: d.effective_contacts },
+    { key: 'managed', label: 'Gestionados (Total)', value: totalManaged },
+    { key: 'visits', label: '• Visitas Presenciales', value: d.visits || 0 },
+    { key: 'calls', label: '• Llamadas / Virtuales', value: d.calls || 0 },
+    { key: 'effective_contacts', label: 'Contactos Efectivos', value: d.effective_contacts },
     { key: 'interested', label: 'Interesados', value: d.interested },
     { key: 'opportunities', label: 'Oportunidades', value: d.opportunities },
-    { key: 'followups', label: 'Seguimientos', value: d.followups },
   ];
 
   // Dummy delta for design matching
@@ -270,42 +272,45 @@ function PeriodCard({
         'flex flex-col rounded-xl transition-all duration-300 relative cursor-pointer',
         isPrimary
           ? 'bg-white border-2 border-blue-500 shadow-sm' 
-          : 'bg-white border border-gray-200 shadow-sm hover:border-blue-300',
+          : 'bg-gray-50 border border-gray-100 opacity-70 hover:opacity-100 hover:bg-white scale-[0.98]'
       ].join(' ')}
     >
-      {/* Card header */}
-      <div className={['px-6 pt-6 pb-4 border-b flex justify-between', isPrimary ? 'border-blue-100 bg-blue-50/20 rounded-t-xl' : 'border-gray-100'].join(' ')}>
-        <div className="flex flex-col">
-          <p className={['flex items-center text-[13px] font-bold tracking-[0.05em] uppercase mb-1', isPrimary ? 'text-blue-600' : 'text-gray-900'].join(' ')}>
+      {/* Header */}
+      <div className={['px-6 py-5 border-b', isPrimary ? 'border-blue-100 bg-blue-50/30' : 'border-gray-100'].join(' ')}>
+        <div className="flex justify-between items-center mb-1">
+          <h3 className={['font-bold text-lg', isPrimary ? 'text-gray-900' : 'text-gray-700'].join(' ')}>
             {title}
-          </p>
-          <p className={['text-[11px]', isPrimary ? 'text-blue-500' : 'text-gray-500'].join(' ')}>
+          </h3>
+          <span className={['text-[11px] font-bold tracking-wider uppercase', isPrimary ? 'text-blue-600' : 'text-gray-500'].join(' ')}>
             {dateLabel}
-          </p>
+          </span>
         </div>
-        {isPrimary && (title === "Hoy" || title === "Esta semana") && (
-          <div className="flex items-center h-fit bg-green-50 text-green-700 px-2 py-1 rounded-full text-[10px] font-bold uppercase">
-            <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
-            En curso
+        
+        {/* Minimal trend indicator */}
+        {isPrimary && (
+          <div className="flex items-center gap-1.5 mt-2 text-[11px] font-medium text-emerald-600 bg-emerald-50 w-fit px-2 py-0.5 rounded-full">
+            <TrendingUp className="w-3 h-3" strokeWidth={3} />
+            <span>+15% {deltaText}</span>
           </div>
         )}
       </div>
 
       {/* Metrics */}
-      <div className="flex-1 px-4 py-3 space-y-1">
+      <div className="flex-1 px-4 py-3 space-y-0.5">
         {metrics.map(({ key, label, value }) => (
           <button
             key={key}
             onClick={(e) => {
               e.stopPropagation();
-              onMetricClick(key, label, periodCode, title);
+              const apiName = key === 'managed' ? 'visited' : key;
+              onMetricClick(apiName, label.replace('• ', ''), periodCode, title);
             }}
-            className="w-full flex items-center justify-between py-1.5 px-2 text-left transition-colors group hover:bg-gray-50"
+            className="w-full flex items-center justify-between py-1 px-2 text-left transition-colors group hover:bg-gray-50 rounded"
           >
-            <span className="text-sm text-gray-600 group-hover:text-gray-900">
+            <span className={`text-sm ${label.includes('•') ? 'text-gray-500 pl-3' : 'text-gray-700 font-medium'} group-hover:text-blue-600`}>
               {label}
             </span>
-            <span className="text-sm font-bold tabular-nums text-gray-900">
+            <span className={`text-sm tabular-nums ${label.includes('•') ? 'text-gray-500' : 'font-bold text-gray-900'}`}>
               {value}
             </span>
           </button>
@@ -314,29 +319,25 @@ function PeriodCard({
 
       {/* Rate footer */}
       <div className={['px-6 py-4 border-t flex items-center justify-between', isPrimary ? 'border-blue-100' : 'border-gray-100'].join(' ')}>
-        {d.visited > 0 ? (
+        {totalManaged > 0 ? (
           <>
             <span className={['text-[10px] font-bold tracking-[0.1em] uppercase', isPrimary ? 'text-blue-600' : 'text-gray-400'].join(' ')}>
               Tasa de contacto
             </span>
             <div className="flex items-center gap-3">
               <span className={['text-lg font-bold', isPrimary ? 'text-blue-600' : 'text-emerald-600'].join(' ')}>
-                {rate(d.effective_contacts, d.visited)}
+                {rate(d.effective_contacts, totalManaged)}
               </span>
               <div className="flex flex-col">
                 <span className="text-[10px] font-bold text-green-600 flex items-center">
-                  ↑ +12%
-                </span>
-                <span className="text-[9px] text-gray-400">
-                  {deltaText}
+                  <TrendingUp className="w-3 h-3 mr-0.5" />
+                  +2.1%
                 </span>
               </div>
             </div>
           </>
         ) : (
-          <span className="text-xs text-gray-400 italic">
-            Sin actividad todavía
-          </span>
+          <span className="text-[11px] font-medium text-gray-400">Todavía no hay actividad en este período</span>
         )}
       </div>
     </div>

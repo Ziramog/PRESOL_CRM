@@ -52,7 +52,7 @@ export async function getDashboardData(params: DashboardParams) {
     return q;
   };
 
-  const summaryActsP = applyFilters(supabase.from('activities').select('prospect_id, outcome, activity_at, prospects!inner(id)').gte('activity_at', minFrom).lte('activity_at', maxTo).is('deleted_at', null));
+  const summaryActsP = applyFilters(supabase.from('activities').select('prospect_id, outcome, type, summary, activity_at, prospects!inner(id)').gte('activity_at', minFrom).lte('activity_at', maxTo).is('deleted_at', null));
   const summaryOppsP = applyFilters(supabase.from('opportunities').select('id, created_at, prospects!inner(id)').gte('created_at', minFrom).lte('created_at', maxTo).is('deleted_at', null));
   const summaryTasksP = applyFilters(supabase.from('tasks').select('id, due_at, prospects!inner(id)').eq('status', 'pending').gte('due_at', minFrom).lte('due_at', maxTo).is('deleted_at', null), true);
 
@@ -62,20 +62,41 @@ export async function getDashboardData(params: DashboardParams) {
       const opps = (sOpps.data || []).filter((o: any) => o.created_at >= from && o.created_at <= to);
       const tasks = (sTasks.data || []).filter((t: any) => t.due_at >= from && t.due_at <= to);
 
-      const uniqueVisited = new Set();
+      const uniqueManaged = new Set();
+      const uniqueVisits = new Set();
+      const uniqueCalls = new Set();
       const uniqueEffective = new Set();
       const uniqueInterested = new Set();
 
       acts.forEach((a: any) => {
-        uniqueVisited.add(a.prospect_id);
-        const effectiveOutcomes = ['reception_only', 'decision_maker_contact', 'contact_made', 'interested', 'requested_info', 'requested_quote', 'follow_up', 'not_interested'];
-        if (effectiveOutcomes.includes(a.outcome)) uniqueEffective.add(a.prospect_id);
+        if (a.type === 'note') return; // Skip internal notes for funnel
+        
+        uniqueManaged.add(a.prospect_id);
+        
+        if (a.type === 'visit' || a.type === 'meeting') {
+          uniqueVisits.add(a.prospect_id);
+        } else if (a.type === 'call' || a.type === 'whatsapp' || a.type === 'email') {
+          uniqueCalls.add(a.prospect_id);
+        }
+
+        const legacyEffective = ['reception_only', 'decision_maker_contact', 'contact_made', 'interested', 'requested_info', 'requested_quote', 'follow_up', 'not_interested'];
+        const isNewEffective = a.summary === 'reception' || a.summary === 'decision_maker';
+        
+        if (isNewEffective || legacyEffective.includes(a.outcome)) {
+          uniqueEffective.add(a.prospect_id);
+        }
+
         const interestedOutcomes = ['interested', 'requested_info', 'requested_quote', 'follow_up'];
-        if (interestedOutcomes.includes(a.outcome)) uniqueInterested.add(a.prospect_id);
+        if (interestedOutcomes.includes(a.outcome)) {
+          uniqueInterested.add(a.prospect_id);
+        }
       });
 
       return {
-        visited: uniqueVisited.size,
+        visited: uniqueManaged.size, // backward compatibility
+        managed: uniqueManaged.size,
+        visits: uniqueVisits.size,
+        calls: uniqueCalls.size,
         effective_contacts: uniqueEffective.size,
         interested: uniqueInterested.size,
         opportunities: opps.length,

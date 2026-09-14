@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { createActivity, updateActivity } from '@/app/actions/activities';
 import { updateStopStatus } from '@/app/actions/trips';
-import { X } from 'lucide-react';
-import { ACTIVITY_RESULTS, OUTCOMES_BY_ACTIVITY, ActivityResult } from '@/lib/constants';
+import { X, Loader2 } from 'lucide-react';
+import { ACTIVITY_RESULTS, OUTCOMES_BY_CONTACT_LEVEL, CONTACT_LEVELS, ContactLevel, ActivityResult } from '@/lib/constants';
 
 const formatDateTimeLocal = (dateStr?: string) => {
   if (!dateStr) return '';
@@ -26,29 +26,39 @@ export function ActivityForm({
 }) {
   const [isPending, setIsPending] = useState(false);
   const [activityType, setActivityType] = useState(activityToEdit?.type || 'visit');
+  const [contactLevel, setContactLevel] = useState<ContactLevel | ''>((activityToEdit?.summary as ContactLevel) || '');
   const [outcome, setOutcome] = useState(activityToEdit?.outcome || '');
   const [error, setError] = useState<string | null>(null);
 
-  // If activityType changes and the current outcome is not valid for this type, clear it.
+  // If contactLevel changes and the current outcome is not valid for this level, clear it.
   useEffect(() => {
-    const validOutcomes = OUTCOMES_BY_ACTIVITY[activityType] || [];
-    if (outcome && !validOutcomes.includes(outcome as ActivityResult)) {
-      setOutcome('');
+    if (contactLevel) {
+      const validOutcomes = OUTCOMES_BY_CONTACT_LEVEL[contactLevel] || [];
+      if (outcome && !validOutcomes.includes(outcome as ActivityResult)) {
+        setOutcome('');
+      }
     }
-  }, [activityType, outcome]);
+  }, [contactLevel]); // Do not include outcome to avoid infinite loop
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!outcome) {
-      setError('Por favor, selecciona un resultado.');
-      return;
+    if (activityType !== 'note') {
+      if (!contactLevel) {
+        setError('Por favor, indica con quién te contactaste.');
+        return;
+      }
+      if (!outcome) {
+        setError('Por favor, selecciona un resultado del contacto.');
+        return;
+      }
     }
     
     setIsPending(true);
     setError(null);
     
     const formData = new FormData(e.currentTarget);
-    formData.append('outcome', outcome); // inject the selected outcome state
+    formData.append('outcome', activityType === 'note' ? 'other' : outcome);
+    formData.append('summary', activityType === 'note' ? '' : contactLevel);
     
     if (tripContext) {
       formData.append('trip_id', tripContext.tripId);
@@ -70,11 +80,11 @@ export function ActivityForm({
       if (tripContext && !activityToEdit) {
         await updateStopStatus(tripContext.tripStopId, tripContext.tripId, 'visited');
       }
-      onClose(); // close modal on success
+      onClose();
     }
   };
 
-  const validOutcomes = OUTCOMES_BY_ACTIVITY[activityType] || [];
+  const validOutcomes = contactLevel ? (OUTCOMES_BY_CONTACT_LEVEL[contactLevel] || []) : [];
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-white/60 backdrop-blur-md transition-all">
@@ -88,7 +98,7 @@ export function ActivityForm({
               {activityToEdit ? 'Modificar datos de la interacción' : 'Nueva interacción comercial'}
             </p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-sm text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+          <button type="button" onClick={onClose} className="p-1.5 rounded-sm text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
             <X className="w-5 h-5" strokeWidth={1.5} />
           </button>
         </div>
@@ -97,11 +107,17 @@ export function ActivityForm({
           <input type="hidden" name="prospect_id" value={prospectId} />
           
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tipo de interacción</label>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Canal de comunicación</label>
             <select 
               name="type" 
               value={activityType}
-              onChange={(e) => setActivityType(e.target.value)}
+              onChange={(e) => {
+                setActivityType(e.target.value);
+                if (e.target.value === 'note') {
+                  setContactLevel('');
+                  setOutcome('');
+                }
+              }}
               required 
               className="w-full text-sm rounded-sm border border-gray-200 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 py-2.5 px-3 bg-white outline-none"
             >
@@ -110,38 +126,64 @@ export function ActivityForm({
               <option value="whatsapp">Mensaje de WhatsApp</option>
               <option value="email">Correo Electrónico</option>
               <option value="meeting">Reunión Virtual</option>
-              <option value="note">Nota Interna</option>
+              <option value="note">Nota Interna (Sin contacto)</option>
             </select>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Resultado</label>
-            <div className="grid grid-cols-2 gap-2">
-              {validOutcomes.map((o) => (
-                <button
-                  key={o}
-                  type="button"
-                  onClick={() => setOutcome(o)}
-                  className={`text-xs px-3 py-2 border rounded-sm font-medium transition-colors text-center cursor-pointer ${
-                    outcome === o 
-                      ? 'bg-blue-50 border-blue-600 text-blue-700 font-semibold' 
-                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  {ACTIVITY_RESULTS[o as ActivityResult] || o}
-                </button>
-              ))}
-            </div>
-          </div>
+          {activityType !== 'note' && (
+            <>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">1. Nivel de contacto (¿Con quién hablaste?)</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {(Object.entries(CONTACT_LEVELS) as [ContactLevel, string][]).map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setContactLevel(key)}
+                      className={`text-xs px-2 py-2 border rounded-sm font-medium transition-colors text-center cursor-pointer ${
+                        contactLevel === key 
+                          ? 'bg-blue-50 border-blue-600 text-blue-700 font-semibold' 
+                          : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {contactLevel && (
+                <div className="animate-in fade-in slide-in-from-top-2">
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">2. Resultado del contacto</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {validOutcomes.map((o) => (
+                      <button
+                        key={o}
+                        type="button"
+                        onClick={() => setOutcome(o)}
+                        className={`text-xs px-3 py-2 border rounded-sm font-medium transition-colors text-center cursor-pointer ${
+                          outcome === o 
+                            ? 'bg-blue-50 border-blue-600 text-blue-700 font-semibold' 
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        {ACTIVITY_RESULTS[o]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
 
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Notas de campo (Opcional)</label>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Notas y detalles adicionales</label>
             <textarea 
               name="notes"
               defaultValue={activityToEdit?.notes || ''}
-              placeholder="Detalles sobre lo hablado, acuerdos, etc."
-              className="w-full text-sm rounded-sm border border-gray-200 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-3 resize-none bg-white outline-none"
-              rows={3}
+              rows={3} 
+              className="w-full text-sm rounded-sm border border-gray-200 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-3 bg-white outline-none resize-none"
+              placeholder="Ej: Me dijo que llame el martes..."
             />
           </div>
 
