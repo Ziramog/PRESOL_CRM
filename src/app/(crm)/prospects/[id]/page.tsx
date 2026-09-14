@@ -131,7 +131,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
         
         {/* ROW 4: 2 columns (50/50 split) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-2">
-          <InternalNotesAccordion comments={overview.comments} />
+          <InternalNotesAccordion comments={overview.comments} prospectId={params.id} />
           <LinkedOpportunitiesAccordion opportunities={overview.opportunities} />
         </div>
         

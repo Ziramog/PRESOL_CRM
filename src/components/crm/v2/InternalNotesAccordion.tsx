@@ -1,16 +1,44 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, MessageSquare } from 'lucide-react';
+import { ChevronDown, ChevronRight, MessageSquare, Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { createComment } from '@/app/actions/comments';
+import { useRouter } from 'next/navigation';
 
 interface InternalNotesAccordionProps {
   comments: any[];
+  prospectId: string;
 }
 
-export function InternalNotesAccordion({ comments }: InternalNotesAccordionProps) {
+export function InternalNotesAccordion({ comments, prospectId }: InternalNotesAccordionProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [newNote, setNewNote] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+
+  const handleAddNote = async () => {
+    if (!newNote.trim()) return;
+    
+    setIsSubmitting(true);
+    const formData = new FormData();
+    formData.append('prospect_id', prospectId);
+    formData.append('body', newNote);
+    formData.append('is_direction_note', 'false'); // Internal notes for standard users
+
+    const result = await createComment(formData);
+    
+    if (result.success) {
+      setNewNote('');
+      setIsAdding(false);
+      router.refresh();
+    } else {
+      alert('Error al agregar nota: ' + result.error);
+    }
+    setIsSubmitting(false);
+  };
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden h-auto">
@@ -43,7 +71,41 @@ export function InternalNotesAccordion({ comments }: InternalNotesAccordionProps
             )}
             
             <div className="mt-2 pt-3 border-t border-gray-100">
-              <button className="text-[11px] text-blue-600 hover:underline font-medium">+ Agregar nota</button>
+              {!isAdding ? (
+                <button 
+                  onClick={() => setIsAdding(true)}
+                  className="text-[11px] text-blue-600 hover:underline font-medium"
+                >
+                  + Agregar nota
+                </button>
+              ) : (
+                <div className="space-y-2 mt-2">
+                  <textarea
+                    value={newNote}
+                    onChange={(e) => setNewNote(e.target.value)}
+                    placeholder="Escribí una nota interna..."
+                    className="w-full text-[12px] p-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+                    rows={3}
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <button 
+                      onClick={() => { setIsAdding(false); setNewNote(''); }}
+                      disabled={isSubmitting}
+                      className="px-3 py-1.5 text-[11px] font-medium text-gray-600 hover:bg-gray-100 rounded-md"
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      onClick={handleAddNote}
+                      disabled={isSubmitting || !newNote.trim()}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium bg-gray-900 text-white hover:bg-gray-800 rounded-md disabled:opacity-50"
+                    >
+                      {isSubmitting && <Loader2 className="w-3 h-3 animate-spin" />}
+                      Guardar
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -30,11 +30,11 @@ export async function enrichProspectAuto(prospectId: string) {
     // 1.5 Fetch comments (notes)
     const { data: commentsData } = await supabase
       .from('comments')
-      .select('content')
+      .select('body')
       .eq('prospect_id', prospectId)
       .is('deleted_at', null);
 
-    const commentsText = commentsData?.map((c: any) => c.content).join(' | ') || '';
+    const commentsText = commentsData?.map((c: any) => c.body).join(' | ') || '';
 
     // 2. Build the prompt
     const systemPrompt = `
