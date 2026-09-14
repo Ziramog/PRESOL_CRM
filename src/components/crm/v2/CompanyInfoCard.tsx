@@ -23,7 +23,12 @@ const CHECKLIST = [
   { key: 'employee_count', label: 'Cantidad empleados' }
 ];
 
+import { useState } from 'react';
+import { ProspectForm } from '@/components/crm/prospect-form';
+
 export function CompanyInfoCard({ prospect, dataQuality }: CompanyInfoCardProps) {
+  const [showEditModal, setShowEditModal] = useState(false);
+  
   const missingSet = new Set(dataQuality?.missing || []);
   const score = dataQuality?.score || 0;
   
@@ -51,8 +56,17 @@ export function CompanyInfoCard({ prospect, dataQuality }: CompanyInfoCardProps)
           <Building2 className="w-5 h-5 text-gray-500" />
           <h3 className="text-[15px] font-bold text-gray-900">Información de la empresa</h3>
         </div>
-        <button className="text-[11px] text-blue-600 hover:underline font-medium">Editar</button>
+        <button onClick={() => setShowEditModal(true)} className="text-[11px] text-blue-600 hover:underline font-medium">Editar</button>
       </div>
+      
+      {showEditModal && (
+        <ProspectForm 
+          prospect={prospect}
+          availableCities={[]}
+          availableSectors={[]}
+          onClose={() => setShowEditModal(false)} 
+        />
+      )}
       
       <div className="space-y-4 mb-6">
         <InfoRow icon={<MapPin className="w-4 h-4" />} label="Dirección" value={prospect.address || prospect.city} copyable />

@@ -34,7 +34,9 @@ export function OpenFollowupsCard({ tasks, prospectId }: OpenFollowupsCardProps)
           <CheckSquare className="w-5 h-5 text-gray-500" />
           <h3 className="text-[15px] font-bold text-gray-900">Seguimientos abiertos</h3>
         </div>
-        <button onClick={() => setShowTaskForm(true)} className="text-[11px] text-blue-600 hover:underline font-medium">+ Nuevo</button>
+        {displayTasks.length > 0 && (
+          <button onClick={() => setShowTaskForm(true)} className="text-[11px] text-blue-600 hover:underline font-medium">+ Nuevo</button>
+        )}
       </div>
       
       <div>

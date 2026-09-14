@@ -1,6 +1,12 @@
+'use client';
+
+import { useState } from 'react';
 import { User, Phone, Mail, MessageCircle, Building, UserCircle } from 'lucide-react';
+import { ProspectForm } from '@/components/crm/prospect-form';
 
 export function PrimaryContactCard({ contacts, prospect, secondaryCount = 0 }: { contacts: any[], prospect: any, secondaryCount?: number }) {
+  const [showEditModal, setShowEditModal] = useState(false);
+  
   const primaryContact = contacts.find((c) => c.is_primary) || contacts[0];
 
   return (
@@ -10,8 +16,17 @@ export function PrimaryContactCard({ contacts, prospect, secondaryCount = 0 }: {
           <UserCircle className="w-5 h-5 text-gray-500" />
           <h3 className="text-[15px] font-bold text-gray-900">Contacto principal</h3>
         </div>
-        <button className="text-[11px] text-blue-600 hover:underline font-medium">Editar</button>
+        <button onClick={() => setShowEditModal(true)} className="text-[11px] text-blue-600 hover:underline font-medium">Editar</button>
       </div>
+      
+      {showEditModal && (
+        <ProspectForm 
+          prospect={prospect}
+          availableCities={[]}
+          availableSectors={[]}
+          onClose={() => setShowEditModal(false)} 
+        />
+      )}
       
       <div>
         {!primaryContact && !prospect.primary_phone ? (
