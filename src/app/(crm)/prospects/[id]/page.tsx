@@ -111,7 +111,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
       <div className="flex flex-col lg:grid lg:grid-cols-12 gap-3 mt-3 items-start">
         {/* Próxima Acción (Mobile: 1, Desktop: Row 1 Col 1) */}
         <div className="order-1 lg:col-span-5 lg:order-none w-full">
-          <NextActionCard tasks={overview.next_task ? [overview.next_task] : []} />
+          <NextActionCard tasks={overview.next_task ? [overview.next_task] : []} prospectId={id} />
         </div>
         
         {/* Contacto Principal (Mobile: 2, Desktop: Row 1 Col 2) */}
@@ -136,7 +136,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
 
         {/* Seguimientos (Mobile: 6, Desktop: Row 3 Col 2) */}
         <div className="order-6 lg:col-span-4 lg:col-start-6 lg:row-start-3 lg:order-none w-full">
-          <OpenFollowupsCard tasks={overview.open_tasks} />
+          <OpenFollowupsCard tasks={overview.open_tasks} prospectId={id} />
         </div>
 
         {/* Actividad Reciente (Mobile: 7, Desktop: Row 3 Col 1) */}
