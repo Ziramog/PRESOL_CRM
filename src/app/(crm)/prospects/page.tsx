@@ -14,6 +14,7 @@ const SORTABLE_COLUMNS: Record<string, string> = {
   contact_status: 'contact_status',
   created_at: 'created_at',
   last_contact_date: 'last_contact_date',
+  open_tasks: 'open_tasks',
 };
 
 export default async function ProspectsPage({
@@ -41,15 +42,12 @@ export default async function ProspectsPage({
     : 'created_at';
   const sortDir = params.dir === 'asc';
 
-  // We also fetch if each prospect has a direction note via the comments table
-  // We select id + a flag for direction notes via a subquery-style select
-  let query = supabase
-    .from('prospects')
-    .select('*, has_direction_note:comments!prospect_id(id).not.is.null')
-    .order(sortCol, { ascending: sortDir });
-
-  // Simpler approach: fetch prospects then fetch direction note ids separately
-  let baseQuery = supabase.from('prospects').select('*').order(sortCol, { ascending: sortDir });
+  let baseQuery = supabase.from('prospects').select('*');
+  
+  // Only apply DB sorting if it's not our custom open_tasks sort
+  if (sortCol !== 'open_tasks') {
+    baseQuery = baseQuery.order(sortCol, { ascending: sortDir });
+  }
 
   if (search) baseQuery = baseQuery.ilike('company_name', `%${search}%`);
   if (prospectClass) baseQuery = baseQuery.eq('class', prospectClass);
@@ -57,16 +55,20 @@ export default async function ProspectsPage({
   if (sector) baseQuery = baseQuery.eq('sector', sector);
   if (status) baseQuery = baseQuery.eq('contact_status', status);
 
-  const [prospectsResponse, citiesResponse, sectorsResponse, dirNotesResponse] = await Promise.all([
+  const [prospectsResponse, citiesResponse, sectorsResponse, dirNotesResponse, tasksResponse] = await Promise.all([
     baseQuery,
-    supabase.from('prospects').select('city').not('city', 'is', null),
-    supabase.from('prospects').select('sector').not('sector', 'is', null),
+    supabase.from('prospects').select('city'),
+    supabase.from('prospects').select('sector'),
     // Get all prospect IDs that have at least one direction note
     supabase
       .from('comments')
       .select('prospect_id')
       .eq('is_direction_note', true)
       .is('deleted_at', null),
+    supabase
+      .from('tasks')
+      .select('prospect_id')
+      .eq('status', 'pending'),
   ]);
 
   const { data: prospects, error } = prospectsResponse;
@@ -77,11 +79,24 @@ export default async function ProspectsPage({
     (dirNotesResponse.data ?? []).map((c: any) => c.prospect_id),
   );
 
-  // Attach has_direction_note flag to each prospect
-  const prospectsWithFlags = (prospects ?? []).map((p) => ({
+  const taskCounts: Record<string, number> = {};
+  (tasksResponse.data ?? []).forEach((t: any) => {
+    taskCounts[t.prospect_id] = (taskCounts[t.prospect_id] || 0) + 1;
+  });
+
+  // Attach has_direction_note flag and open_tasks count to each prospect
+  let prospectsWithFlags = (prospects ?? []).map((p) => ({
     ...p,
     has_direction_note: dirNoteProspects.has(p.id),
+    open_tasks: taskCounts[p.id] || 0,
   }));
+
+  if (sortCol === 'open_tasks') {
+    prospectsWithFlags.sort((a, b) => {
+      const diff = a.open_tasks - b.open_tasks;
+      return sortDir ? diff : -diff;
+    });
+  }
 
   const cities = Array.from(
     new Set(citiesResponse.data?.map((c) => c.city).filter(Boolean)),

@@ -21,6 +21,7 @@ const COLUMNS: Column[] = [
   { key: 'class', label: 'Clase', sortable: true },
   { key: 'commercial_category', label: 'Categoría', sortable: true },
   { key: 'contact_status', label: 'Estado', sortable: true },
+  { key: 'open_tasks', label: 'Seguimientos', sortable: true },
   { key: 'actions', label: 'Acciones', sortable: false, align: 'right' },
 ];
 
@@ -174,6 +175,17 @@ export function ProspectTable({
                     </span>
                   ) : (
                     <span className="text-gray-300">—</span>
+                  )}
+                </td>
+
+                {/* Seguimientos */}
+                <td className="px-5 py-3.5">
+                  {prospect.open_tasks > 0 ? (
+                    <span className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold">
+                      {prospect.open_tasks}
+                    </span>
+                  ) : (
+                    <span className="text-gray-300 text-xs font-medium">-</span>
                   )}
                 </td>
 
