@@ -41,8 +41,8 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
       supabase.from('contacts').select('*').eq('prospect_id', id).order('created_at', { ascending: true }),
       supabase.from('activities').select('*, profiles(full_name)').eq('prospect_id', id).order('activity_at', { ascending: false }),
       supabase.from('comments').select('*, profiles(full_name)').eq('prospect_id', id).order('created_at', { ascending: false }),
-      supabase.from('tasks').select('*, profiles(full_name)').eq('prospect_id', id).eq('status', 'pending').order('due_at', { ascending: true }),
-      supabase.from('opportunities').select('*, profiles(full_name)').eq('prospect_id', id).order('created_at', { ascending: false })
+      supabase.from('tasks').select('*, profiles!tasks_assigned_to_fkey(full_name)').eq('prospect_id', id).eq('status', 'pending').order('due_at', { ascending: true }),
+      supabase.from('opportunities').select('*, profiles!opportunities_owner_id_fkey(full_name)').eq('prospect_id', id).order('created_at', { ascending: false })
     ]);
 
     if (prospectResponse.error || !prospectResponse.data) notFound();
