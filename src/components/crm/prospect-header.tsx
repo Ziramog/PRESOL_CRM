@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { MapPin, Navigation, Phone, MessageCircle, PlusCircle, CalendarPlus, Target, Trash2, AlertTriangle, X, Edit, MoreHorizontal, Building2, Factory, Users } from 'lucide-react';
 import { ActivityForm } from './activity-form';
 import { TaskForm } from './task-form';
+import { OpportunityForm } from './opportunity-form';
 import { ProspectForm } from './prospect-form';
 import { updateProspectStatus, deleteProspect } from '@/app/actions/prospects';
 
@@ -24,6 +25,7 @@ export function ProspectHeader({
   const router = useRouter();
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [showOpportunityForm, setShowOpportunityForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -209,7 +211,7 @@ export function ProspectHeader({
                     <CalendarPlus className="w-3.5 h-3.5 text-slate-400" /> Crear tarea
                   </button>
                   <button 
-                    onClick={() => setShowMenu(false)}
+                    onClick={() => { setShowOpportunityForm(true); setShowMenu(false); }}
                     className="flex items-center gap-2 px-3 py-2 text-[12px] font-medium text-slate-700 hover:bg-slate-50 text-left"
                   >
                     <Target className="w-3.5 h-3.5 text-slate-400" /> Crear oportunidad
@@ -254,6 +256,13 @@ export function ProspectHeader({
         <TaskForm 
           prospectId={prospect.id} 
           onClose={() => setShowTaskForm(false)} 
+        />
+      )}
+
+      {showOpportunityForm && (
+        <OpportunityForm 
+          prospectId={prospect.id} 
+          onClose={() => setShowOpportunityForm(false)} 
         />
       )}
 
