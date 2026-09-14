@@ -66,35 +66,22 @@ export async function getDashboardKPIList(
   };
 
   // We add !inner to prospects to ensure we only get records where the prospect matches our filters
-  let prospectSelect = 'prospect_id, prospects!inner(id, company_name, city, commercial_category)';
+  let prospectSelect = 'prospect_id, type, outcome, summary, prospects!inner(id, company_name, city, commercial_category)';
   
   let query;
+  
+  // Flag to know if we need to manually filter activities in memory
+  const isActivityKpi = ['visited', 'visits', 'calls', 'effective_contacts', 'interested'].includes(kpi);
 
   switch (kpi) {
     case 'visited':
-      query = applyFilters(supabase
-        .from('activities')
-        .select(prospectSelect)
-        .is('deleted_at', null)
-        .gte('activity_at', fromIso)
-        .lte('activity_at', toIso));
-      break;
-    
+    case 'visits':
+    case 'calls':
     case 'effective_contacts':
-      query = applyFilters(supabase
-        .from('activities')
-        .select(prospectSelect)
-        .not('outcome', 'in', '(no_answer,closed,not_available,invalid_data,wrong_number,sent,read,reception_only)')
-        .is('deleted_at', null)
-        .gte('activity_at', fromIso)
-        .lte('activity_at', toIso));
-      break;
-
     case 'interested':
       query = applyFilters(supabase
         .from('activities')
         .select(prospectSelect)
-        .in('outcome', ['interested', 'requested_info', 'requested_quote', 'follow_up'])
         .is('deleted_at', null)
         .gte('activity_at', fromIso)
         .lte('activity_at', toIso));
@@ -103,7 +90,7 @@ export async function getDashboardKPIList(
     case 'opportunities':
       query = applyFilters(supabase
         .from('opportunities')
-        .select(prospectSelect.replace('prospect_id,', 'prospect_id, stage,'))
+        .select('prospect_id, stage, prospects!inner(id, company_name, city, commercial_category)')
         .is('deleted_at', null)
         .gte('created_at', fromIso)
         .lte('created_at', toIso));
@@ -112,7 +99,7 @@ export async function getDashboardKPIList(
     case 'tasks_overdue':
       query = applyFilters(supabase
         .from('tasks')
-        .select(prospectSelect.replace('prospect_id,', 'prospect_id, title, due_at,'))
+        .select('prospect_id, title, due_at, prospects!inner(id, company_name, city, commercial_category)')
         .eq('status', 'pending')
         .is('deleted_at', null)
         .lt('due_at', fromIso), 't.');
@@ -122,7 +109,7 @@ export async function getDashboardKPIList(
     case 'tasks_today':
       query = applyFilters(supabase
         .from('tasks')
-        .select(prospectSelect.replace('prospect_id,', 'prospect_id, title, due_at,'))
+        .select('prospect_id, title, due_at, prospects!inner(id, company_name, city, commercial_category)')
         .eq('status', 'pending')
         .is('deleted_at', null)
         .gte('due_at', fromIso)
@@ -147,11 +134,27 @@ export async function getDashboardKPIList(
     return [];
   }
 
-  // Deduplicate by prospect_id (unless it's opportunities or tasks where multiple per prospect makes sense)
-  if (['visited', 'effective_contacts', 'interested'].includes(kpi)) {
+  if (isActivityKpi) {
     const unique = new Map();
     data.forEach((item: any) => {
-      if (!unique.has(item.prospect_id)) {
+      if (item.type === 'note') return;
+      
+      let include = false;
+      
+      if (kpi === 'visited') include = true;
+      else if (kpi === 'visits' && (item.type === 'visit' || item.type === 'meeting')) include = true;
+      else if (kpi === 'calls' && (item.type === 'call' || item.type === 'whatsapp' || item.type === 'email')) include = true;
+      else if (kpi === 'effective_contacts') {
+        const legacyEffective = ['reception_only', 'decision_maker_contact', 'contact_made', 'interested', 'requested_info', 'requested_quote', 'follow_up', 'not_interested'];
+        const isNewEffective = item.summary === 'reception' || item.summary === 'decision_maker';
+        include = isNewEffective || legacyEffective.includes(item.outcome);
+      }
+      else if (kpi === 'interested') {
+        const interestedOutcomes = ['interested', 'requested_info', 'requested_quote', 'follow_up', 'opportunity', 'quote'];
+        include = interestedOutcomes.includes(item.outcome);
+      }
+
+      if (include && !unique.has(item.prospect_id)) {
         unique.set(item.prospect_id, item);
       }
     });
