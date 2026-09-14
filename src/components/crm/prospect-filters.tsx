@@ -242,6 +242,7 @@ export function ProspectFilters({
           Filtros
         </span>
       </button>
+      </div>
 
       {/* Filter panel */}
       {showFilters && (
