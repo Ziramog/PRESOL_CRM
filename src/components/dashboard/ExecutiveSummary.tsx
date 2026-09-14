@@ -4,7 +4,7 @@ import { X, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
 import { getDashboardKPIList } from '@/app/actions/dashboard';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import { format, subDays, startOfWeek, endOfWeek, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toZonedTime } from 'date-fns-tz';
