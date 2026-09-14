@@ -58,21 +58,27 @@ export function EnrichmentModal({ prospect }: { prospect: any }) {
     setIsAiLoading(true);
     setAiError(null);
     
-    const result = await enrichProspectAuto(prospect.id);
-    
-    setIsAiLoading(false);
-    
-    if (result.error) {
-      setAiError(result.error);
-      setIsOpen(true); // Open modal to show error
-    } else {
-      if (!result.updates || Object.keys(result.updates).length === 0) {
-        setAiError('No hay datos nuevos en las notas, ni la IA conoce a esta empresa para autocompletarlos.');
-        setIsOpen(true);
+    try {
+      const result = await enrichProspectAuto(prospect.id);
+      
+      setIsAiLoading(false);
+      
+      if (result.error) {
+        setAiError(result.error);
+        setIsOpen(true); // Open modal to show error
       } else {
-        // Success
-        router.refresh();
+        if (!result.updates || Object.keys(result.updates).length === 0) {
+          setAiError('No hay datos nuevos en las notas, ni la IA conoce a esta empresa para autocompletarlos.');
+          setIsOpen(true);
+        } else {
+          // Success
+          router.refresh();
+        }
       }
+    } catch (e: any) {
+      setIsAiLoading(false);
+      setAiError(e.message || 'Error interno del servidor. Revisá que la API Key esté configurada en Vercel.');
+      setIsOpen(true);
     }
   };
 

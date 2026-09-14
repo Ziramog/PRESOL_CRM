@@ -4,12 +4,16 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function enrichProspectAuto(prospectId: string) {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      return { error: 'Falta configurar la clave OPENAI_API_KEY en el servidor.' };
+    }
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
     const supabase = await createAdminClient();
     
     // 1. Fetch prospect data
