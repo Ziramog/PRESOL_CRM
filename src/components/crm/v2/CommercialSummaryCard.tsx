@@ -12,13 +12,13 @@ export function CommercialSummaryCard({ prospect }: CommercialSummaryCardProps) 
   const [showEditModal, setShowEditModal] = useState(false);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col h-full">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2">
-          <Target className="w-5 h-5 text-gray-500" />
-          <h3 className="text-[15px] font-bold text-gray-900">Resumen comercial</h3>
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 flex flex-col h-full">
+      <div className="flex justify-between items-center mb-5">
+        <div className="flex items-center gap-2.5">
+          <Target className="w-5 h-5 text-blue-600" strokeWidth={2.5} />
+          <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Resumen comercial</h3>
         </div>
-        <button onClick={() => setShowEditModal(true)} className="text-[11px] text-blue-600 hover:underline font-medium">Editar</button>
+        <button onClick={() => setShowEditModal(true)} className="text-[12px] text-blue-600 hover:underline font-semibold">Editar</button>
       </div>
       
       {showEditModal && (
