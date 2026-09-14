@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Mail, UserCircle, ArrowRight } from 'lucide-react';
+import { Phone, Mail, UserCircle, ArrowRight, MessageCircle } from 'lucide-react';
 import { ContactForm } from '@/components/crm/contact-form';
 
 const LinkedinIcon = ({ className }: { className?: string }) => (
