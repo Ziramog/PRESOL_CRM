@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Search, Sparkles, AlertCircle } from 'lucide-react';
 import { enrichProspectManual } from '@/app/actions/prospects';
+import { enrichProspectAuto } from '@/app/actions/enrichment';
 
 export function EnrichmentModal({ prospect }: { prospect: any }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   const router = useRouter();
   
   // Local state for missing fields
@@ -52,13 +54,26 @@ export function EnrichmentModal({ prospect }: { prospect: any }) {
     window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
   };
 
-  const handleAiEnrich = () => {
-    // Groundwork for V2
+  const handleAiEnrich = async () => {
     setIsAiLoading(true);
-    setTimeout(() => {
-      alert("Enriquecimiento con Inteligencia Artificial estará disponible en V2.");
-      setIsAiLoading(false);
-    }, 1500);
+    setAiError(null);
+    
+    const result = await enrichProspectAuto(prospect.id);
+    
+    setIsAiLoading(false);
+    
+    if (result.error) {
+      setAiError(result.error);
+      setIsOpen(true); // Open modal to show error
+    } else {
+      if (!result.updates || Object.keys(result.updates).length === 0) {
+        setAiError('La IA no pudo encontrar datos nuevos para agregar.');
+        setIsOpen(true);
+      } else {
+        // Success
+        router.refresh();
+      }
+    }
   };
 
   return (
@@ -97,6 +112,15 @@ export function EnrichmentModal({ prospect }: { prospect: any }) {
                 Faltan {missingFields.length} campos importantes. Completa los datos para llegar al 100% de calidad.
               </p>
             </div>
+            
+            {aiError && (
+              <div className="p-4 bg-red-50/50 border-b border-red-100 flex items-start">
+                <AlertCircle className="w-5 h-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-800">
+                  {aiError}
+                </p>
+              </div>
+            )}
 
             <div className="p-4 space-y-4">
               <div className="flex justify-between items-center mb-4">
