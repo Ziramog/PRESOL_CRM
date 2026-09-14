@@ -111,9 +111,9 @@ export function CompanyInfoCard({ prospect, dataQuality }: CompanyInfoCardProps)
         </div>
         
         {score < 80 && (
-          <button className="mt-4 w-full flex items-center justify-center gap-1.5 px-3 py-2 border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-md text-xs font-semibold transition-colors">
-            ✨ Enriquecer datos
-          </button>
+          <div className="mt-4">
+            <EnrichmentModal prospect={prospect} />
+          </div>
         )}
       </div>
     </div>
@@ -161,4 +161,6 @@ function InfoRow({ icon, label, value, link, copyable }: { icon: React.ReactNode
     </div>
   );
 }
+
+
 
