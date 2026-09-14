@@ -183,7 +183,7 @@ export function ProspectHeader({
           
           <button 
             onClick={() => setShowActivityForm(true)}
-            className="h-[36px] hidden md:flex items-center justify-center gap-2 px-4 bg-blue-600 text-white rounded-lg text-[13px] font-bold hover:bg-blue-700 transition-colors shadow-sm"
+            className="h-[36px] flex items-center justify-center gap-2 px-4 bg-blue-600 text-white rounded-lg text-[13px] font-bold hover:bg-blue-700 transition-colors shadow-sm"
           >
             <PlusCircle className="w-4 h-4" />
             Registrar gestión
@@ -232,17 +232,6 @@ export function ProspectHeader({
             )}
           </div>
         </div>
-      </div>
-
-      {/* FIXED MOBILE CTA */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-50 shadow-[0_-4px_6px_-1px_rgb(0,0,0,0.1)]">
-        <button 
-          onClick={() => setShowActivityForm(true)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-blue-600 text-white rounded-lg text-base font-bold shadow-md active:scale-95 transition-transform"
-        >
-          <PlusCircle className="w-5 h-5" />
-          Registrar gestión
-        </button>
       </div>
       
       {showEditModal && (
