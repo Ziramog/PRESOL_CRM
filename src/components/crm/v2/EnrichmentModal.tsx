@@ -67,7 +67,7 @@ export function EnrichmentModal({ prospect }: { prospect: any }) {
       setIsOpen(true); // Open modal to show error
     } else {
       if (!result.updates || Object.keys(result.updates).length === 0) {
-        setAiError('La IA no pudo encontrar datos nuevos para agregar.');
+        setAiError('No hay datos nuevos en las notas, ni la IA conoce a esta empresa para autocompletarlos.');
         setIsOpen(true);
       } else {
         // Success

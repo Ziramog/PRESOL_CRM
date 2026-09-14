@@ -15,7 +15,7 @@ export async function enrichProspectAuto(prospectId: string) {
     // 1. Fetch prospect data
     const { data: prospect, error: fetchError } = await supabase
       .from('prospects')
-      .select('company_name, phones_raw, primary_phone, city, sector, class, commercial_category, ask_for, probable_need, presol_offer, sales_hook, pending_data, evidence, source_name, email')
+      .select('company_name, phones_raw, primary_phone, city, sector, class, commercial_category, ask_for, probable_need, presol_offer, sales_hook, pending_data, evidence, source_name, email, google_maps_url, website, address')
       .eq('id', prospectId)
       .single();
       
@@ -23,27 +23,40 @@ export async function enrichProspectAuto(prospectId: string) {
       return { error: 'No se encontró el prospecto' };
     }
 
+    // 1.5 Fetch comments (notes)
+    const { data: commentsData } = await supabase
+      .from('comments')
+      .select('content')
+      .eq('prospect_id', prospectId)
+      .is('deleted_at', null);
+
+    const commentsText = commentsData?.map(c => c.content).join(' | ') || '';
+
     // 2. Build the prompt
     const systemPrompt = `
 Sos un asistente experto en enriquecimiento de datos de ventas (CRM).
-Tu objetivo es analizar los datos crudos y sucios de un prospecto y extraer información limpia y estructurada.
+Tu objetivo es analizar los datos crudos de un prospecto (y tus propios conocimientos sobre la empresa si es conocida) para extraer información limpia y estructurada.
 
 Reglas:
-1. 'primary_phone': Extraé y limpiá el número de teléfono principal (agregale el código de país +54 si parece de Argentina, sacale los espacios y caracteres extraños).
-2. 'city': Si se menciona una ciudad en las notas (ej. "Río Tercero", "CABA"), extraela. 
-3. 'sector': Inferí el rubro o categoría comercial (ej. "Maquinaria Agrícola", "Logística", "Software") a partir de la evidencia o el nombre de la empresa.
-4. 'class': Si podés inferir el tamaño o importancia (A, B, C), asignalo. Si no estás seguro, dejalo nulo.
-5. 'probable_need': Si la evidencia menciona un problema que la empresa resuelve, resumilo.
+1. 'primary_phone': Extraé y limpiá el número de teléfono principal (agregale el código de país +54 si es Argentina). Si el prospecto no tiene uno, pero lo sabés por tu conocimiento general, agregalo.
+2. 'city': Si se menciona una ciudad en las notas (ej. "Río Tercero"), extraela. Si no, inferila usando tu conocimiento sobre la empresa.
+3. 'sector': Inferí el rubro comercial (ej. "Maquinaria Agrícola", "Logística") a partir del nombre, notas, o tu conocimiento.
+4. 'class': Si podés inferir el tamaño (A, B, C), asignalo.
+5. 'probable_need': Si la evidencia menciona un problema, resumilo.
 
-Si algún dato no se puede inferir con seguridad absoluta, devolvé null para ese campo.
+¡IMPORTANTE! Si los datos crudos están vacíos, usá tu base de conocimientos (entrenamiento) para tratar de adivinar el sector, ciudad o teléfono de la empresa basándote en su "Nombre Empresa".
+Si es imposible inferir un dato, devolvé null.
 `;
 
     const userMessage = `
 Datos del prospecto:
 - Nombre Empresa: ${prospect.company_name}
+- Web / Maps: ${prospect.website || ''} ${prospect.google_maps_url || ''}
+- Dirección: ${prospect.address || ''}
 - Teléfonos crudos: ${prospect.phones_raw || ''}
 - Evidencia / Notas: ${prospect.evidence || ''}
 - Datos pendientes: ${prospect.pending_data || ''}
+- Historial de Comentarios: ${commentsText}
 - Ciudad actual: ${prospect.city || ''}
 - Rubro actual: ${prospect.sector || prospect.commercial_category || ''}
 `;
