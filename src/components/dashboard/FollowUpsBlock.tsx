@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { isBefore, isToday, isAfter, startOfDay } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
-import { AlertCircle, Clock, CalendarDays } from 'lucide-react';
+import { AlarmClock, CalendarDays, Clock, CheckSquare } from 'lucide-react';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
@@ -20,38 +20,55 @@ export function FollowUpsBlock({ followups }: { followups: any[] }) {
 
   const statChips = [
     {
-      icon: AlertCircle,
+      icon: AlarmClock,
       label: 'Vencidas',
       count: overdue.length,
-      color: overdue.length > 0 ? 'text-red-600 bg-red-50' : 'text-gray-500 bg-gray-50',
-    },
-    {
-      icon: Clock,
-      label: 'Hoy',
-      count: today.length,
-      color: today.length > 0 ? 'text-blue-600 bg-blue-50' : 'text-gray-500 bg-gray-50',
+      bg: 'bg-red-50',
+      iconColor: 'text-red-500',
+      numColor: 'text-red-600',
+      labelColor: 'text-red-500',
     },
     {
       icon: CalendarDays,
+      label: 'Hoy',
+      count: today.length,
+      bg: 'bg-blue-50',
+      iconColor: 'text-blue-600',
+      numColor: 'text-blue-700',
+      labelColor: 'text-blue-600',
+    },
+    {
+      icon: Clock,
       label: 'Próximas',
       count: upcoming.length,
-      color: 'text-gray-600 bg-gray-50',
+      bg: 'bg-gray-50',
+      iconColor: 'text-gray-700',
+      numColor: 'text-gray-900',
+      labelColor: 'text-gray-500',
     },
   ];
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col h-full">
-      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-        <h2 className="text-[13px] font-bold tracking-[0.05em] text-gray-900 uppercase">Seguimientos</h2>
-        <span className="text-xs text-blue-600 font-medium cursor-pointer hover:underline">Ver todos</span>
+      <div className="px-5 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="bg-blue-50 p-1 rounded">
+            <CheckSquare className="w-5 h-5 text-blue-600" />
+          </div>
+          <h2 className="text-[15px] font-bold text-gray-900">Seguimientos</h2>
+        </div>
+        <Link href="/tasks" className="text-[12px] text-blue-600 font-medium hover:underline">Ver todos</Link>
       </div>
 
       {/* Summary chips */}
-      <div className="grid grid-cols-3 gap-3 px-6 pt-5 pb-5">
-        {statChips.map(({ label, count, color }) => (
-          <div key={label} className={`flex flex-col items-center justify-center rounded-lg py-3 border ${color.includes('red') ? 'border-red-100 bg-red-50/50' : 'border-gray-100 bg-gray-50/50'}`}>
-            <span className={`text-xl font-bold tabular-nums ${color.includes('red') ? 'text-red-600' : 'text-gray-900'}`}>{count}</span>
-            <span className={`text-[10px] font-bold tracking-widest uppercase mt-0.5 ${color.includes('red') ? 'text-red-500' : 'text-gray-500'}`}>{label}</span>
+      <div className="grid grid-cols-3 gap-3 px-5 pb-5">
+        {statChips.map(({ label, count, bg, icon: Icon, iconColor, numColor, labelColor }) => (
+          <div key={label} className={`flex items-center justify-center gap-3 rounded-xl py-3.5 ${bg}`}>
+            <Icon className={`w-5 h-5 ${iconColor}`} strokeWidth={2.5} />
+            <div className="flex flex-col items-center">
+              <span className={`text-[20px] font-bold leading-none ${numColor}`}>{count}</span>
+              <span className={`text-[11px] font-medium mt-1 ${labelColor}`}>{label}</span>
+            </div>
           </div>
         ))}
       </div>
@@ -62,8 +79,8 @@ export function FollowUpsBlock({ followups }: { followups: any[] }) {
           <p className="text-sm text-gray-400">No hay tareas pendientes.</p>
         </div>
       ) : (
-        <div className="border-t border-gray-100 flex-1 overflow-y-auto">
-          <p className="px-6 pt-4 pb-2 text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase">Próximas acciones</p>
+        <div className="flex-1 overflow-y-auto pb-2">
+          <p className="px-5 pb-2 text-[13px] font-bold text-slate-700">Próximas acciones</p>
           <div className="flex flex-col">
             {followups.slice(0, 5).map((task) => {
               const prospect = Array.isArray(task.prospects) ? task.prospects[0] : task.prospects;
@@ -71,40 +88,51 @@ export function FollowUpsBlock({ followups }: { followups: any[] }) {
               const isOv = isBefore(dueDate, todayStart);
               const isTd = isToday(dueDate);
               
-              let statusLabel = 'Próxima';
-              let statusColor = 'text-gray-400';
+              let statusLabel = 'Mañana';
+              let statusColor = 'text-gray-500';
+              let dotColor = 'bg-gray-400';
+              let timeColor = 'text-gray-400';
+              
               if (isOv) {
                 statusLabel = 'Vencida';
-                statusColor = 'text-red-600 font-bold';
+                statusColor = 'text-red-500';
+                dotColor = 'bg-red-500';
+                timeColor = 'text-red-500';
               } else if (isTd) {
                 statusLabel = 'Hoy';
-                statusColor = 'text-blue-600 font-bold';
-              } else if (isAfter(dueDate, now)) {
+                statusColor = 'text-blue-600';
+                dotColor = 'bg-blue-500';
+                timeColor = 'text-gray-900';
+              } else {
                 statusLabel = 'Mañana';
                 statusColor = 'text-gray-500';
+                dotColor = 'bg-gray-400';
+                timeColor = 'text-gray-400';
               }
 
-              const timeStr = formatInTimeZone(dueDate, TZ, 'dd MMM', { locale: es });
+              const timeFormat = isTd ? 'HH:mm' : 'dd MMM';
+              const timeStr = formatInTimeZone(dueDate, TZ, timeFormat, { locale: es });
 
               return (
                 <Link
                   key={task.id}
                   href={`/prospects/${prospect?.id}`}
-                  className="grid grid-cols-12 items-center gap-2 px-6 py-2.5 hover:bg-gray-50 transition-colors group"
+                  className="grid grid-cols-12 items-center gap-3 px-5 py-2.5 hover:bg-gray-50 transition-colors group border-b border-gray-50 last:border-0"
                 >
-                  <div className="col-span-2">
-                    <span className={`text-[11px] uppercase tracking-wider ${statusColor}`}>{statusLabel}</span>
+                  <div className="col-span-3 lg:col-span-2 flex items-center">
+                    <span className={`w-1.5 h-1.5 rounded-full mr-2 shrink-0 ${dotColor}`}></span>
+                    <span className={`text-[12px] font-medium ${statusColor}`}>{statusLabel}</span>
                   </div>
                   <div className="col-span-4 min-w-0">
-                    <p className="text-[13px] font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
+                    <p className="text-[13px] font-bold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
                       {prospect?.company_name ?? 'Sin empresa'}
                     </p>
                   </div>
-                  <div className="col-span-4 min-w-0">
-                    <p className="text-[12px] text-gray-500 truncate">{task.title}</p>
+                  <div className="col-span-3 lg:col-span-4 min-w-0">
+                    <p className="text-[12px] text-gray-400 truncate">{task.title}</p>
                   </div>
                   <div className="col-span-2 text-right">
-                    <span className="text-[12px] text-gray-400">{timeStr}</span>
+                    <span className={`text-[12px] font-medium ${timeColor}`}>{timeStr}</span>
                   </div>
                 </Link>
               );
