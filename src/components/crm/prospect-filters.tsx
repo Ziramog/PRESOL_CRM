@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, Filter, X, Check } from 'lucide-react';
 import { useTransition, useState, useRef, useEffect, useCallback } from 'react';
 import { PROSPECT_STATUS } from '@/lib/constants';
+import { saveProspectFilters } from '@/app/actions/preferences';
 
 type Tab = 'class' | 'sector' | 'city' | 'status';
 
@@ -41,32 +42,11 @@ export function ProspectFilters({
     setSearchValue(currentSearch);
   }, [currentSearch]);
 
-  // Restore structural filters from localStorage (NOT search)
+  // Persist structural filters to DB whenever they change (exclude search)
   useEffect(() => {
-    const hasAnyFilter = searchParams.toString().length > 0;
-    if (!hasAnyFilter) {
-      try {
-        const stored = localStorage.getItem('presol_prospect_filters');
-        if (stored) {
-          const p = new URLSearchParams(stored);
-          // Only restore structural filters, never search text
-          p.delete('search');
-          if (p.toString()) {
-            startTransition(() => router.replace(`/prospects?${p.toString()}`));
-          }
-        }
-      } catch {}
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // run once on mount
-
-  // Persist structural filters to localStorage whenever they change (exclude search)
-  useEffect(() => {
-    try {
-      const p = new URLSearchParams(searchParams.toString());
-      p.delete('search');
-      localStorage.setItem('presol_prospect_filters', p.toString());
-    } catch {}
+    const p = new URLSearchParams(searchParams.toString());
+    p.delete('search');
+    saveProspectFilters(p.toString()).catch(console.error);
   }, [searchParams]);
 
   // Click outside closes filter panel
@@ -402,3 +382,5 @@ export function ProspectFilters({
     </div>
   );
 }
+
+

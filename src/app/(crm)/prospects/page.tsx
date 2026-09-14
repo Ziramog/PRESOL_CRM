@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 import { ProspectCard } from '@/components/crm/prospect-card';
 import { ProspectTable } from '@/components/crm/prospect-table';
 import { ProspectFilters } from '@/components/crm/prospect-filters';
@@ -24,6 +25,19 @@ export default async function ProspectsPage({
 }) {
   const supabase = await createAdminClient();
   const params = await searchParams;
+
+  const hasStructuralFilters = params.class || params.city || params.sector || params.status;
+  
+  if (!hasStructuralFilters && !params.search) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase.from('profiles').select('preferences').eq('id', user.id).single();
+      const savedFilters = profile?.preferences?.prospect_filters;
+      if (savedFilters) {
+        redirect(`/prospects?${savedFilters}`);
+      }
+    }
+  }
 
   const search = typeof params.search === 'string' ? params.search : '';
   const prospectClass = typeof params.class === 'string' ? params.class : '';
