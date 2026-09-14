@@ -93,7 +93,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
   const { prospect } = overview;
 
   return (
-    <div className="max-w-[1180px] mx-auto px-4 md:px-6 pt-4 pb-24 md:pb-8">
+    <div className="w-full px-4 md:px-8 pt-4 pb-24 md:pb-8">
       <RealtimeListener prospectId={id} />
       
       <div>
@@ -108,54 +108,36 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
         />
       </div>
 
-      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-3 mt-3 items-start">
-        {/* Próxima Acción (Mobile: 1, Desktop: Row 1 Col 1) */}
-        <div className="order-1 lg:col-span-5 lg:order-none w-full">
+      {/* Main 3-Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4 items-start">
+        
+        {/* Left Column */}
+        <div className="flex flex-col gap-4">
           <NextActionCard tasks={overview.next_task ? [overview.next_task] : []} prospectId={id} />
+          <LastInteractionCard activities={overview.latest_activity ? [overview.latest_activity] : []} prospectId={id} />
+          <ActivityTimeline activities={overview.recent_activities} />
         </div>
         
-        {/* Contacto Principal (Mobile: 2, Desktop: Row 1 Col 2) */}
-        <div className="order-2 lg:col-span-4 lg:order-none w-full">
+        {/* Middle Column */}
+        <div className="flex flex-col gap-4">
           <PrimaryContactCard contacts={overview.primary_contact ? [overview.primary_contact] : []} prospect={prospect} secondaryCount={overview.secondary_contacts_count} />
-        </div>
-
-        {/* Última Interacción (Mobile: 3, Desktop: Row 2 Col 1) */}
-        <div className="order-3 lg:col-span-4 lg:col-start-1 lg:row-start-2 lg:order-none w-full">
-          <LastInteractionCard activities={overview.latest_activity ? [overview.latest_activity] : []} prospectId={id} />
-        </div>
-
-        {/* Estado Comercial (Mobile: 4, Desktop: Row 1 Col 3) */}
-        <div className="order-4 lg:col-span-3 lg:col-start-10 lg:row-start-1 lg:order-none w-full">
-          <CommercialStatusCard prospect={prospect} latestActivity={overview.latest_activity} />
-        </div>
-
-        {/* Resumen Comercial (Mobile: 5, Desktop: Row 2 Col 2) */}
-        <div className="order-5 lg:col-span-8 lg:col-start-5 lg:row-start-2 lg:order-none w-full">
           <CommercialSummaryCard prospect={prospect} />
-        </div>
-
-        {/* Seguimientos (Mobile: 6, Desktop: Row 3 Col 2) */}
-        <div className="order-6 lg:col-span-4 lg:col-start-6 lg:row-start-3 lg:order-none w-full">
           <OpenFollowupsCard tasks={overview.open_tasks} prospectId={id} />
         </div>
 
-        {/* Actividad Reciente (Mobile: 7, Desktop: Row 3 Col 1) */}
-        <div className="order-7 lg:col-span-5 lg:col-start-1 lg:row-start-3 lg:order-none w-full">
-          <ActivityTimeline activities={overview.recent_activities} />
-        </div>
-
-        {/* Información Empresa (Mobile: 8, Desktop: Row 3 Col 3) */}
-        <div className="order-8 lg:col-span-3 lg:col-start-10 lg:row-start-3 lg:order-none w-full">
+        {/* Right Column */}
+        <div className="flex flex-col gap-4">
+          <CommercialStatusCard prospect={prospect} latestActivity={overview.latest_activity} />
           <CompanyInfoCard prospect={prospect} dataQuality={overview.data_quality} />
         </div>
+      </div>
 
-        {/* Notas Internas (Mobile: 9, Desktop: Row 4 Col 1) */}
-        <div className="order-9 lg:col-span-6 lg:col-start-1 lg:row-start-4 lg:order-none w-full">
+      {/* Bottom Accordions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+        <div className="lg:col-span-2">
           <InternalNotesAccordion comments={overview.comments} />
         </div>
-
-        {/* Oportunidades Vinculadas (Mobile: 10, Desktop: Row 4 Col 2) */}
-        <div className="order-10 lg:col-span-6 lg:col-start-7 lg:row-start-4 lg:order-none w-full">
+        <div className="lg:col-span-1">
           <LinkedOpportunitiesAccordion opportunities={overview.opportunities} />
         </div>
       </div>
