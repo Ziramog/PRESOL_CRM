@@ -48,9 +48,16 @@ export function ProspectCard({ prospect }: { prospect: any }) {
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
           {prospect.commercial_category || 'Sin categoría'}
         </span>
-        <span className="text-xs px-2 py-1 bg-gray-100 rounded-none text-gray-600 font-medium">
-          {PROSPECT_STATUS[prospect.contact_status as keyof typeof PROSPECT_STATUS] || prospect.contact_status}
-        </span>
+        <div className="flex items-center gap-2">
+          {prospect.open_tasks > 0 && (
+            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-1 bg-blue-50 text-blue-700 rounded-full">
+              {prospect.open_tasks} Seg.
+            </span>
+          )}
+          <span className="text-xs px-2 py-1 bg-gray-100 rounded-lg text-gray-600 font-medium">
+            {PROSPECT_STATUS[prospect.contact_status as keyof typeof PROSPECT_STATUS] || prospect.contact_status}
+          </span>
+        </div>
       </div>
     </Link>
   );
