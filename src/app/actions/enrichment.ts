@@ -34,7 +34,7 @@ export async function enrichProspectAuto(prospectId: string) {
       .eq('prospect_id', prospectId)
       .is('deleted_at', null);
 
-    const commentsText = commentsData?.map(c => c.content).join(' | ') || '';
+    const commentsText = commentsData?.map((c: any) => c.content).join(' | ') || '';
 
     // 2. Build the prompt
     const systemPrompt = `
