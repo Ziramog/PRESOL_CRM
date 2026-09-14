@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ACTIVITY_RESULTS } from '@/lib/constants';
 import { formatInTimeZone } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
-import { Phone, Building, MessageCircle, Mail, FileText, Target, StickyNote } from 'lucide-react';
+import { Phone, Building, MessageCircle, Mail, FileText, StickyNote, User, Clock, ChevronRight } from 'lucide-react';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
@@ -18,41 +18,34 @@ const TYPE_LABELS: Record<string, string> = {
   other: 'Actividad registrada',
 };
 
-const TYPE_ICONS: Record<string, any> = {
-  visit: Building,
-  call: Phone,
-  meeting: Building,
-  whatsapp: MessageCircle,
-  email: Mail,
-  note: StickyNote,
-  other: StickyNote,
-};
-
-const TYPE_COLORS: Record<string, string> = {
-  visit: 'text-blue-500',
-  call: 'text-amber-500',
-  meeting: 'text-purple-500',
-  whatsapp: 'text-emerald-500',
-  email: 'text-sky-500',
-  note: 'text-gray-400',
-  other: 'text-gray-400',
+const TYPE_STYLES: Record<string, { icon: any, color: string, bg: string }> = {
+  call: { icon: Phone, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  email: { icon: Mail, color: 'text-blue-600', bg: 'bg-blue-50' },
+  visit: { icon: User, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  meeting: { icon: Building, color: 'text-blue-600', bg: 'bg-blue-50' },
+  whatsapp: { icon: MessageCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  note: { icon: StickyNote, color: 'text-amber-600', bg: 'bg-amber-50' },
+  other: { icon: StickyNote, color: 'text-slate-500', bg: 'bg-slate-50' },
 };
 
 function getBadgeColors(outcome: string) {
   const norm = outcome?.toLowerCase() || '';
-  if (norm.includes('interesado')) return 'bg-green-100 text-green-700';
-  if (norm.includes('cotiza')) return 'bg-purple-100 text-purple-700';
-  if (norm.includes('responsable') || norm.includes('efectivo')) return 'bg-blue-100 text-blue-700';
-  if (norm.includes('sin interés') || norm.includes('no estaba')) return 'bg-red-50 text-red-600';
-  return 'bg-gray-100 text-gray-600';
+  if (norm.includes('interesado') || norm.includes('efectivo')) return 'bg-emerald-50 text-emerald-600';
+  if (norm.includes('cotiza') || norm.includes('oportunidad')) return 'bg-purple-50 text-purple-600';
+  if (norm.includes('seguimiento')) return 'bg-blue-50 text-blue-600';
+  if (norm.includes('sin') || norm.includes('no estaba')) return 'bg-amber-50 text-amber-600';
+  return 'bg-slate-50 text-slate-600';
 }
 
 export function RecentActivity({ activities }: { activities: any[] }) {
   if (!activities || activities.length === 0) {
     return (
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col h-full">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="text-[13px] font-bold tracking-[0.05em] text-gray-900 uppercase">Actividad reciente</h2>
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Clock className="w-5 h-5 text-blue-600" strokeWidth={2.5} />
+            <h2 className="text-[15px] font-bold text-slate-900">Actividad reciente</h2>
+          </div>
         </div>
         <div className="px-6 py-10 text-center flex-1 flex flex-col items-center justify-center">
           <p className="text-sm text-gray-400">Todavía no hay actividad en este período.</p>
@@ -62,59 +55,74 @@ export function RecentActivity({ activities }: { activities: any[] }) {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col h-full">
-      <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-        <h2 className="text-[13px] font-bold tracking-[0.05em] text-gray-900 uppercase">Actividad reciente</h2>
-        <span className="text-xs text-blue-600 font-medium cursor-pointer hover:underline">Ver todas</span>
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col h-full relative">
+      <div className="px-5 py-4 border-b border-gray-50 flex justify-between items-center z-10 bg-white rounded-t-xl">
+        <div className="flex items-center gap-2.5">
+          <Clock className="w-5 h-5 text-blue-600" strokeWidth={2.5} />
+          <h2 className="text-[15px] font-bold text-slate-900">Actividad reciente</h2>
+        </div>
+        <button className="text-[12px] text-blue-600 font-medium hover:underline">Ver todas</button>
       </div>
 
-      <div className="overflow-y-auto max-h-[480px] custom-scrollbar px-6 py-4">
-        <div className="relative border-l-2 border-gray-100 ml-8 space-y-6">
-          {activities.slice(0, 7).map((a) => {
+      <div className="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar relative z-0">
+        <div className="absolute left-[29px] top-6 bottom-4 w-px bg-slate-100 z-0"></div>
+        <div className="relative z-10 flex flex-col gap-6">
+          {activities.map((a, idx) => {
             const prospect = Array.isArray(a.prospects) ? a.prospects[0] : a.prospects;
             const outcomeLabel = ACTIVITY_RESULTS[a.outcome as keyof typeof ACTIVITY_RESULTS] || a.outcome;
             const typeLabel = TYPE_LABELS[a.type] ?? a.type;
-            const Icon = TYPE_ICONS[a.type] ?? StickyNote;
-            const iconColor = TYPE_COLORS[a.type] ?? 'text-gray-400';
+            const { icon: Icon, color, bg } = TYPE_STYLES[a.type] || TYPE_STYLES.other;
             const timeStr = formatInTimeZone(new Date(a.activity_at), TZ, 'HH:mm', { locale: es });
             const badgeClass = getBadgeColors(a.outcome);
+            
+            // Highlight the line dot for all items
+            const dotClass = 'bg-blue-500 border-white';
 
             return (
-              <div key={a.id} className="relative pl-6">
-                {/* Time and Icon dot */}
-                <div className="absolute -left-[45px] top-0 flex items-start gap-3">
-                  <span className="text-[12px] text-gray-500 font-medium tabular-nums">{timeStr}</span>
-                  <div className="w-5 h-5 rounded-full bg-white border border-gray-200 flex items-center justify-center shrink-0 z-10">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                  </div>
+              <div key={a.id} className="flex items-center gap-3 w-full group">
+                <div className="relative flex items-center justify-center w-2 h-2 shrink-0">
+                  <div className={`w-1.5 h-1.5 rounded-full ${dotClass} ring-4 ring-white z-10`}></div>
                 </div>
-
-                <div className="absolute left-[3px] top-0.5">
-                   {/* Optional: Add icon on top of the blue dot if desired, but V3 spec says blue dot and icon in the row. Let's place icon next to the title. */}
+                <div className="w-[40px] shrink-0">
+                  <span className="text-[12px] text-slate-500 font-medium tabular-nums">{timeStr}</span>
                 </div>
-
-                {/* Content */}
+                
                 <Link
                   href={`/prospects/${prospect?.id}`}
-                  className="block group"
+                  className="flex-1 flex items-center gap-3 min-w-0"
                 >
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <Icon className={`w-4 h-4 ${iconColor}`} />
-                    <span className="text-sm font-semibold text-gray-900">{typeLabel}</span>
-                    {outcomeLabel && (
-                      <span className={`ml-auto text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${badgeClass}`}>
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${bg}`}>
+                    <Icon className={`w-4 h-4 ${color}`} strokeWidth={2.5} />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <span className="text-[13px] font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
+                      {typeLabel}
+                    </span>
+                    <span className="text-[12px] text-slate-500 truncate">
+                      {prospect?.company_name || 'Sin empresa'}
+                    </span>
+                  </div>
+
+                  {outcomeLabel && (
+                    <div className="shrink-0 ml-2">
+                      <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${badgeClass}`}>
                         {outcomeLabel}
                       </span>
-                    )}
-                  </div>
-                  <p className="text-[13px] text-gray-500 group-hover:text-blue-600 transition-colors">
-                    {prospect?.company_name}
-                  </p>
+                    </div>
+                  )}
                 </Link>
               </div>
             );
           })}
         </div>
+      </div>
+      
+      <div className="px-5 py-3 border-t border-gray-50 z-10 bg-white rounded-b-xl">
+        <button className="flex items-center text-[13px] font-medium text-blue-600 hover:underline">
+          Ver más actividad
+          <ChevronRight className="w-4 h-4 ml-0.5" />
+        </button>
       </div>
     </div>
   );
