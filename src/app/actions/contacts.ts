@@ -38,3 +38,43 @@ export async function createContact(formData: FormData) {
   revalidatePath(`/prospects/${prospect_id}`);
   return { success: true, contact: data };
 }
+
+export async function updateContact(id: string, formData: FormData) {
+  const supabase = createAdminClient();
+  const prospect_id = formData.get('prospect_id') as string;
+  const full_name = formData.get('full_name') as string;
+  const role_title = formData.get('role_title') as string;
+  const phone = formData.get('phone') as string;
+  const email = formData.get('email') as string;
+  const is_primary = formData.get('is_primary') === 'true';
+
+  if (!id || !full_name) {
+    return { error: 'ID y nombre son obligatorios' };
+  }
+
+  const { data, error } = await supabase
+    .from('contacts')
+    .update({
+      full_name,
+      role_title: role_title || null,
+      phone: phone || null,
+      email: email || null,
+      is_primary
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating contact:', error);
+    return { error: 'Error al actualizar el contacto' };
+  }
+
+  if (prospect_id) {
+    revalidatePath(`/prospects/${prospect_id}`);
+  }
+  return { success: true, contact: data };
+}
+
+
+

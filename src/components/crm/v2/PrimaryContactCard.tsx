@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Mail, UserCircle, ArrowRight, MessageCircle } from 'lucide-react';
+import { Phone, Mail, UserCircle, ArrowRight, MessageCircle, X, Plus, Edit2 } from 'lucide-react';
 import { ContactForm } from '@/components/crm/contact-form';
 
 const LinkedinIcon = ({ className }: { className?: string }) => (
@@ -20,6 +20,69 @@ const LinkedinIcon = ({ className }: { className?: string }) => (
     <circle cx="4" cy="4" r="2" />
   </svg>
 );
+
+function ContactsManagerModal({ contacts, prospectId, onClose }: { contacts: any[], prospectId: string, onClose: () => void }) {
+  const [editingContact, setEditingContact] = useState<any | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
+
+  if (editingContact || isAdding) {
+    return (
+      <ContactForm 
+        prospectId={prospectId} 
+        contact={editingContact} 
+        onClose={() => { setEditingContact(null); setIsAdding(false); onClose(); }} 
+      />
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+      <div className="bg-white w-full max-w-md rounded-xl shadow-2xl flex flex-col max-h-[85vh]">
+        <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50/50 shrink-0">
+          <h3 className="text-lg font-bold text-gray-900">Contactos</h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-white border border-transparent hover:border-gray-200 transition-colors">
+            <X className="w-4 h-4" strokeWidth={2.5} />
+          </button>
+        </div>
+        
+        <div className="p-5 overflow-y-auto space-y-3">
+          {contacts.map((contact) => (
+            <div key={contact.id} className="p-3.5 border border-gray-200 rounded-lg flex items-center justify-between hover:border-blue-200 transition-colors bg-white">
+              <div className="min-w-0 pr-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold text-[14px] text-gray-900 truncate">{contact.full_name}</span>
+                  {contact.is_primary && (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wide uppercase bg-blue-50 text-blue-600">Principal</span>
+                  )}
+                </div>
+                <p className="text-[12px] text-gray-500 truncate">{contact.role_title || 'Sin cargo'}</p>
+              </div>
+              <button 
+                onClick={() => setEditingContact(contact)}
+                className="w-8 h-8 rounded-md bg-gray-50 border border-gray-200 text-gray-500 flex items-center justify-center hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors shrink-0"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+          {contacts.length === 0 && (
+            <p className="text-sm text-gray-500 text-center py-4">No hay contactos guardados.</p>
+          )}
+        </div>
+        
+        <div className="p-5 border-t border-gray-100 bg-gray-50/50 shrink-0">
+          <button 
+            onClick={() => setIsAdding(true)}
+            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-bold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+          >
+            <Plus className="w-4 h-4" strokeWidth={2.5} />
+            Añadir nuevo contacto
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function PrimaryContactCard({ contacts, prospect, secondaryCount = 0 }: { contacts: any[], prospect: any, secondaryCount?: number }) {
   const [showEditModal, setShowEditModal] = useState(false);
@@ -48,7 +111,8 @@ export function PrimaryContactCard({ contacts, prospect, secondaryCount = 0 }: {
       </div>
       
       {showEditModal && (
-        <ContactForm 
+        <ContactsManagerModal 
+          contacts={contacts}
           prospectId={prospect.id}
           onClose={() => setShowEditModal(false)} 
         />
@@ -130,7 +194,7 @@ export function PrimaryContactCard({ contacts, prospect, secondaryCount = 0 }: {
 
       {secondaryCount > 0 && (
         <div className="mt-5 text-center">
-          <button className="text-[13px] font-semibold text-blue-600 hover:underline flex items-center justify-center gap-1.5 w-full">
+          <button onClick={() => setShowEditModal(true)} className="text-[13px] font-semibold text-blue-600 hover:underline flex items-center justify-center gap-1.5 w-full">
             Ver {secondaryCount} contactos más <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>

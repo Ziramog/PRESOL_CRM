@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { createContact } from '@/app/actions/contacts';
+import { createContact, updateContact } from '@/app/actions/contacts';
 import { X, BookUser } from 'lucide-react';
 
 export function ContactForm({ 
   prospectId, 
+  contact,
   onClose 
 }: { 
-  prospectId: string, 
+  prospectId: string,
+  contact?: any,
   onClose: () => void 
 }) {
   const [isPending, setIsPending] = useState(false);
@@ -54,7 +56,9 @@ export function ContactForm({
     setError(null);
     
     const formData = new FormData(e.currentTarget);
-    const result = await createContact(formData);
+    const result = contact 
+      ? await updateContact(contact.id, formData)
+      : await createContact(formData);
     
     if (result.error) {
       setError(result.error);
@@ -66,18 +70,18 @@ export function ContactForm({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-md rounded-none shadow-2xl overflow-hidden">
-        <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50/50">
-          <h3 className="text-lg font-semibold text-gray-900">Añadir Contacto</h3>
-          <button onClick={onClose} className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100">
-            <X className="w-5 h-5" />
+      <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden">
+        <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50/50">
+          <h3 className="text-lg font-bold text-gray-900">{contact ? 'Editar' : 'Añadir'} Contacto</h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-white border border-transparent hover:border-gray-200 transition-colors">
+            <X className="w-4 h-4" strokeWidth={2.5} />
           </button>
         </div>
         
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <input type="hidden" name="prospect_id" value={prospectId} />
           
-          {isSupported && (
+          {!contact && isSupported && (
             <button 
               type="button" 
               onClick={handleImportContact}
@@ -89,78 +93,83 @@ export function ContactForm({
           )}
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo *</label>
+            <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Nombre Completo *</label>
             <input 
               ref={nameRef}
               type="text" 
               name="full_name" 
+              defaultValue={contact?.full_name}
               required
               placeholder="Ej: Juan Pérez"
-              className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="w-full text-[13px] rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cargo / Rol</label>
+            <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Cargo / Rol</label>
             <input 
               type="text" 
               name="role_title" 
+              defaultValue={contact?.role_title}
               placeholder="Ej: Gerente de Compras"
-              className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="w-full text-[13px] rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+            <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Teléfono</label>
             <input 
               ref={phoneRef}
-              type="text" 
+              type="tel" 
               name="phone" 
-              placeholder="Ej: 351 123 4567"
-              className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              defaultValue={contact?.phone}
+              placeholder="Ej: +54 9 351 1234567"
+              className="w-full text-[13px] rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Correo Electrónico</label>
             <input 
               ref={emailRef}
               type="email" 
               name="email" 
-              placeholder="Ej: juan@empresa.com"
-              className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              defaultValue={contact?.email}
+              placeholder="ejemplo@empresa.com"
+              className="w-full text-[13px] rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3"
             />
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center gap-2 pt-2">
             <input 
               type="checkbox" 
               name="is_primary" 
               id="is_primary"
               value="true"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              defaultChecked={contact?.is_primary}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
             />
-            <label htmlFor="is_primary" className="ml-2 block text-sm text-gray-900">
-              Es el contacto principal
+            <label htmlFor="is_primary" className="text-[13px] font-medium text-gray-700 cursor-pointer">
+              Marcar como contacto principal
             </label>
           </div>
 
-          {error && <div className="text-sm text-red-600 font-medium">{error}</div>}
+          {error && <div className="p-3 bg-red-50 text-red-700 text-[13px] rounded-lg border border-red-100">{error}</div>}
 
-          <div className="flex gap-3 pt-4 border-t border-gray-100">
+          <div className="pt-4 flex justify-end gap-3">
             <button 
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50"
+              className="px-4 py-2 text-[13px] font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancelar
             </button>
             <button 
               type="submit" 
               disabled={isPending}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50"
+              className="px-4 py-2 text-[13px] font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-sm"
             >
-              {isPending ? 'Guardando...' : 'Guardar Contacto'}
+              {isPending ? 'Guardando...' : contact ? 'Guardar Cambios' : 'Añadir Contacto'}
             </button>
           </div>
         </form>
