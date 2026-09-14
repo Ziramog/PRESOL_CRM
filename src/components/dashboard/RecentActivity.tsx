@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { ACTIVITY_RESULTS } from '@/lib/constants';
 import { formatInTimeZone } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
@@ -15,6 +16,7 @@ const TYPE_LABELS: Record<string, string> = {
   whatsapp: 'WhatsApp enviado',
   email: 'Email enviado',
   note: 'Nota agregada',
+  quote: 'Cotización enviada',
   other: 'Actividad registrada',
 };
 
@@ -24,6 +26,7 @@ const TYPE_STYLES: Record<string, { icon: any, color: string, bg: string }> = {
   visit: { icon: User, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   meeting: { icon: Building, color: 'text-blue-600', bg: 'bg-blue-50' },
   whatsapp: { icon: MessageCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  quote: { icon: FileText, color: 'text-purple-600', bg: 'bg-purple-50' },
   note: { icon: StickyNote, color: 'text-amber-600', bg: 'bg-amber-50' },
   other: { icon: StickyNote, color: 'text-slate-500', bg: 'bg-slate-50' },
 };
@@ -38,6 +41,10 @@ function getBadgeColors(outcome: string) {
 }
 
 export function RecentActivity({ activities }: { activities: any[] }) {
+  const searchParams = useSearchParams();
+  const currentPeriod = searchParams.get('period') || 'today';
+  const showDate = currentPeriod !== 'today';
+
   if (!activities || activities.length === 0) {
     return (
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col h-full">
@@ -72,7 +79,11 @@ export function RecentActivity({ activities }: { activities: any[] }) {
             const outcomeLabel = ACTIVITY_RESULTS[a.outcome as keyof typeof ACTIVITY_RESULTS] || a.outcome;
             const typeLabel = TYPE_LABELS[a.type] ?? a.type;
             const { icon: Icon, color, bg } = TYPE_STYLES[a.type] || TYPE_STYLES.other;
-            const timeStr = formatInTimeZone(new Date(a.activity_at), TZ, 'HH:mm', { locale: es });
+            
+            const activityDate = new Date(a.activity_at);
+            const timeStr = formatInTimeZone(activityDate, TZ, 'HH:mm', { locale: es });
+            const dateStr = formatInTimeZone(activityDate, TZ, 'd MMM', { locale: es });
+            
             const badgeClass = getBadgeColors(a.outcome);
             
             // Highlight the line dot for all items
@@ -83,8 +94,11 @@ export function RecentActivity({ activities }: { activities: any[] }) {
                 <div className="relative flex items-center justify-center w-2 h-2 shrink-0">
                   <div className={`w-1.5 h-1.5 rounded-full ${dotClass} ring-4 ring-white z-10`}></div>
                 </div>
-                <div className="w-[40px] shrink-0">
-                  <span className="text-[12px] text-slate-500 font-medium tabular-nums">{timeStr}</span>
+                <div className="w-[42px] shrink-0 flex flex-col">
+                  <span className="text-[12px] text-slate-500 font-medium tabular-nums leading-tight">{timeStr}</span>
+                  {showDate && (
+                    <span className="text-[9px] text-slate-400 font-semibold tracking-wide leading-tight mt-0.5">{dateStr}</span>
+                  )}
                 </div>
                 
                 <Link
