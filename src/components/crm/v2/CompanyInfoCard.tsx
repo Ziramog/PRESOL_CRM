@@ -1,3 +1,5 @@
+'use client';
+
 import { MapPin, Phone, Globe, Mail, Briefcase, Building, ExternalLink, CheckCircle2, Circle, Building2, Copy, Info } from 'lucide-react';
 
 interface CompanyInfoCardProps {
