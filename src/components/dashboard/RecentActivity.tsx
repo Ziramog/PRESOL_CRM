@@ -81,7 +81,11 @@ export function RecentActivity({ activities }: { activities: any[] }) {
                 const timeStr = formatInTimeZone(new Date(a.activity_at), TZ, 'HH:mm', { locale: es });
                 
                 reportText += `🕒 ${timeStr} | *${prospect?.company_name || 'Sin empresa'}*\n`;
-                reportText += `   👉 ${typeLabel} - ${outcomeLabel}\n\n`;
+                reportText += `   👉 ${typeLabel} - ${outcomeLabel}\n`;
+                if (a.notes) {
+                  reportText += `   💬 _"${a.notes.trim()}"_\n`;
+                }
+                reportText += `\n`;
               });
             }
             reportText += `Generado desde PRESOL CRM`;
@@ -94,8 +98,8 @@ export function RecentActivity({ activities }: { activities: any[] }) {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar relative z-0 max-h-[380px]">
-        <div className="absolute left-[29px] top-6 bottom-4 w-px bg-slate-100 z-0"></div>
+      <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 custom-scrollbar relative z-0 max-h-[450px]">
+        <div className="absolute left-[25px] sm:left-[29px] top-6 bottom-4 w-px bg-slate-100 z-0"></div>
         <div className="relative z-10 flex flex-col gap-6">
           {activities.map((a, idx) => {
             const prospect = Array.isArray(a.prospects) ? a.prospects[0] : a.prospects;
@@ -113,12 +117,12 @@ export function RecentActivity({ activities }: { activities: any[] }) {
             const dotClass = 'bg-blue-500 border-white';
 
             return (
-              <div key={a.id} className="flex items-center gap-3 w-full group">
-                <div className="relative flex items-center justify-center w-2 h-2 shrink-0">
+              <div key={a.id} className="flex items-start gap-2 sm:gap-3 w-full group">
+                <div className="relative flex items-center justify-center w-2 h-2 shrink-0 mt-1.5">
                   <div className={`w-1.5 h-1.5 rounded-full ${dotClass} ring-4 ring-white z-10`}></div>
                 </div>
-                <div className="w-[42px] shrink-0 flex flex-col">
-                  <span className="text-[12px] text-slate-500 font-medium tabular-nums leading-tight">{timeStr}</span>
+                <div className="w-[36px] sm:w-[42px] shrink-0 flex flex-col mt-0.5">
+                  <span className="text-[11px] sm:text-[12px] text-slate-500 font-medium tabular-nums leading-tight">{timeStr}</span>
                   {showDate && (
                     <span className="text-[9px] text-slate-400 font-semibold tracking-wide leading-tight mt-0.5">{dateStr}</span>
                   )}
@@ -126,26 +130,33 @@ export function RecentActivity({ activities }: { activities: any[] }) {
                 
                 <Link
                   href={`/prospects/${prospect?.id}`}
-                  className="flex-1 flex items-center gap-3 min-w-0"
+                  className="flex-1 flex flex-col gap-2 min-w-0 bg-transparent hover:bg-slate-50/50 p-1.5 -m-1.5 rounded-lg transition-colors"
                 >
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${bg}`}>
-                    <Icon className={`w-4 h-4 ${color}`} strokeWidth={2.5} />
+                  <div className="flex items-center gap-2.5 sm:gap-3 w-full">
+                    <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 ${bg}`}>
+                      <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${color}`} strokeWidth={2.5} />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[12px] sm:text-[13px] font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
+                          {typeLabel}
+                        </span>
+                        {outcomeLabel && (
+                          <span className={`text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 ${badgeClass}`}>
+                            {outcomeLabel}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[11px] sm:text-[12px] text-slate-500 truncate">
+                        {prospect?.company_name || 'Sin empresa'}
+                      </span>
+                    </div>
                   </div>
                   
-                  <div className="flex-1 min-w-0 flex flex-col justify-center">
-                    <span className="text-[13px] font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
-                      {typeLabel}
-                    </span>
-                    <span className="text-[12px] text-slate-500 truncate">
-                      {prospect?.company_name || 'Sin empresa'}
-                    </span>
-                  </div>
-
-                  {outcomeLabel && (
-                    <div className="shrink-0 ml-2">
-                      <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${badgeClass}`}>
-                        {outcomeLabel}
-                      </span>
+                  {a.notes && (
+                    <div className="ml-11 sm:ml-12 text-[11px] sm:text-[12px] text-slate-600 bg-slate-50 border border-slate-100 rounded-lg p-2.5 sm:p-3 break-words whitespace-pre-wrap">
+                      {a.notes}
                     </div>
                   )}
                 </Link>
