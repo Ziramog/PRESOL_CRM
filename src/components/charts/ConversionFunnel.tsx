@@ -61,7 +61,7 @@ export function ConversionFunnel({ data }: { data: FunnelData }) {
   }
 
   const steps = [
-    { name: 'Visitados', value: data.visited },
+    { name: 'Gestionados', value: data.visited },
     { name: 'Contactos efectivos', value: data.effective_contacts },
     { name: 'Interesados', value: data.interested },
     { name: 'Oportunidades', value: data.opportunities }

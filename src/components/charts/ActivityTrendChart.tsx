@@ -78,7 +78,7 @@ export function ActivityTrendChart({ data }: ActivityTrendChartProps) {
               contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
             />
             <Legend wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }} />
-            <Line type="monotone" name="Visitados" dataKey="visited" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6, onClick: handleDotClick, cursor: 'pointer' }} />
+            <Line type="monotone" name="Gestionados" dataKey="visited" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6, onClick: handleDotClick, cursor: 'pointer' }} />
             <Line type="monotone" name="Contactos Ef." dataKey="effective_contacts" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6, onClick: handleDotClick, cursor: 'pointer' }} />
             <Line type="monotone" name="Interesados" dataKey="interested" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6, onClick: handleDotClick, cursor: 'pointer' }} />
             <Line type="monotone" name="Oportunidades" dataKey="opportunities" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6, onClick: handleDotClick, cursor: 'pointer' }} />

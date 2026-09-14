@@ -52,7 +52,7 @@ export default async function DirectionDashboardPage(props: { searchParams: Prom
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <KpiCard icon={Users} title="Visitados" value={f.visited} delta="+12%" />
+        <KpiCard icon={Users} title="Gestionados" value={f.visited} delta="+12%" />
         <KpiCard icon={UserCheck} title="Contactos ef." value={f.effective_contacts} delta="+8%" />
         <KpiCard icon={Target} title="Interesados" value={f.interested} delta="+20%" />
         <KpiCard icon={Briefcase} title="Oportunidades" value={f.opportunities} delta="+12%" />

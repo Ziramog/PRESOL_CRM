@@ -42,7 +42,7 @@ export function SalespersonRanking({ data }: SalespersonRankingProps) {
                 <div 
                   className="bg-blue-500 h-1.5" 
                   style={{ width: `${(user.visited / maxVisited) * 100}%` }} 
-                  title={`Visitados: ${user.visited}`}
+                  title={`Gestionados: ${user.visited}`}
                 />
               </div>
               <div className="flex text-[10px] text-gray-400 mt-1 gap-3">

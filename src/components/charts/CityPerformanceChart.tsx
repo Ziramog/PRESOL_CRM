@@ -59,7 +59,7 @@ export function CityPerformanceChart({ data }: { data: CityData[] }) {
             />
             <Bar 
               dataKey="visited" 
-              name="Visitados" 
+              name="Gestionados" 
               radius={[4, 4, 0, 0]}
               onClick={(entry: any) => {
                 if (entry && entry.city) {
