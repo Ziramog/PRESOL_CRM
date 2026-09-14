@@ -1,5 +1,8 @@
 'use client';
 
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { Filter } from 'lucide-react';
+
 interface FunnelData {
   visited: number;
   effective_contacts: number;
@@ -19,10 +22,40 @@ const FUNNEL_COLORS = [
 ];
 
 export function ConversionFunnel({ data }: { data: FunnelData }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const currentPeriod = searchParams.get('period') || 'today';
+
+  const handlePeriodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPeriod = e.target.value;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('period', newPeriod);
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
   if (!data || data.visited === 0) {
     return (
-      <div className="h-64 flex items-center justify-center border border-gray-200 rounded-lg bg-gray-50/50">
-        <p className="text-sm text-gray-500">Sin datos suficientes para este período.</p>
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm h-full flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h3 className="text-[15px] font-bold text-gray-900 flex items-center">
+            <Filter className="w-5 h-5 mr-2 text-blue-600" strokeWidth={2.5} />
+            Embudo comercial
+          </h3>
+          <select 
+            value={currentPeriod}
+            onChange={handlePeriodChange}
+            className="text-sm border-gray-200 rounded-md text-gray-600 bg-gray-50 py-1 pl-2 pr-8 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="today">Hoy</option>
+            <option value="yesterday">Ayer</option>
+            <option value="week">Esta semana</option>
+            <option value="month">Este mes</option>
+          </select>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-6">
+          <p className="text-sm text-gray-500">Sin datos suficientes para este período.</p>
+        </div>
       </div>
     );
   }
@@ -41,18 +74,25 @@ export function ConversionFunnel({ data }: { data: FunnelData }) {
   const maxVal = Math.max(steps[0].value, 1);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-8">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col h-full">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
         <h3 className="text-[15px] font-bold text-gray-900 flex items-center">
-          <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+          <Filter className="w-5 h-5 mr-2 text-blue-600" strokeWidth={2.5} />
           Embudo comercial
         </h3>
-        <select className="text-sm border-gray-200 rounded-md text-gray-600 bg-gray-50 py-1 pl-2 pr-8">
-          <option>Esta semana</option>
+        <select 
+          value={currentPeriod}
+          onChange={handlePeriodChange}
+          className="text-sm border-gray-200 rounded-md text-gray-600 bg-gray-50 py-1 pl-2 pr-8 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="today">Hoy</option>
+          <option value="yesterday">Ayer</option>
+          <option value="week">Esta semana</option>
+          <option value="month">Este mes</option>
         </select>
       </div>
       
-      <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
+      <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 p-5">
         {/* Gráfico SVG */}
         <div className="w-48 h-48 flex flex-col items-center justify-start relative">
           {steps.map((step, idx) => {

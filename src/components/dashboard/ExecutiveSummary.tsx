@@ -104,10 +104,14 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   const [loading, setLoading] = useState(false);
 
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+
   const userId = searchParams.get('user_id') || undefined;
   const city = searchParams.get('city') || undefined;
   const category = searchParams.get('category') || undefined;
   const tripId = searchParams.get('trip_id') || undefined;
+  const currentPeriod = searchParams.get('period') || 'today';
 
   const realToday = toZonedTime(new Date(), TZ);
   const zonedNow = baseDate ? new Date(baseDate) : realToday;
@@ -135,7 +139,7 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   const yesterdayLabel = format(yesterday, "d MMM", { locale: es });
   const weekStart = format(startOfWeek(zonedNow, { weekStartsOn: 1 }), 'd', { locale: es });
   const weekEnd = format(endOfWeek(zonedNow, { weekStartsOn: 1 }), "d MMM", { locale: es });
-  const weekLabel = `${weekStart} – ${weekEnd}`;
+  const weekLabel = `${weekStart} — ${weekEnd}`;
 
   const openModal = async (kpiKey: string, title: string, periodCode: string, periodLabel: string) => {
     setModal({ open: true, title, period: periodCode, periodLabel });
@@ -152,6 +156,21 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   const rate = (contacts: number, visits: number) =>
     visits > 0 ? `${Math.round((contacts / visits) * 100)}%` : '—';
 
+  const handleCardClick = (periodCode: string) => {
+    if (currentPeriod === periodCode) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('period', periodCode);
+    if (periodCode !== 'custom') {
+      params.delete('from_date');
+      params.delete('to_date');
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const isPrimaryToday = currentPeriod === 'today' || currentPeriod === 'custom';
+  const isPrimaryYesterday = currentPeriod === 'yesterday';
+  const isPrimaryWeek = currentPeriod === 'week';
+
   return (
     <>
       <div className="flex flex-col lg:grid lg:grid-cols-3 gap-3 lg:gap-4">
@@ -165,9 +184,10 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
             dateLabel={yesterdayLabel}
             data={summary?.yesterday}
             periodCode="yesterday"
-            isPrimary={false}
+            isPrimary={isPrimaryYesterday}
             rate={rate}
             onMetricClick={openModal}
+            onCardClick={handleCardClick}
           />
         </div>
         <div className="order-1 lg:order-2">
@@ -176,9 +196,10 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
             dateLabel={todayLabel}
             data={summary?.today}
             periodCode="today"
-            isPrimary={true}
+            isPrimary={isPrimaryToday}
             rate={rate}
             onMetricClick={openModal}
+            onCardClick={handleCardClick}
           />
         </div>
         <div className="order-3 lg:order-3">
@@ -187,9 +208,10 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
             dateLabel={weekLabel}
             data={summary?.week}
             periodCode="week"
-            isPrimary={false}
+            isPrimary={isPrimaryWeek}
             rate={rate}
             onMetricClick={openModal}
+            onCardClick={handleCardClick}
           />
         </div>
       </div>
@@ -214,6 +236,7 @@ function PeriodCard({
   isPrimary,
   rate,
   onMetricClick,
+  onCardClick,
 }: {
   title: string;
   dateLabel: string;
@@ -222,6 +245,7 @@ function PeriodCard({
   isPrimary: boolean;
   rate: (c: number, v: number) => string;
   onMetricClick: (kpiKey: string, title: string, period: string, periodLabel: string) => void;
+  onCardClick: (periodCode: string) => void;
 }) {
   const d = data ?? { visited: 0, effective_contacts: 0, interested: 0, opportunities: 0, followups: 0 };
 
@@ -241,11 +265,12 @@ function PeriodCard({
 
   return (
     <div
+      onClick={() => onCardClick(periodCode)}
       className={[
-        'flex flex-col rounded-xl transition-all duration-300 relative',
+        'flex flex-col rounded-xl transition-all duration-300 relative cursor-pointer',
         isPrimary
           ? 'bg-white border-2 border-blue-500 shadow-sm' 
-          : 'bg-white border border-gray-200 shadow-sm',
+          : 'bg-white border border-gray-200 shadow-sm hover:border-blue-300',
       ].join(' ')}
     >
       {/* Card header */}
@@ -258,7 +283,7 @@ function PeriodCard({
             {dateLabel}
           </p>
         </div>
-        {isPrimary && (
+        {isPrimary && (title === "Hoy" || title === "Esta semana") && (
           <div className="flex items-center h-fit bg-green-50 text-green-700 px-2 py-1 rounded-full text-[10px] font-bold uppercase">
             <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
             En curso
@@ -271,7 +296,10 @@ function PeriodCard({
         {metrics.map(({ key, label, value }) => (
           <button
             key={key}
-            onClick={() => onMetricClick(key, label, periodCode, title)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMetricClick(key, label, periodCode, title);
+            }}
             className="w-full flex items-center justify-between py-1.5 px-2 text-left transition-colors group hover:bg-gray-50"
           >
             <span className="text-sm text-gray-600 group-hover:text-gray-900">
@@ -297,7 +325,7 @@ function PeriodCard({
               </span>
               <div className="flex flex-col">
                 <span className="text-[10px] font-bold text-green-600 flex items-center">
-                  ▲ +12%
+                  ↑ +12%
                 </span>
                 <span className="text-[9px] text-gray-400">
                   {deltaText}
