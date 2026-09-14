@@ -22,7 +22,7 @@ export function NextActionCard({ tasks, prospectId }: { tasks: any[], prospectId
 
   if (!localTasks || localTasks.length === 0) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col h-auto">
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col h-full">
         <div className="flex items-center gap-2 mb-3">
           <CalendarDays className="w-5 h-5 text-blue-600" />
           <h3 className="text-[15px] font-bold text-gray-900">Próxima acción</h3>
@@ -65,7 +65,7 @@ export function NextActionCard({ tasks, prospectId }: { tasks: any[], prospectId
   }
 
   return (
-    <div className="bg-white border border-blue-200 rounded-xl shadow-sm p-4 h-auto flex flex-col relative overflow-hidden">
+    <div className="bg-white border border-blue-200 rounded-xl shadow-sm p-4 h-full flex flex-col relative overflow-hidden">
       <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50/50 rounded-bl-full -mr-12 -mt-12 z-0"></div>
       
       <div className="relative z-10 flex justify-between items-start mb-3">
@@ -106,3 +106,4 @@ export function NextActionCard({ tasks, prospectId }: { tasks: any[], prospectId
     </div>
   );
 }
+

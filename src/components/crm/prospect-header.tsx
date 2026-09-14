@@ -77,11 +77,46 @@ export function ProspectHeader({
                 {prospect.company_name}
               </h1>
               
-              {/* Status Badge */}
-              <span className="flex items-center gap-1.5 bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full text-[11px] font-bold">
-                <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
-                {PROSPECT_STATUS[prospect.contact_status as keyof typeof PROSPECT_STATUS] || 'Prospecto'}
-              </span>
+              {/* Status Badge as Select */}
+              <div className="relative flex items-center">
+                <select
+                  value={prospect.contact_status || 'pending'}
+                  onChange={handleStatusChange}
+                  disabled={isPending}
+                  className={`appearance-none cursor-pointer outline-none transition-colors border pl-5 pr-5 py-1 rounded-full text-[11px] font-bold
+                    ${isPending ? 'opacity-50' : ''}
+                    ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                      prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                      prospect.contact_status === 'opportunity' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                      prospect.contact_status === 'quote' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                      prospect.contact_status === 'customer' ? 'bg-green-50 text-green-700 border-green-200' :
+                      prospect.contact_status === 'discarded' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                      'bg-amber-50 text-amber-700 border-amber-200'
+                    }
+                  `}
+                >
+                  {STATUS_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 left-2 flex items-center">
+                  <span className={`w-1.5 h-1.5 rounded-full 
+                    ${prospect.contact_status === 'in_progress' ? 'bg-blue-500' :
+                      prospect.contact_status === 'interested' ? 'bg-emerald-500' :
+                      prospect.contact_status === 'opportunity' ? 'bg-indigo-500' :
+                      prospect.contact_status === 'quote' ? 'bg-purple-500' :
+                      prospect.contact_status === 'customer' ? 'bg-green-500' :
+                      prospect.contact_status === 'discarded' ? 'bg-rose-500' :
+                      'bg-amber-500'
+                    }
+                  `}></span>
+                </div>
+                <div className="pointer-events-none absolute inset-y-0 right-1.5 flex items-center text-current opacity-70">
+                  <svg className="h-3 w-3 fill-current" viewBox="0 0 20 20">
+                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
               
               {/* Priority Badge */}
               {prospect.priority === 'Alta' && (

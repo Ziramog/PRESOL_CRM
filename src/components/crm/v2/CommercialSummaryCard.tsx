@@ -12,7 +12,7 @@ export function CommercialSummaryCard({ prospect }: CommercialSummaryCardProps) 
   const [showEditModal, setShowEditModal] = useState(false);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col h-auto">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col h-full">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
           <Target className="w-5 h-5 text-gray-500" />
@@ -64,3 +64,4 @@ export function CommercialSummaryCard({ prospect }: CommercialSummaryCardProps) 
     </div>
   );
 }
+

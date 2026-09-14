@@ -25,7 +25,7 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
   const displayActivities = filteredActivities.slice(0, 5);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 h-auto flex flex-col">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 h-full flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
           <Clock className="w-5 h-5 text-gray-500" />
@@ -127,3 +127,4 @@ function getActivityTitle(type: string) {
     default: return 'Actividad';
   }
 }
+

@@ -108,28 +108,24 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
         />
       </div>
 
-      {/* Main 3-Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4 items-start">
+      {/* Main 3-Column Grid Layout by Rows */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4 items-stretch">
         
-        {/* Left Column */}
-        <div className="flex flex-col gap-4">
-          <NextActionCard tasks={overview.next_task ? [overview.next_task] : []} prospectId={id} />
-          <LastInteractionCard activities={overview.latest_activity ? [overview.latest_activity] : []} prospectId={id} />
-          <ActivityTimeline activities={overview.recent_activities} />
-        </div>
+        {/* ROW 1 */}
+        <NextActionCard tasks={overview.next_task ? [overview.next_task] : []} prospectId={id} />
+        <PrimaryContactCard contacts={overview.primary_contact ? [overview.primary_contact] : []} prospect={prospect} secondaryCount={overview.secondary_contacts_count} />
+        <CommercialStatusCard prospect={prospect} latestActivity={overview.latest_activity} />
         
-        {/* Middle Column */}
-        <div className="flex flex-col gap-4">
-          <PrimaryContactCard contacts={overview.primary_contact ? [overview.primary_contact] : []} prospect={prospect} secondaryCount={overview.secondary_contacts_count} />
-          <CommercialSummaryCard prospect={prospect} />
-          <OpenFollowupsCard tasks={overview.open_tasks} prospectId={id} />
-        </div>
+        {/* ROW 2 */}
+        <LastInteractionCard activities={overview.latest_activity ? [overview.latest_activity] : []} prospectId={id} />
+        <CommercialSummaryCard prospect={prospect} />
+        <OpenFollowupsCard tasks={overview.open_tasks} prospectId={id} />
 
-        {/* Right Column */}
-        <div className="flex flex-col gap-4">
-          <CommercialStatusCard prospect={prospect} latestActivity={overview.latest_activity} />
-          <CompanyInfoCard prospect={prospect} dataQuality={overview.data_quality} />
-        </div>
+        {/* ROW 3 */}
+        <ActivityTimeline activities={overview.recent_activities} />
+        <CompanyInfoCard prospect={prospect} dataQuality={overview.data_quality} />
+        <div className="hidden lg:block"></div>
+        
       </div>
 
       {/* Bottom Accordions */}
