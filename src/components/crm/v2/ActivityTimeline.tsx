@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Phone, Mail, MessageSquare, MapPin, FileText, Activity, Clock } from 'lucide-react';
+import { ACTIVITY_RESULTS, CONTACT_LEVELS } from '@/lib/constants';
 
 interface ActivityTimelineProps {
   activities: any[];
@@ -79,14 +80,14 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                       {getActivityTitle(activity.type)}
                       {activity.outcome && (
                         <span className="inline-block text-gray-500 text-[11px] font-normal">
-                          {activity.outcome.replace(/_/g, ' ')}
+                          {ACTIVITY_RESULTS[activity.outcome as keyof typeof ACTIVITY_RESULTS] || activity.outcome.replace(/_/g, ' ')}
                         </span>
                       )}
                     </h4>
                     <p className="text-[11px] text-blue-600 font-medium mb-1.5">{activity.user_full_name || 'Usuario'}</p>
                     {(activity.notes || activity.summary) && (
                       <p className="text-[12px] text-gray-600 line-clamp-2 leading-relaxed">
-                        {activity.summary || activity.notes}
+                        {activity.notes || (CONTACT_LEVELS[activity.summary as keyof typeof CONTACT_LEVELS] || activity.summary)}
                       </p>
                     )}
                   </div>

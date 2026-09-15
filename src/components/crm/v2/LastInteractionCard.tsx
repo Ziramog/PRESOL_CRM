@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { Clock, Trash2, AlertTriangle, Pencil, MoreHorizontal, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ACTIVITY_RESULTS } from '@/lib/constants';
+import { ACTIVITY_RESULTS, CONTACT_LEVELS } from '@/lib/constants';
 import { deleteActivity } from '@/app/actions/activities';
 import { ActivityForm } from '@/components/crm/activity-form';
 
@@ -91,7 +91,7 @@ export function LastInteractionCard({ activities, prospectId }: { activities: an
           
           {lastActivity.notes || lastActivity.summary ? (
             <p className="text-[13px] text-gray-700 bg-gray-50/50 p-3 rounded-lg border border-gray-100 mb-3 line-clamp-3 leading-relaxed">
-              "{lastActivity.notes || lastActivity.summary}"
+              "{lastActivity.notes || (CONTACT_LEVELS[lastActivity.summary as keyof typeof CONTACT_LEVELS] || lastActivity.summary)}"
             </p>
           ) : (
             <p className="text-[12px] text-gray-400 italic mb-3">Sin notas adicionales.</p>
