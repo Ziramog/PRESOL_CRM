@@ -4,7 +4,7 @@ import * as xlsx from 'xlsx';
 import { CONTACT_LEVELS, ACTIVITY_RESULTS } from '@/lib/constants';
 
 export async function GET() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Fetch all prospects and their activities
   const { data: prospects, error } = await supabase
@@ -25,7 +25,7 @@ export async function GET() {
   }
 
   // Format data for Excel
-  const excelData = prospects.map((p) => {
+  const excelData = prospects.map((p: any) => {
     // Sort activities for this prospect by date descending to get the latest
     const sortedActivities = p.activities?.sort((a: any, b: any) => 
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
