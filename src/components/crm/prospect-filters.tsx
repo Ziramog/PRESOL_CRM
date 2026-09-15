@@ -43,6 +43,17 @@ export function ProspectFilters({
   }, [currentSearch]);
 
   
+  
+  // Client-side fallback for Next.js router cache issues
+  useEffect(() => {
+    if (!searchParams.toString() && typeof window !== 'undefined') {
+      const saved = localStorage.getItem('presol_prospect_filters');
+      if (saved) {
+        router.replace(`/prospects?${saved}`);
+      }
+    }
+  }, [searchParams, router]);
+
   // Click outside closes filter panel
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -58,6 +69,7 @@ export function ProspectFilters({
     const persistFilters = (params: URLSearchParams) => {
     const p = new URLSearchParams(params.toString());
     p.delete('search');
+    localStorage.setItem('presol_prospect_filters', p.toString());
     saveProspectFilters(p.toString()).catch(console.error);
   };
 
