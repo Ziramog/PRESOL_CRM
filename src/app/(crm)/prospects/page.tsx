@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { ProspectCard } from '@/components/crm/prospect-card';
 import { ProspectTable } from '@/components/crm/prospect-table';
@@ -24,15 +24,16 @@ export default async function ProspectsPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const supabase = await createAdminClient();
+  const supabaseAdmin = createAdminClient();
+  const supabaseUser = await createClient();
   const params = await searchParams;
 
   const hasStructuralFilters = params.class || params.city || params.sector || params.status;
   
   if (!hasStructuralFilters && !params.search) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabaseUser.auth.getUser();
     if (user) {
-      const { data: profile } = await supabase.from('profiles').select('preferences').eq('id', user.id).single();
+      const { data: profile } = await supabaseAdmin.from('profiles').select('preferences').eq('id', user.id).single();
       const savedFilters = profile?.preferences?.prospect_filters;
       if (savedFilters) {
         redirect(`/prospects?${savedFilters}`);
@@ -57,7 +58,7 @@ export default async function ProspectsPage({
     : 'created_at';
   const sortDir = params.dir === 'asc';
 
-  let baseQuery = supabase.from('prospects').select('*');
+  let baseQuery = supabaseAdmin.from('prospects').select('*');
   
   // Only apply DB sorting if it's not our custom open_tasks sort
   if (sortCol !== 'open_tasks') {
@@ -72,15 +73,15 @@ export default async function ProspectsPage({
 
   const [prospectsResponse, citiesResponse, sectorsResponse, dirNotesResponse, tasksResponse] = await Promise.all([
     baseQuery,
-    supabase.from('prospects').select('city'),
-    supabase.from('prospects').select('sector'),
+    supabaseAdmin.from('prospects').select('city'),
+    supabaseAdmin.from('prospects').select('sector'),
     // Get all prospect IDs that have at least one direction note
-    supabase
+    supabaseAdmin
       .from('comments')
       .select('prospect_id')
       .eq('is_direction_note', true)
       .is('deleted_at', null),
-    supabase
+    supabaseAdmin
       .from('tasks')
       .select('prospect_id')
       .eq('status', 'pending'),
