@@ -42,13 +42,7 @@ export function ProspectFilters({
     setSearchValue(currentSearch);
   }, [currentSearch]);
 
-  // Persist structural filters to DB whenever they change (exclude search)
-  useEffect(() => {
-    const p = new URLSearchParams(searchParams.toString());
-    p.delete('search');
-    saveProspectFilters(p.toString()).catch(console.error);
-  }, [searchParams]);
-
+  
   // Click outside closes filter panel
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -61,6 +55,12 @@ export function ProspectFilters({
   }, []);
 
   // Debounced search — fires 400ms after user stops typing
+    const persistFilters = (params: URLSearchParams) => {
+    const p = new URLSearchParams(params.toString());
+    p.delete('search');
+    saveProspectFilters(p.toString()).catch(console.error);
+  };
+
   const commitSearch = useCallback(
     (term: string) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -69,7 +69,8 @@ export function ProspectFilters({
       } else {
         params.delete('search');
       }
-      startTransition(() => router.push(`/prospects?${params.toString()}`));
+      persistFilters(params);
+    startTransition(() => router.push(`/prospects?${params.toString()}`));
     },
     [router, searchParams],
   );
@@ -94,6 +95,7 @@ export function ProspectFilters({
     } else {
       params.delete(key);
     }
+    persistFilters(params);
     startTransition(() => router.push(`/prospects?${params.toString()}`));
   };
 
@@ -106,6 +108,7 @@ export function ProspectFilters({
     } else {
       [...cities, city].forEach((c) => params.append('city', c));
     }
+    persistFilters(params);
     startTransition(() => router.push(`/prospects?${params.toString()}`));
   };
 
@@ -115,6 +118,7 @@ export function ProspectFilters({
     params.delete('city');
     params.delete('sector');
     params.delete('status');
+    persistFilters(params);
     startTransition(() => router.push(`/prospects?${params.toString()}`));
     try {
       localStorage.removeItem('presol_prospect_filters');
@@ -183,7 +187,8 @@ export function ProspectFilters({
               const params = new URLSearchParams(searchParams.toString());
               params.set('sort', col);
               params.set('dir', dir);
-              startTransition(() => router.push(`/prospects?${params.toString()}`));
+              persistFilters(params);
+    startTransition(() => router.push(`/prospects?${params.toString()}`));
             }}
             className="appearance-none block w-full pl-3 pr-8 py-2 border border-gray-200 rounded-lg leading-5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-400 sm:text-sm transition-all"
           >
@@ -281,7 +286,8 @@ export function ProspectFilters({
                     onClick={() => {
                       const params = new URLSearchParams(searchParams.toString());
                       params.delete('city');
-                      startTransition(() => router.push(`/prospects?${params.toString()}`));
+                      persistFilters(params);
+    startTransition(() => router.push(`/prospects?${params.toString()}`));
                     }}
                     className={filterItemClass(currentCities.length === 0)}
                   >
