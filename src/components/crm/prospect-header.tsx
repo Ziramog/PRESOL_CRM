@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapPin, Navigation, Phone, MessageCircle, PlusCircle, CalendarPlus, Target, Trash2, AlertTriangle, X, Edit, MoreHorizontal, Building2, Factory, Users } from 'lucide-react';
+import { MapPin, Navigation, Phone, MessageCircle, PlusCircle, CalendarPlus, Target, Trash2, AlertTriangle, X, Edit, MoreHorizontal, Building2, Factory, Users, Globe } from 'lucide-react';
 import { ActivityForm } from './activity-form';
 import { TaskForm } from './task-form';
 import { OpportunityForm } from './opportunity-form';
@@ -156,23 +156,28 @@ export function ProspectHeader({
 
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
+          {prospect.website && (
+            <a 
+              href={prospect.website.startsWith('http') ? prospect.website : `https://${prospect.website}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Visitar página web"
+              className="h-[36px] flex items-center justify-center gap-2 px-4 bg-white border border-slate-200 rounded-lg text-[13px] font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+            >
+              <Globe className="w-4 h-4" />
+              Web
+            </a>
+          )}
+
           {cleanPhone && (
-            <>
-              <a 
-                href={`tel:${cleanPhone}`}
-                className="h-[36px] flex items-center justify-center gap-2 px-4 bg-white border border-blue-200 rounded-lg text-[13px] font-bold text-blue-600 hover:bg-blue-50 transition-colors shadow-sm"
-              >
-                <Phone className="w-4 h-4" />
-                Llamar
-              </a>
-              <a 
-                href={`whatsapp://send?phone=${cleanPhone.replace('+', '')}`}
-                className="h-[36px] flex items-center justify-center gap-2 px-4 bg-emerald-50 border border-emerald-200 rounded-lg text-[13px] font-bold text-emerald-700 hover:bg-emerald-100 transition-colors shadow-sm"
-              >
-                <MessageCircle className="w-4 h-4" />
-                WhatsApp
-              </a>
-            </>
+            <a 
+              href={`tel:${cleanPhone}`}
+              title="Teléfono general"
+              className="h-[36px] flex items-center justify-center gap-2 px-4 bg-white border border-blue-200 rounded-lg text-[13px] font-bold text-blue-600 hover:bg-blue-50 transition-colors shadow-sm"
+            >
+              <Phone className="w-4 h-4" />
+              Llamar
+            </a>
           )}
           
           <button 
