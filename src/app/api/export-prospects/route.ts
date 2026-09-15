@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import * as xlsx from 'xlsx';
 import { CONTACT_LEVELS, ACTIVITY_RESULTS } from '@/lib/constants';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   // Fetch all prospects and their activities
   const { data: prospects, error } = await supabase
@@ -16,12 +18,27 @@ export async function GET() {
         summary,
         outcome,
         created_at
+      ),
+      comments (
+        body,
+        is_direction_note,
+        created_at
       )
     `)
     .order('created_at', { ascending: false });
 
-  if (error || !prospects) {
-    return NextResponse.json({ error: 'Failed to fetch prospects' }, { status: 500 });
+  console.log('Export route hit. Prospects fetched:', prospects?.length);
+
+  if (error) {
+    return NextResponse.json({ error: 'Failed to fetch prospects', details: error }, { status: 500 });
+  }
+
+  if (!prospects || prospects.length === 0) {
+    // Debug info in case of empty array
+    return NextResponse.json({ 
+      error: 'No prospects found', 
+      debug: { count: prospects?.length, client: 'admin' }
+    }, { status: 400 });
   }
 
   // Format data for Excel
@@ -50,6 +67,13 @@ export async function GET() {
       }
     }
 
+    // Get latest direction comment
+    const directionComments = p.comments?.filter((c: any) => c.is_direction_note) || [];
+    const sortedComments = directionComments.sort((a: any, b: any) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    const lastDirectionComment = sortedComments[0]?.body || '';
+
     return {
       'ID CRM': p.external_id || p.id.split('-')[0],
       'Empresa': p.company_name,
@@ -64,7 +88,8 @@ export async function GET() {
       'Prioridad Visita': p.visit_priority || '',
       'Necesidad Probable': p.probable_need || '',
       'Última Interacción (Fecha)': lastInteractionDate,
-      'Última Interacción (Resumen)': lastInteractionSummary
+      'Última Interacción (Resumen)': lastInteractionSummary,
+      'Comentario de Dirección': lastDirectionComment
     };
   });
 
@@ -89,11 +114,12 @@ export async function GET() {
     { wch: 35 }, // Necesidad
     { wch: 20 }, // Fecha
     { wch: 50 }, // Resumen
+    { wch: 40 }, // Comentario Dirección
   ];
   worksheet['!cols'] = wscols;
 
-  // Generate buffer
-  const excelBuffer = xlsx.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+  // Generate buffer using 'array' to get an Uint8Array which works better with NextResponse
+  const excelArray = xlsx.write(workbook, { bookType: 'xlsx', type: 'array' });
 
   const headers = new Headers();
   // Get current date for filename
@@ -101,7 +127,7 @@ export async function GET() {
   headers.append('Content-Disposition', `attachment; filename="PRESOL_Prospectos_${dateStr}.xlsx"`);
   headers.append('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 
-  return new NextResponse(excelBuffer, {
+  return new Response(excelArray, {
     status: 200,
     headers,
   });
