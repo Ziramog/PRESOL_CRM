@@ -21,3 +21,17 @@ body {
 input, select, textarea {
   color: #111827; /* text-gray-900 */
 }
+
+@keyframes gradient-x {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 0%;
+  }
+}
+
+.animate-gradient-x {
+  animation: gradient-x 6s linear infinite;
+  background-size: 200% 100% !important;
+}
