@@ -51,7 +51,7 @@ export function ProspectCard({ prospect }: { prospect: any }) {
   const { Icon, bg, text, border } = getIconProps(prospect.commercial_category, prospect.company_name);
   
   return (
-    <div className="bg-white rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden transition-all hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] relative mb-3">
+    <div className="bg-white rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-200 overflow-hidden transition-all hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] relative mb-3">
       <Link 
         href={`/prospects/${prospect.id}`}
         className="block px-4 pt-4 pb-3 active:bg-gray-50 transition-colors"
@@ -68,7 +68,7 @@ export function ProspectCard({ prospect }: { prospect: any }) {
                 {prospect.company_name}
               </h3>
               {/* ROW 2: City and Phone */}
-              <div className="flex items-center gap-1.5 mt-1 text-gray-500 text-[12px] font-medium">
+              <div className="flex items-center gap-1.5 mt-1 text-slate-600 text-[12px] font-medium">
                 <span className="line-clamp-1">{prospect.city || 'Sin ciudad'}</span>
                 {activePhone && (
                   <>
@@ -82,23 +82,22 @@ export function ProspectCard({ prospect }: { prospect: any }) {
           
           {/* Class Badge */}
           {prospect.class && (
-            <span className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold shrink-0
+            <span className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide shrink-0
               ${prospect.class === 'A' ? 'bg-green-50 text-green-700' : 
                 prospect.class === 'B' ? 'bg-blue-50 text-blue-700' : 
                 'bg-gray-50 text-gray-600'}`
             }>
-              <Star className="w-3 h-3 fill-current" /> Clase {prospect.class}
+              Clase {prospect.class}
             </span>
           )}
         </div>
         
         {/* ROW 3: Categories and Status */}
-        <div className="flex items-center justify-between mt-3 mb-1 pl-[52px]">
-          <div className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase truncate pr-3">
+        <div className="flex items-center justify-between mt-4 mb-2 pl-[52px]">
+          <div className="text-[10px] font-semibold tracking-wide text-slate-500 uppercase truncate pr-3">
             {prospect.commercial_category || 'SIN CATEGORÍA'}
           </div>
-          <div className="flex items-center gap-1.5 bg-gray-50 text-gray-600 rounded-full px-2.5 py-0.5 text-[11px] font-semibold shrink-0">
-            <Clock className="w-3 h-3" />
+          <div className="flex items-center gap-1.5 bg-gray-50 text-gray-600 rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide shrink-0">
             <span>{PROSPECT_STATUS[prospect.contact_status as keyof typeof PROSPECT_STATUS] || 'Pendiente'}</span>
           </div>
         </div>
@@ -110,7 +109,7 @@ export function ProspectCard({ prospect }: { prospect: any }) {
           <>
             <a 
               href={`tel:${cleanPhone}`} 
-              className="flex-1 flex justify-center items-center gap-1.5 h-[38px] bg-[#3B82F6] hover:bg-[#2563EB] rounded-[19px] text-[13px] font-semibold text-white shadow-sm transition-transform active:scale-95"
+              className="flex-1 flex justify-center items-center gap-1.5 h-[38px] bg-[#5A87CE] hover:bg-[#4873B8] rounded-[19px] text-[13px] font-semibold text-white shadow-sm transition-transform active:scale-95"
             >
               <Phone className="w-4 h-4 fill-current" /> Llamar
             </a>
@@ -118,7 +117,7 @@ export function ProspectCard({ prospect }: { prospect: any }) {
               href={`https://wa.me/${cleanPhone}`} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex-1 flex justify-center items-center gap-1.5 h-[38px] bg-[#22C55E] hover:bg-[#16A34A] rounded-[19px] text-[13px] font-semibold text-white shadow-sm transition-transform active:scale-95"
+              className="flex-1 flex justify-center items-center gap-1.5 h-[38px] bg-[#52B774] hover:bg-[#43A062] rounded-[19px] text-[13px] font-semibold text-white shadow-sm transition-transform active:scale-95"
             >
               <MessageCircle className="w-4 h-4 fill-current" /> WhatsApp
             </a>
