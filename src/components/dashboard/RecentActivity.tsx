@@ -100,8 +100,8 @@ export function RecentActivity({ activities, showDate = false }: { activities: a
 
       {/* List */}
       <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 relative z-0 max-h-[450px]">
-        <div className="absolute left-[23px] sm:left-[29px] top-6 bottom-4 w-px bg-slate-100 z-0" />
-        <div className="relative z-10 flex flex-col gap-5">
+        <div className="absolute left-[74px] sm:left-[82px] top-6 bottom-4 w-px bg-slate-200 z-0" />
+        <div className="relative z-10 flex flex-col gap-4">
           {activities.map((a) => {
             const prospect    = Array.isArray(a.prospects) ? a.prospects[0] : a.prospects;
             const outcomeLabel = getRichOutcomeLabel(a);
@@ -113,55 +113,52 @@ export function RecentActivity({ activities, showDate = false }: { activities: a
             const badgeClass = getBadgeColors(a.outcome);
 
             return (
-              <div key={a.id} className="flex items-start gap-2 sm:gap-3 w-full group">
+              <div key={a.id} className="flex items-start gap-3 w-full group">
+                
+                {/* Time and Date */}
+                <div className="w-[46px] shrink-0 flex flex-col mt-1 text-right">
+                  <span className="text-[12px] text-slate-600 font-semibold tabular-nums leading-tight">{timeStr}</span>
+                  <span className="text-[10px] text-slate-400 font-semibold leading-tight mt-0.5">{dateStr}</span>
+                </div>
+
                 {/* Timeline dot */}
                 <div className="relative flex items-center justify-center w-2 h-2 shrink-0 mt-2">
                   <div className="w-2 h-2 rounded-full bg-blue-500 ring-4 ring-white z-10" />
                 </div>
 
-                {/* Time */}
-                <div className="w-[40px] shrink-0 flex flex-col mt-0.5 text-right">
-                  <span className="text-[12px] text-slate-600 font-semibold tabular-nums leading-tight">{timeStr}</span>
-                  {showDate && (
-                    <span className="text-[10px] text-slate-400 font-semibold leading-tight mt-0.5">{dateStr}</span>
-                  )}
-                </div>
-
                 {/* Content */}
                 <Link
                   href={`/prospects/${prospect?.id}`}
-                  className="flex-1 flex flex-col gap-2 min-w-0 hover:bg-slate-50/60 p-2 -m-1 rounded-xl transition-colors"
+                  className="flex-1 flex flex-col gap-2 min-w-0 hover:bg-slate-50/60 p-2 -m-2 rounded-xl transition-colors"
                 >
-                  <div className="flex items-center gap-2.5 w-full">
+                  <div className="flex items-start gap-3 w-full">
                     {/* Icon */}
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${bg}`}>
                       <Icon className={`w-4 h-4 ${color}`} strokeWidth={2.5} />
                     </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex flex-col min-w-0">
-                          {/* Company name — primary */}
-                          <span className="text-[14px] font-extrabold text-slate-900 truncate group-hover:text-blue-600 transition-colors leading-tight">
-                            {prospect?.company_name || 'Sin empresa'}
-                          </span>
-                          {/* Activity type — secondary */}
-                          <span className="text-[12px] text-slate-500 font-medium leading-tight mt-0.5">
-                            {typeLabel}
-                          </span>
-                        </div>
-                        {outcomeLabel && (
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 mt-0.5 ${badgeClass}`}>
-                            {outcomeLabel}
-                          </span>
-                        )}
+                    <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2">
+                      <div className="flex flex-col min-w-0">
+                        {/* Company name — primary (no truncate, wraps naturally) */}
+                        <span className="text-[14px] font-extrabold text-slate-900 group-hover:text-blue-600 transition-colors leading-tight break-words">
+                          {prospect?.company_name || 'Sin empresa'}
+                        </span>
+                        {/* Activity type — secondary */}
+                        <span className="text-[12px] text-slate-500 font-medium leading-tight mt-1">
+                          {typeLabel}
+                        </span>
                       </div>
+                      {outcomeLabel && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 w-fit sm:mt-0 mt-1 ${badgeClass}`}>
+                          {outcomeLabel}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   {/* Notes bubble */}
                   {a.notes && (
-                    <div className="ml-[46px] text-[12px] sm:text-[13px] text-slate-700 bg-slate-50 border border-slate-100 rounded-xl p-3 break-words whitespace-pre-wrap leading-relaxed">
+                    <div className="ml-[48px] text-[12px] sm:text-[13px] text-slate-700 bg-slate-50 border border-slate-100 rounded-xl p-3 break-words whitespace-pre-wrap leading-relaxed">
                       {a.notes}
                     </div>
                   )}

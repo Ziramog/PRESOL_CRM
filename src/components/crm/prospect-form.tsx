@@ -173,8 +173,10 @@ export function ProspectForm({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Rubro / Sector</label>
-                  <input type="text" name="sector" defaultValue={prospect?.sector || ''} list="sectors-list" className="w-full text-sm rounded-none border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white" />
-                  <datalist id="sectors-list">{availableSectors.map(s => <option key={s} value={s} />)}</datalist>
+                  <select name="sector" defaultValue={prospect?.sector || ''} className="w-full text-sm rounded-none border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white">
+                    <option value="">Seleccionar...</option>
+                    {availableSectors.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Categoría Comercial</label>

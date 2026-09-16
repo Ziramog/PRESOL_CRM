@@ -5,6 +5,7 @@ import { ProspectTable } from '@/components/crm/prospect-table';
 import { ProspectFilters } from '@/components/crm/prospect-filters';
 import { NewProspectButton } from '@/components/crm/new-prospect-button';
 import { ExportProspectsButton } from '@/components/crm/v2/ExportProspectsButton';
+import { BusinessCardScanner } from '@/components/crm/v2/BusinessCardScanner';
 
 // Columns the user can sort by
 const SORTABLE_COLUMNS: Record<string, string> = {
@@ -141,9 +142,10 @@ export default async function ProspectsPage({
   return (
     <div className="space-y-6 pb-24 md:pb-0">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           <h1 className="text-xl font-semibold text-gray-900 tracking-tight">Prospectos</h1>
           <NewProspectButton availableCities={cities} availableSectors={sectors} />
+          <BusinessCardScanner />
           <ExportProspectsButton />
         </div>
         <ProspectFilters 
