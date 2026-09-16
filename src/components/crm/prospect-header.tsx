@@ -196,48 +196,21 @@ export function ProspectHeader({
             Registrar gestión
           </button>
 
-          {/* Context Menu */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowMenu(!showMenu)}
-              className="h-[36px] w-[36px] flex items-center justify-center bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors shadow-sm"
-            >
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
-            
-            {showMenu && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
-                <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50 py-1 flex flex-col">
-                  <button 
-                    onClick={() => { setShowTaskForm(true); setShowMenu(false); }}
-                    className="flex items-center gap-2 px-3 py-2 text-[12px] font-medium text-slate-700 hover:bg-slate-50 text-left"
-                  >
-                    <CalendarPlus className="w-3.5 h-3.5 text-slate-400" /> Crear tarea
-                  </button>
-                  <button 
-                    onClick={() => { setShowOpportunityForm(true); setShowMenu(false); }}
-                    className="flex items-center gap-2 px-3 py-2 text-[12px] font-medium text-slate-700 hover:bg-slate-50 text-left"
-                  >
-                    <Target className="w-3.5 h-3.5 text-slate-400" /> Crear oportunidad
-                  </button>
-                  <div className="h-px bg-slate-100 my-1"></div>
-                  <button 
-                    onClick={() => { setShowEditModal(true); setShowMenu(false); }}
-                    className="flex items-center gap-2 px-3 py-2 text-[12px] font-medium text-slate-700 hover:bg-slate-50 text-left"
-                  >
-                    <Edit className="w-3.5 h-3.5 text-slate-400" /> Editar prospecto
-                  </button>
-                  <button 
-                    onClick={() => { setShowDeleteModal(true); setShowMenu(false); }}
-                    className="flex items-center gap-2 px-3 py-2 text-[12px] font-medium text-rose-600 hover:bg-rose-50 text-left"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-rose-500" /> Eliminar prospecto
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          <button 
+            onClick={() => setShowEditModal(true)}
+            title="Editar prospecto"
+            className="h-[36px] w-[36px] flex items-center justify-center bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors shadow-sm"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          
+          <button 
+            onClick={() => setShowDeleteModal(true)}
+            title="Eliminar prospecto"
+            className="h-[36px] w-[36px] flex items-center justify-center bg-white border border-rose-200 rounded-lg text-rose-500 hover:bg-rose-50 hover:border-rose-300 transition-colors shadow-sm"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
         </div>
       </div>
       
