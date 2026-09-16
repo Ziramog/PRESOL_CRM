@@ -1,23 +1,43 @@
 import Link from 'next/link';
-import { MapPin, Phone, MessageCircle, ChevronRight, Building2, Factory, Leaf, Store, Star, Tag, Clock, Mic } from 'lucide-react';
+import { MapPin, Phone, MessageCircle, ChevronRight, Building2, Factory, Leaf, Store, Star, Tag, Clock, Mic, HardHat, Hexagon, Truck, Briefcase, Wrench, Wheat, Box } from 'lucide-react';
 import { PROSPECT_STATUS } from '@/lib/constants';
 
 function getIconProps(category: string, name: string) {
   const cat = (category || '').toLowerCase();
-  if (cat.includes('agro') || cat.includes('semilla') || cat.includes('cereal') || cat.includes('campo')) {
-    return { Icon: Leaf, bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-100' };
+  
+  // 1. Agro
+  if (cat.includes('agro') || cat.includes('semilla') || cat.includes('cereal') || cat.includes('acopio') || cat.includes('cooperativa')) {
+    return { Icon: Wheat, bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-100' };
   }
-  if (cat.includes('indus') || cat.includes('fábrica') || cat.includes('fabrica') || cat.includes('metal')) {
-    return { Icon: Factory, bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-100' };
+  // 2. Construcción / Obras
+  if (cat.includes('construcci') || cat.includes('obra') || cat.includes('arquitectura') || cat.includes('vial') || cat.includes('hormig')) {
+    return { Icon: HardHat, bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200' };
   }
-  if (cat.includes('comercio') || cat.includes('venta')) {
+  // 3. Industria / Metalúrgica
+  if (cat.includes('indus') || cat.includes('fábrica') || cat.includes('fabrica') || cat.includes('metal') || cat.includes('acero')) {
+    return { Icon: Factory, bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200' };
+  }
+  // 4. Plásticos y PRFV (Plástico Reforzado con Fibra de Vidrio)
+  if (cat.includes('plástico') || cat.includes('plastico') || cat.includes('prfv') || cat.includes('polímero') || cat.includes('resina')) {
+    return { Icon: Hexagon, bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-100' };
+  }
+  // 5. Transporte / Logística
+  if (cat.includes('transporte') || cat.includes('logística') || cat.includes('logistica') || cat.includes('flete')) {
+    return { Icon: Truck, bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-100' };
+  }
+  // 6. Comercio / Venta
+  if (cat.includes('comercio') || cat.includes('venta') || cat.includes('mayorista') || cat.includes('distribuidor')) {
     return { Icon: Store, bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-100' };
   }
-  
+  // 7. Servicios
+  if (cat.includes('servicio') || cat.includes('mantenimiento') || cat.includes('taller')) {
+    return { Icon: Wrench, bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-100' };
+  }
+  // 8. Default/Others
   const colors = [
     { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-100' },
     { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-100' },
-    { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-100' }
+    { bg: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-100' }
   ];
   const color = colors[(name.length || 0) % colors.length];
   
