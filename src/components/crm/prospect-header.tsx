@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useTransition, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { MapPin, Navigation, Phone, MessageCircle, PlusCircle, CalendarPlus, Target, Trash2, AlertTriangle, X, Edit, MoreHorizontal, Building2, Factory, Users, Globe, Mic } from 'lucide-react';
 import { ActivityForm } from './activity-form';
 import { TaskForm } from './task-form';
@@ -24,8 +24,17 @@ export function ProspectHeader({
   availableSectors?: string[] 
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [showVoiceModal, setShowVoiceModal] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'voice') {
+      setShowVoiceModal(true);
+      // Remove param from URL
+      window.history.replaceState(null, '', `/prospects/${prospect.id}`);
+    }
+  }, [searchParams, prospect.id]);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showOpportunityForm, setShowOpportunityForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);

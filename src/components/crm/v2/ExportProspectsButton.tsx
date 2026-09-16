@@ -45,13 +45,15 @@ export function ExportProspectsButton() {
     <button
       onClick={handleExport}
       disabled={isExporting}
-      className={`inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-colors rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 ${
+      title="Exportar a Excel"
+      className={`inline-flex items-center justify-center gap-2 w-9 h-9 sm:w-auto sm:px-4 sm:py-2 text-sm font-medium transition-colors rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 ${
         isExporting ? 'opacity-70 cursor-not-allowed' : 'hover:bg-gray-50'
       }`}
     >
-      <Download className={`h-4 w-4 ${isExporting ? 'animate-bounce' : ''}`} />
-      {isExporting ? 'Exportando...' : 'Exportar a Excel'}
+      <Download className={`w-4 h-4 ${isExporting ? 'animate-bounce' : ''}`} />
+      <span className="hidden sm:inline">
+        {isExporting ? 'Exportando...' : 'Exportar'}
+      </span>
     </button>
   );
 }
-
