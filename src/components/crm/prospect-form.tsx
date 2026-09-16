@@ -23,13 +23,17 @@ export function ProspectForm({
   const [canImportContacts, setCanImportContacts] = useState(false);
 
   useEffect(() => {
-    if (typeof navigator !== 'undefined' && 'contacts' in navigator && 'ContactsManager' in window) {
+    if (typeof navigator !== 'undefined' && 'contacts' in navigator) {
       setCanImportContacts(true);
     }
   }, []);
 
   const handleContactPicker = async () => {
     try {
+      if (typeof navigator === 'undefined' || !('contacts' in navigator) || typeof (navigator as any).contacts?.select !== 'function') {
+        alert('El selector de contactos sólo está disponible en navegadores móviles compatibles (como Chrome en Android o PWA).');
+        return;
+      }
       const props = ['name', 'tel', 'email'];
       const opts = { multiple: false };
       // @ts-ignore
@@ -40,11 +44,14 @@ export function ProspectForm({
         if (form) {
           if (contact.name && contact.name.length > 0) {
             const companyInput = form.querySelector('[name="company_name"]') as HTMLInputElement;
-            if (companyInput && !companyInput.value) companyInput.value = contact.name[0];
+            if (companyInput && (!companyInput.value || !prospect)) companyInput.value = contact.name[0];
+            const askForInput = form.querySelector('[name="ask_for"]') as HTMLInputElement;
+            if (askForInput) askForInput.value = contact.name[0];
           }
           if (contact.tel && contact.tel.length > 0) {
+            const clean = contact.tel[0].replace(/[\s-]/g, '');
             const phoneInput = form.querySelector('[name="primary_phone"]') as HTMLInputElement;
-            if (phoneInput && !phoneInput.value) phoneInput.value = contact.tel[0];
+            if (phoneInput) phoneInput.value = clean;
             
             if (contact.tel.length > 1) {
               const rawInput = form.querySelector('[name="phones_raw"]') as HTMLTextAreaElement;
@@ -56,12 +63,14 @@ export function ProspectForm({
           }
           if (contact.email && contact.email.length > 0) {
             const emailInput = form.querySelector('[name="email"]') as HTMLInputElement;
-            if (emailInput && !emailInput.value) emailInput.value = contact.email[0];
+            if (emailInput) emailInput.value = contact.email[0];
           }
         }
       }
-    } catch (err) {
-      console.error('Contact picker error:', err);
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('Contact picker error:', err);
+      }
     }
   };
 
@@ -118,7 +127,7 @@ export function ProspectForm({
         </div>
 
         <div className="overflow-y-auto p-5 flex-1">
-          {canImportContacts && !prospect && (
+          {canImportContacts && (
             <div className="mb-5">
               <button
                 type="button"
@@ -208,9 +217,21 @@ export function ProspectForm({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Preguntar por (Contacto principal)</label>
                 <input type="text" name="ask_for" defaultValue={prospect?.ask_for || ''} className="w-full text-sm rounded-none border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono Principal</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-sm font-medium text-gray-700">Teléfono Principal</label>
+                    {canImportContacts && (
+                      <button
+                        type="button"
+                        onClick={handleContactPicker}
+                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                        title="Importar de contactos del móvil"
+                      >
+                        <Smartphone className="w-3.5 h-3.5" /> Traer del móvil
+                      </button>
+                    )}
+                  </div>
                   <input type="tel" name="primary_phone" defaultValue={prospect?.primary_phone || ''} className="w-full text-sm rounded-none border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white" />
                 </div>
                 <div>

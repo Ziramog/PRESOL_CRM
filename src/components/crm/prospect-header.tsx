@@ -75,7 +75,9 @@ export function ProspectHeader({
     }
   };
 
-  const cleanPhone = prospect.primary_phone?.replace(/[^\d+]/g, '');
+  const primaryContact = prospect.contacts?.find((c: any) => c.is_primary) || prospect.contacts?.[0];
+  const activePhone = prospect.primary_phone || primaryContact?.phone;
+  const cleanPhone = activePhone?.replace(/[^\d+]/g, '');
 
   return (
     <>
@@ -170,22 +172,30 @@ export function ProspectHeader({
 
         {/* Action Buttons (Mobile Optimized) */}
         <div className="flex flex-wrap items-center gap-2">
-          {cleanPhone && (
+          {cleanPhone ? (
             <>
               <a 
-                href={`tel:${cleanPhone}`}
+                href={`tel:${cleanPhone}`} 
                 className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-blue-600 text-white rounded-lg text-[13px] font-bold hover:bg-blue-700 transition-colors shadow-sm"
               >
                 <Phone className="w-4 h-4" /> Llamar
               </a>
               <a 
-                href={`https://wa.me/${cleanPhone}`}
+                href={`https://wa.me/${cleanPhone}`} 
                 target="_blank" rel="noopener noreferrer"
                 className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-[#25D366] text-white rounded-lg text-[13px] font-bold hover:bg-[#128C7E] transition-colors shadow-sm"
               >
                 <MessageCircle className="w-4 h-4" /> WhatsApp
               </a>
             </>
+          ) : (
+            <button 
+              onClick={() => setShowEditModal(true)}
+              className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[13px] font-bold hover:bg-amber-100 transition-colors shadow-sm"
+              title="Cargar teléfono desde el móvil o escribirlo"
+            >
+              <Phone className="w-4 h-4" /> + Teléfono
+            </button>
           )}
 
           <FavoriteButton

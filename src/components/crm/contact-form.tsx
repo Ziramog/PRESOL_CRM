@@ -23,7 +23,7 @@ export function ContactForm({
 
   useEffect(() => {
     // Check if Contact Picker API is available
-    if ('contacts' in navigator && 'ContactsManager' in window) {
+    if (typeof navigator !== 'undefined' && 'contacts' in navigator) {
       setIsSupported(true);
     }
   }, []);
