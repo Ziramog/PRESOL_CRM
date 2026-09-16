@@ -2,11 +2,12 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapPin, Navigation, Phone, MessageCircle, PlusCircle, CalendarPlus, Target, Trash2, AlertTriangle, X, Edit, MoreHorizontal, Building2, Factory, Users, Globe } from 'lucide-react';
+import { MapPin, Navigation, Phone, MessageCircle, PlusCircle, CalendarPlus, Target, Trash2, AlertTriangle, X, Edit, MoreHorizontal, Building2, Factory, Users, Globe, Mic } from 'lucide-react';
 import { ActivityForm } from './activity-form';
 import { TaskForm } from './task-form';
 import { OpportunityForm } from './opportunity-form';
 import { ProspectForm } from './prospect-form';
+import { VoiceRecorderModal } from './v2/VoiceRecorderModal';
 import { updateProspectStatus, deleteProspect } from '@/app/actions/prospects';
 
 import { PROSPECT_STATUS } from '@/lib/constants';
@@ -24,6 +25,7 @@ export function ProspectHeader({
 }) {
   const router = useRouter();
   const [showActivityForm, setShowActivityForm] = useState(false);
+  const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showOpportunityForm, setShowOpportunityForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -154,47 +156,62 @@ export function ProspectHeader({
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
+        {/* Action Buttons (Mobile Optimized) */}
+        <div className="flex flex-wrap items-center gap-2">
+          {cleanPhone && (
+            <>
+              <a 
+                href={`tel:${cleanPhone}`}
+                className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-blue-600 text-white rounded-lg text-[13px] font-bold hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                <Phone className="w-4 h-4" /> Llamar
+              </a>
+              <a 
+                href={`https://wa.me/${cleanPhone}`}
+                target="_blank" rel="noopener noreferrer"
+                className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-[#25D366] text-white rounded-lg text-[13px] font-bold hover:bg-[#128C7E] transition-colors shadow-sm"
+              >
+                <MessageCircle className="w-4 h-4" /> WhatsApp
+              </a>
+            </>
+          )}
+
+          <button 
+            onClick={() => setShowVoiceModal(true)}
+            className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-purple-600 text-white rounded-lg text-[13px] font-bold hover:bg-purple-700 transition-colors shadow-sm"
+            title="Nota de voz"
+          >
+            <Mic className="w-4 h-4" />
+            <span className="hidden sm:inline">Voz</span>
+          </button>
+
+          <button 
+            onClick={() => setShowActivityForm(true)}
+            className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-white border border-gray-200 rounded-lg text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+          >
+            <PlusCircle className="w-4 h-4 text-blue-600" />
+            <span className="hidden sm:inline">Actividad</span>
+          </button>
+
+          <button 
+            onClick={openMaps}
+            className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-white border border-gray-200 rounded-lg text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+          >
+            <MapPin className="w-4 h-4 text-gray-400" />
+            <span className="hidden sm:inline">Maps</span>
+          </button>
+
           {prospect.website && (
             <a 
               href={prospect.website.startsWith('http') ? prospect.website : `https://${prospect.website}`}
               target="_blank"
               rel="noopener noreferrer"
-              title="Visitar página web"
-              className="h-[36px] flex items-center justify-center gap-2 px-4 bg-white border border-slate-200 rounded-lg text-[13px] font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+              className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-white border border-gray-200 rounded-lg text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
             >
-              <Globe className="w-4 h-4" />
-              Web
+              <Globe className="w-4 h-4 text-gray-400" />
+              <span className="hidden sm:inline">Web</span>
             </a>
           )}
-
-          {cleanPhone && (
-            <a 
-              href={`tel:${cleanPhone}`}
-              title="Teléfono general"
-              className="h-[36px] flex items-center justify-center gap-2 px-4 bg-white border border-blue-200 rounded-lg text-[13px] font-bold text-blue-600 hover:bg-blue-50 transition-colors shadow-sm"
-            >
-              <Phone className="w-4 h-4" />
-              Llamar
-            </a>
-          )}
-          
-          <button 
-            onClick={openMaps}
-            className="h-[36px] flex items-center justify-center gap-2 px-4 bg-white border border-blue-200 rounded-lg text-[13px] font-bold text-blue-600 hover:bg-blue-50 transition-colors shadow-sm"
-          >
-            <MapPin className="w-4 h-4" />
-            Maps
-          </button>
-          
-          <button 
-            onClick={() => setShowActivityForm(true)}
-            className="h-[36px] flex items-center justify-center gap-2 px-4 bg-blue-600 text-white rounded-lg text-[13px] font-bold hover:bg-blue-700 transition-colors shadow-sm"
-          >
-            <PlusCircle className="w-4 h-4" />
-            Registrar gestión
-          </button>
 
           <button 
             onClick={() => setShowEditModal(true)}
@@ -223,6 +240,13 @@ export function ProspectHeader({
         />
       )}
       
+      {showVoiceModal && (
+        <VoiceRecorderModal 
+          prospectId={prospect.id} 
+          onClose={() => setShowVoiceModal(false)} 
+        />
+      )}
+
       {showActivityForm && (
         <ActivityForm 
           prospectId={prospect.id} 
