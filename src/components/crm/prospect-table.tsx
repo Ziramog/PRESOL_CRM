@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { PROSPECT_STATUS } from '@/lib/constants';
-import { ArrowUpDown, ArrowUp, ArrowDown, MessageSquare } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, MessageSquare, Star } from 'lucide-react';
+import { FavoriteButton } from './FavoriteButton';
 
 type SortDir = 'asc' | 'desc';
 
@@ -15,6 +16,7 @@ interface Column {
 }
 
 const COLUMNS: Column[] = [
+  { key: 'is_favorite', label: '⭐', sortable: true },
   { key: 'external_id', label: 'ID', sortable: true },
   { key: 'company_name', label: 'Empresa', sortable: true },
   { key: 'city', label: 'Ciudad', sortable: true },
@@ -102,7 +104,7 @@ export function ProspectTable({
         <tbody className="divide-y divide-gray-50">
           {prospects.length === 0 ? (
             <tr>
-              <td colSpan={7} className="px-5 py-12 text-center text-sm text-gray-400">
+              <td colSpan={9} className="px-5 py-12 text-center text-sm text-gray-400">
                 No se encontraron prospectos.
               </td>
             </tr>
@@ -112,6 +114,15 @@ export function ProspectTable({
                 key={prospect.id}
                 className="hover:bg-gray-50/80 transition-colors group"
               >
+                {/* Favorito */}
+                <td className="pl-4 pr-1 py-3.5 w-8">
+                  <FavoriteButton
+                    prospectId={prospect.id}
+                    isFavorite={prospect.is_favorite ?? false}
+                    variant="card"
+                  />
+                </td>
+
                 {/* ID */}
                 <td className="px-5 py-3.5">
                   <span className="font-mono text-xs text-gray-400">{prospect.external_id ?? '—'}</span>

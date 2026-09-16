@@ -122,7 +122,6 @@ export async function updateProspectStatus(prospectId: string, status: string) {
 export async function deleteProspect(prospectId: string) {
   const supabase = await createAdminClient();
 
-  // Clean up related child rows to satisfy foreign key constraints
   await supabase.from('comments').delete().eq('prospect_id', prospectId);
   await supabase.from('tasks').delete().eq('prospect_id', prospectId);
   await supabase.from('opportunities').delete().eq('prospect_id', prospectId);
@@ -158,4 +157,22 @@ export async function enrichProspectManual(id: string, updates: any) {
   revalidatePath(`/prospects/${id}`);
   revalidatePath('/prospects');
   return { success: true };
+}
+
+export async function toggleFavorite(prospectId: string, currentValue: boolean) {
+  const supabase = await createAdminClient();
+
+  const { error } = await supabase
+    .from('prospects')
+    .update({ is_favorite: !currentValue })
+    .eq('id', prospectId);
+
+  if (error) {
+    console.error('Error toggling favorite:', error);
+    return { error: 'Error al actualizar favorito' };
+  }
+
+  revalidatePath(`/prospects/${prospectId}`);
+  revalidatePath('/prospects');
+  return { success: true, is_favorite: !currentValue };
 }

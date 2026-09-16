@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { MapPin, Phone, MessageCircle, ChevronRight, Building2, Factory, Leaf, Store, Star, Tag, Clock, Mic, HardHat, Hexagon, Truck, Briefcase, Wrench, Wheat, Box } from 'lucide-react';
 import { PROSPECT_STATUS } from '@/lib/constants';
+import { FavoriteButton } from '@/components/crm/FavoriteButton';
 
 function getIconProps(category: string, name: string) {
   const cat = (category || '').toLowerCase();
@@ -136,6 +137,13 @@ export function ProspectCard({ prospect }: { prospect: any }) {
         >
           <Mic className="w-4 h-4" />
         </Link>
+
+        {/* Favorite Star Button */}
+        <FavoriteButton
+          prospectId={prospect.id}
+          isFavorite={prospect.is_favorite ?? false}
+          variant="card"
+        />
 
         {/* Chevron Button */}
         <Link 

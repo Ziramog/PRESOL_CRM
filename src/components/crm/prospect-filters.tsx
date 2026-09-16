@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, Filter, X, Check } from 'lucide-react';
+import { Search, Filter, X, Check, Star } from 'lucide-react';
 import { useTransition, useState, useRef, useEffect, useCallback } from 'react';
 import { PROSPECT_STATUS } from '@/lib/constants';
 import { saveProspectFilters } from '@/app/actions/preferences';
@@ -33,6 +33,7 @@ export function ProspectFilters({
   const currentSector = searchParams.get('sector') || '';
   const currentStatus = searchParams.get('status') || '';
   const currentCities = searchParams.getAll('city');
+  const currentFavorites = searchParams.get('favorites') || '';
 
   // Controlled input state — always in sync with URL
   const [searchValue, setSearchValue] = useState(currentSearch);
@@ -42,8 +43,6 @@ export function ProspectFilters({
     setSearchValue(currentSearch);
   }, [currentSearch]);
 
-  
-  
   // Client-side fallback for Next.js router cache issues
   useEffect(() => {
     if (!searchParams.toString() && typeof window !== 'undefined') {
@@ -66,7 +65,7 @@ export function ProspectFilters({
   }, []);
 
   // Debounced search — fires 400ms after user stops typing
-    const persistFilters = (params: URLSearchParams) => {
+  const persistFilters = (params: URLSearchParams) => {
     const p = new URLSearchParams(params.toString());
     p.delete('search');
     localStorage.setItem('presol_prospect_filters', p.toString());
@@ -82,7 +81,7 @@ export function ProspectFilters({
         params.delete('search');
       }
       persistFilters(params);
-    startTransition(() => router.push(`/prospects?${params.toString()}`));
+      startTransition(() => router.push(`/prospects?${params.toString()}`));
     },
     [router, searchParams],
   );
@@ -130,6 +129,7 @@ export function ProspectFilters({
     params.delete('city');
     params.delete('sector');
     params.delete('status');
+    params.delete('favorites');
     persistFilters(params);
     startTransition(() => router.push(`/prospects?${params.toString()}`));
     try {
@@ -138,7 +138,11 @@ export function ProspectFilters({
   };
 
   const activeFiltersCount =
-    (currentClass ? 1 : 0) + currentCities.length + (currentSector ? 1 : 0) + (currentStatus ? 1 : 0);
+    (currentClass ? 1 : 0) +
+    currentCities.length +
+    (currentSector ? 1 : 0) +
+    (currentStatus ? 1 : 0) +
+    (currentFavorites === 'true' ? 1 : 0);
 
   // Status options aligned with current PROSPECT_STATUS constants
   const statusOptions = Object.entries(PROSPECT_STATUS).map(([value, label]) => ({ value, label }));
@@ -157,7 +161,6 @@ export function ProspectFilters({
 
   return (
     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto relative" ref={filterRef}>
-      
       {/* Search input (Row 1 on mobile) */}
       <div className="relative w-full sm:w-64 flex-none">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -190,7 +193,37 @@ export function ProspectFilters({
       </div>
 
       {/* Sort & Filters (Row 2 on mobile) */}
-      <div className="flex gap-2 w-full sm:w-auto">
+      <div className="flex gap-2 w-full sm:w-auto items-center">
+        {/* Favorite Quick Filter Button */}
+        <button
+          onClick={() => {
+            const params = new URLSearchParams(searchParams.toString());
+            if (currentFavorites === 'true') {
+              params.delete('favorites');
+            } else {
+              params.set('favorites', 'true');
+            }
+            persistFilters(params);
+            startTransition(() => router.push(`/prospects?${params.toString()}`));
+          }}
+          className={`relative flex-none h-[38px] px-2.5 rounded-lg border transition-all flex items-center gap-1.5 active:scale-95 ${
+            currentFavorites === 'true'
+              ? 'bg-amber-500 border-amber-500 text-white shadow-sm'
+              : 'bg-white border-gray-200 text-gray-500 hover:border-amber-300 hover:text-amber-500 hover:bg-amber-50/50'
+          }`}
+          title={currentFavorites === 'true' ? 'Mostrando solo favoritos' : 'Filtrar por favoritos'}
+        >
+          <Star
+            className="h-4 w-4"
+            fill={currentFavorites === 'true' ? 'currentColor' : 'none'}
+            strokeWidth={2}
+          />
+          <span className="hidden sm:inline text-xs font-semibold tracking-wide uppercase">
+            Favoritos
+          </span>
+        </button>
+
+        {/* Sort Select */}
         <div className="relative flex-1 sm:flex-none">
           <select
             value={`${currentSort}-${currentDir}`}
@@ -200,12 +233,13 @@ export function ProspectFilters({
               params.set('sort', col);
               params.set('dir', dir);
               persistFilters(params);
-    startTransition(() => router.push(`/prospects?${params.toString()}`));
+              startTransition(() => router.push(`/prospects?${params.toString()}`));
             }}
-            className="appearance-none block w-full pl-3 pr-8 py-2 border border-gray-200 rounded-lg leading-5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-400 sm:text-sm transition-all"
+            className="appearance-none block w-full pl-3 pr-8 py-2 h-[38px] border border-gray-200 rounded-lg leading-5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-400 sm:text-sm transition-all"
           >
             <option value="created_at-desc">Más recientes primero</option>
             <option value="created_at-asc">Más antiguos primero</option>
+            <option value="is_favorite-desc">⭐ Favoritos primero</option>
             <option value="open_tasks-desc">Más seguimientos abiertos</option>
             <option value="open_tasks-asc">Menos seguimientos abiertos</option>
             <option value="last_contact_date-desc">Mayor interacción (recientes)</option>
@@ -214,7 +248,7 @@ export function ProspectFilters({
           </select>
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
             <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
-              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd" />
             </svg>
           </div>
         </div>
@@ -222,23 +256,23 @@ export function ProspectFilters({
         {/* Filter button */}
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`relative flex-none p-2 rounded-lg border transition-all flex items-center gap-2 ${
+          className={`relative flex-none h-[38px] p-2 rounded-lg border transition-all flex items-center gap-2 ${
             showFilters || activeFiltersCount > 0
               ? 'bg-gray-900 border-gray-900 text-white'
               : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
           }`}
           title="Filtros avanzados"
         >
-        <Filter className="h-4 w-4" />
-        {activeFiltersCount > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 bg-blue-600 text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
-            {activeFiltersCount}
+          <Filter className="h-4 w-4" />
+          {activeFiltersCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 bg-blue-600 text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
+              {activeFiltersCount}
+            </span>
+          )}
+          <span className="sr-only sm:not-sr-only sm:text-xs sm:font-semibold sm:tracking-wide sm:uppercase">
+            Filtros
           </span>
-        )}
-        <span className="sr-only sm:not-sr-only sm:text-xs sm:font-semibold sm:tracking-wide sm:uppercase">
-          Filtros
-        </span>
-      </button>
+        </button>
       </div>
 
       {/* Filter panel */}
@@ -290,7 +324,6 @@ export function ProspectFilters({
 
             {/* Tab content */}
             <div className="p-3 overflow-y-auto flex-1">
-
               {/* CIUDAD */}
               {activeTab === 'city' && (
                 <div className="space-y-0.5 pb-16 sm:pb-0">
@@ -299,7 +332,7 @@ export function ProspectFilters({
                       const params = new URLSearchParams(searchParams.toString());
                       params.delete('city');
                       persistFilters(params);
-    startTransition(() => router.push(`/prospects?${params.toString()}`));
+                      startTransition(() => router.push(`/prospects?${params.toString()}`));
                     }}
                     className={filterItemClass(currentCities.length === 0)}
                   >
@@ -400,5 +433,3 @@ export function ProspectFilters({
     </div>
   );
 }
-
-

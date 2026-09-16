@@ -8,6 +8,7 @@ import { TaskForm } from './task-form';
 import { OpportunityForm } from './opportunity-form';
 import { ProspectForm } from './prospect-form';
 import { VoiceRecorderModal } from './v2/VoiceRecorderModal';
+import { FavoriteButton } from './FavoriteButton';
 import { updateProspectStatus, deleteProspect } from '@/app/actions/prospects';
 
 import { PROSPECT_STATUS } from '@/lib/constants';
@@ -186,6 +187,12 @@ export function ProspectHeader({
               </a>
             </>
           )}
+
+          <FavoriteButton
+            prospectId={prospect.id}
+            isFavorite={prospect.is_favorite ?? false}
+            variant="header"
+          />
 
           <button 
             onClick={() => setShowVoiceModal(true)}

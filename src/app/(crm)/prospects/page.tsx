@@ -8,6 +8,7 @@ import { ExportProspectsButton } from '@/components/crm/v2/ExportProspectsButton
 
 // Columns the user can sort by
 const SORTABLE_COLUMNS: Record<string, string> = {
+  is_favorite: 'is_favorite',
   external_id: 'external_id',
   company_name: 'company_name',
   city: 'city',
@@ -28,7 +29,7 @@ export default async function ProspectsPage({
   const supabaseUser = await createClient();
   const params = await searchParams;
 
-  const hasStructuralFilters = params.class || params.city || params.sector || params.status;
+  const hasStructuralFilters = params.class || params.city || params.sector || params.status || params.favorites;
   
   if (!hasStructuralFilters && !params.search) {
     const { data: { user } } = await supabaseUser.auth.getUser();
@@ -51,6 +52,7 @@ export default async function ProspectsPage({
     : [];
   const sector = typeof params.sector === 'string' ? params.sector : '';
   const status = typeof params.status === 'string' ? params.status : '';
+  const favoritesOnly = params.favorites === 'true';
 
   // Sorting
   const sortCol = typeof params.sort === 'string' && SORTABLE_COLUMNS[params.sort]
@@ -70,6 +72,7 @@ export default async function ProspectsPage({
   if (selectedCities.length > 0) baseQuery = baseQuery.in('city', selectedCities);
   if (sector) baseQuery = baseQuery.eq('sector', sector);
   if (status) baseQuery = baseQuery.eq('contact_status', status);
+  if (favoritesOnly) baseQuery = baseQuery.eq('is_favorite', true);
 
   const [prospectsResponse, citiesResponse, sectorsResponse, dirNotesResponse, tasksResponse] = await Promise.all([
     baseQuery,
