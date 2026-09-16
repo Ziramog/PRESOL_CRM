@@ -78,7 +78,7 @@ export function RecentActivity({ activities, showDate = false }: { activities: a
       txt += `\n`;
     });
     txt += `Generado desde PRESOL CRM`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
+    window.open(`whatsapp://send?text=${encodeURIComponent(txt)}`, '_blank');
   };
 
   return (
