@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { Calendar, CheckSquare, Clock, CalendarDays, MoreHorizontal } from 'lucide-react';
+import { Calendar, CheckSquare, Clock, CalendarDays, MoreHorizontal, Plus } from 'lucide-react';
 import { format, isPast, isToday, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TaskForm } from '@/components/crm/task-form';
@@ -32,8 +32,10 @@ export function NextActionCard({ tasks, prospectId }: { tasks: any[], prospectId
           <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Próxima acción</h3>
         </div>
         <div className="flex flex-col items-center justify-center text-center flex-1 py-4">
-          <p className="text-[13px] text-gray-500 mb-2">Sin seguimiento programado.</p>
-          <button onClick={() => setShowTaskForm(true)} className="text-[13px] font-bold text-blue-600 hover:underline">+ Crear seguimiento</button>
+          <p className="text-[13px] text-gray-500 mb-2.5">Sin seguimiento programado.</p>
+          <button onClick={() => setShowTaskForm(true)} className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[13px] font-bold transition-colors">
+            <Plus className="w-3.5 h-3.5" /> Crear seguimiento
+          </button>
         </div>
         
         {showTaskForm && (

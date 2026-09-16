@@ -1,15 +1,16 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 export async function saveProspectFilters(filtersStr: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const supabaseAuth = await createClient();
+  const supabaseAdmin = createAdminClient();
+  const { data: { user } } = await supabaseAuth.auth.getUser();
   
   if (!user) return { error: 'No user' };
 
   // Fetch current preferences
-  const { data: profile } = await supabase
+  const { data: profile } = await supabaseAdmin
     .from('profiles')
     .select('preferences')
     .eq('id', user.id)
@@ -23,10 +24,16 @@ export async function saveProspectFilters(filtersStr: string) {
     prospect_filters: filtersStr
   };
 
-  await supabase
+  const { error } = await supabaseAdmin
     .from('profiles')
     .update({ preferences: newPrefs })
     .eq('id', user.id);
+    
+  if (error) {
+    console.error("Failed to update profile filters:", error);
+    return { error: error.message };
+  }
+
     
   return { success: true };
 }

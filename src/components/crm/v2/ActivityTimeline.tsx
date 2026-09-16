@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Phone, Mail, MessageSquare, MapPin, FileText, Activity, Clock, Building, User, StickyNote } from 'lucide-react';
+import { Phone, Mail, MessageSquare, MapPin, FileText, Activity, Clock, Building, User, StickyNote, Plus } from 'lucide-react';
 import { ACTIVITY_RESULTS, CONTACT_LEVELS } from '@/lib/constants';
 
 interface ActivityTimelineProps {
@@ -78,12 +78,14 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
       </div>
       
       <div className="relative flex-1 custom-scrollbar">
-        {displayActivities.length === 0 ? (
-          <div className="text-center py-6">
-            <p className="text-[12px] text-gray-500 mb-1.5">Todavía no hay interacciones registradas.</p>
-            <button className="text-[12px] font-medium text-blue-600 hover:underline">+ Registrar primera gestión</button>
-          </div>
-        ) : (
+          {displayActivities.length === 0 ? (
+            <div className="text-center py-6 flex flex-col items-center">
+              <p className="text-[12px] text-gray-500 mb-2.5">Todavía no hay interacciones registradas.</p>
+              <button className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[12px] font-bold transition-colors">
+                <Plus className="w-3.5 h-3.5" /> Registrar primera gestión
+              </button>
+            </div>
+          ) : (
           <>
             <div className="absolute left-[33px] sm:left-[38px] top-2 bottom-2 w-px bg-slate-100 z-0"></div>
             <div className="relative z-10 flex flex-col gap-5 pt-2">

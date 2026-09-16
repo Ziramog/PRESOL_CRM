@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, MessageSquare, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, MessageSquare, Loader2, Plus } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { createComment } from '@/app/actions/comments';
@@ -70,13 +70,13 @@ export function InternalNotesAccordion({ comments, prospectId }: InternalNotesAc
               ))
             )}
             
-            <div className="mt-2 pt-3 border-t border-gray-100">
+            <div className="mt-3 pt-3 border-t border-gray-100 flex justify-center">
               {!isAdding ? (
                 <button 
                   onClick={() => setIsAdding(true)}
-                  className="text-[11px] text-blue-600 hover:underline font-medium"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[12px] font-bold transition-colors w-full sm:w-auto"
                 >
-                  + Agregar nota
+                  <Plus className="w-3.5 h-3.5" /> Agregar nota
                 </button>
               ) : (
                 <div className="space-y-2 mt-2">

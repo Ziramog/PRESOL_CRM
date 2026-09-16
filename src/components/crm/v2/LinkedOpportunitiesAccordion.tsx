@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, DollarSign } from 'lucide-react';
+import { ChevronDown, ChevronRight, DollarSign, Plus } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { OpportunityForm } from '../opportunity-form';
@@ -32,7 +32,15 @@ export function LinkedOpportunitiesAccordion({ opportunities, prospectId }: Link
         <div className="px-4 pb-4 border-t border-gray-100">
           <div className="mt-3 space-y-2">
             {!opportunities || opportunities.length === 0 ? (
-              <p className="text-[12px] text-gray-500 text-center py-2">No hay oportunidades vinculadas.</p>
+              <div className="text-center py-4 flex flex-col items-center">
+                <p className="text-[12px] text-gray-500 mb-2.5">No hay oportunidades vinculadas.</p>
+                <button 
+                  onClick={() => setShowOppForm(true)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[12px] font-bold transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Crear oportunidad
+                </button>
+              </div>
             ) : (
               opportunities.map(opp => (
                 <div key={opp.id} className="border border-gray-100 rounded-lg p-2.5 hover:border-gray-200 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
@@ -54,14 +62,16 @@ export function LinkedOpportunitiesAccordion({ opportunities, prospectId }: Link
               ))
             )}
             
-            <div className="mt-2 pt-3 border-t border-gray-100 text-center">
-              <button 
-                onClick={() => setShowOppForm(true)}
-                className="text-[11px] font-medium text-blue-600 hover:underline"
-              >
-                + Crear oportunidad
-              </button>
-            </div>
+            {opportunities && opportunities.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-100 flex justify-center">
+                <button 
+                  onClick={() => setShowOppForm(true)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[12px] font-bold transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Crear oportunidad
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

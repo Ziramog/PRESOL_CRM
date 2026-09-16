@@ -119,12 +119,14 @@ export function PrimaryContactCard({ contacts, prospect, secondaryCount = 0 }: {
       )}
       
       <div className="flex-1">
-        {!primaryContact && !prospect.primary_phone ? (
-          <div className="text-center py-6">
-            <p className="text-[13px] text-gray-500 mb-2">No hay contacto principal.</p>
-            <button onClick={() => setShowEditModal(true)} className="text-[13px] font-bold text-blue-600 hover:underline">+ Agregar contacto</button>
-          </div>
-        ) : (
+          {!primaryContact && !prospect.primary_phone ? (
+            <div className="text-center py-6 flex flex-col items-center">
+              <p className="text-[13px] text-gray-500 mb-2.5">No hay contacto principal.</p>
+              <button onClick={() => setShowEditModal(true)} className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[13px] font-bold transition-colors">
+                <Plus className="w-3.5 h-3.5" /> Agregar contacto
+              </button>
+            </div>
+          ) : (
           <div>
             <div className="flex items-center gap-4 mb-4">
               <div className="w-[52px] h-[52px] bg-slate-100 rounded-full flex items-center justify-center shrink-0">

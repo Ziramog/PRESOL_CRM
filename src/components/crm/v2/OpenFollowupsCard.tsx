@@ -2,7 +2,7 @@
 
 import { format, parseISO, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CheckSquare, Square } from 'lucide-react';
+import { CheckSquare, Square, Plus } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { completeTask } from '@/app/actions/tasks';
 import { TaskForm } from '@/components/crm/task-form';
@@ -35,15 +35,19 @@ export function OpenFollowupsCard({ tasks, prospectId }: OpenFollowupsCardProps)
           <h3 className="text-[15px] font-bold text-gray-900">Seguimientos abiertos</h3>
         </div>
         {displayTasks.length > 0 && (
-          <button onClick={() => setShowTaskForm(true)} className="text-[11px] text-blue-600 hover:underline font-medium">+ Nuevo</button>
+          <button onClick={() => setShowTaskForm(true)} className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md text-[11px] font-bold transition-colors">
+            <Plus className="w-3 h-3" /> Nuevo
+          </button>
         )}
       </div>
       
       <div>
         {displayTasks.length === 0 ? (
-          <div className="text-center py-5">
-            <p className="text-[12px] text-gray-500 mb-1.5">Sin seguimientos abiertos.</p>
-            <button onClick={() => setShowTaskForm(true)} className="text-[12px] font-medium text-blue-600 hover:underline">+ Crear seguimiento</button>
+          <div className="text-center py-5 flex flex-col items-center">
+            <p className="text-[12px] text-gray-500 mb-2.5">Sin seguimientos abiertos.</p>
+            <button onClick={() => setShowTaskForm(true)} className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[12px] font-bold transition-colors">
+              <Plus className="w-3.5 h-3.5" /> Crear seguimiento
+            </button>
           </div>
         ) : (
           <div className="space-y-3">
