@@ -8,7 +8,7 @@ export function ProspectCard({ prospect }: { prospect: any }) {
   const cleanPhone = activePhone ? activePhone.replace(/\D/g, '') : '';
   
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md">
+    <div className="bg-white border-b border-gray-200 shadow-sm overflow-hidden transition-all">
       <Link 
         href={`/prospects/${prospect.id}`}
         className="block p-4 active:bg-gray-50 transition-colors"
@@ -67,31 +67,33 @@ export function ProspectCard({ prospect }: { prospect: any }) {
       </Link>
       
       {/* ACTION BAR (Mobile First) */}
-      <div className="flex items-center p-3 bg-gray-50 border-t border-gray-200 gap-2">
+      <div className="flex items-center px-4 py-2.5 bg-gray-50/50 border-t border-gray-100 gap-3">
         {activePhone ? (
           <>
             <a 
               href={`tel:${cleanPhone}`} 
-              className="flex-1 flex justify-center items-center gap-1.5 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-[13px] font-bold text-white shadow-sm transition-colors"
+              className="flex-1 flex justify-center items-center gap-2 py-1.5 text-[13px] font-semibold text-gray-700 hover:text-blue-700 active:bg-gray-100 rounded transition-colors"
             >
-              <Phone className="w-3.5 h-3.5" /> Llamar
+              <Phone className="w-3.5 h-3.5 text-blue-500" /> Llamar
             </a>
+            <div className="w-px h-4 bg-gray-200"></div>
             <a 
               href={`https://wa.me/${cleanPhone}`} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex-1 flex justify-center items-center gap-1.5 py-2 bg-[#25D366] hover:bg-[#128C7E] rounded-lg text-[13px] font-bold text-white shadow-sm transition-colors"
+              className="flex-1 flex justify-center items-center gap-2 py-1.5 text-[13px] font-semibold text-gray-700 hover:text-green-700 active:bg-gray-100 rounded transition-colors"
             >
-              <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+              <MessageCircle className="w-3.5 h-3.5 text-[#25D366]" /> WhatsApp
             </a>
           </>
         ) : (
-          <div className="flex-1 text-center py-2 text-[13px] text-gray-400 font-medium italic bg-white border border-gray-200 rounded-lg">Sin teléfono registrado</div>
+          <div className="flex-1 text-center py-1.5 text-[12px] text-gray-400 font-medium italic">Sin teléfono registrado</div>
         )}
+        <div className="w-px h-4 bg-gray-200"></div>
         <Link 
           href={`/prospects/${prospect.id}`}
-          className="w-10 h-[36px] shrink-0 flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-bold transition-colors"
-          title="Registrar Actividad"
+          className="px-3 py-1.5 flex items-center justify-center text-gray-500 hover:text-blue-600 active:bg-gray-100 rounded transition-colors"
+          title="Ver Prospecto"
         >
           <Plus className="w-4 h-4" />
         </Link>
