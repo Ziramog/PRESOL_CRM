@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { X } from 'lucide-react';
+import { X, Smartphone } from 'lucide-react';
 import { createProspect, updateProspect } from '@/app/actions/prospects';
 
 export function ProspectForm({ 
@@ -20,6 +20,50 @@ export function ProspectForm({
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('general');
+  const [canImportContacts, setCanImportContacts] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && 'contacts' in navigator && 'ContactsManager' in window) {
+      setCanImportContacts(true);
+    }
+  }, []);
+
+  const handleContactPicker = async () => {
+    try {
+      const props = ['name', 'tel', 'email'];
+      const opts = { multiple: false };
+      // @ts-ignore
+      const contacts = await navigator.contacts.select(props, opts);
+      if (contacts && contacts.length > 0) {
+        const contact = contacts[0];
+        const form = document.getElementById('prospect-form') as HTMLFormElement;
+        if (form) {
+          if (contact.name && contact.name.length > 0) {
+            const companyInput = form.querySelector('[name="company_name"]') as HTMLInputElement;
+            if (companyInput && !companyInput.value) companyInput.value = contact.name[0];
+          }
+          if (contact.tel && contact.tel.length > 0) {
+            const phoneInput = form.querySelector('[name="primary_phone"]') as HTMLInputElement;
+            if (phoneInput && !phoneInput.value) phoneInput.value = contact.tel[0];
+            
+            if (contact.tel.length > 1) {
+              const rawInput = form.querySelector('[name="phones_raw"]') as HTMLTextAreaElement;
+              if (rawInput) {
+                const extras = contact.tel.slice(1).join('\n');
+                rawInput.value = rawInput.value ? rawInput.value + '\n' + extras : extras;
+              }
+            }
+          }
+          if (contact.email && contact.email.length > 0) {
+            const emailInput = form.querySelector('[name="email"]') as HTMLInputElement;
+            if (emailInput && !emailInput.value) emailInput.value = contact.email[0];
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Contact picker error:', err);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -74,6 +118,18 @@ export function ProspectForm({
         </div>
 
         <div className="overflow-y-auto p-5 flex-1">
+          {canImportContacts && !prospect && (
+            <div className="mb-5">
+              <button
+                type="button"
+                onClick={handleContactPicker}
+                className="w-full py-2.5 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
+              >
+                <Smartphone className="w-4 h-4" />
+                Importar desde contactos del móvil
+              </button>
+            </div>
+          )}
           <form id="prospect-form" onSubmit={handleSubmit} className="space-y-4">
             
             <div className={activeTab === 'general' ? 'space-y-4' : 'hidden'}>
@@ -154,7 +210,7 @@ export function ProspectForm({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono Principal</label>
-                <input type="text" name="primary_phone" defaultValue={prospect?.primary_phone || ''} className="w-full text-sm rounded-none border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white" />
+                <input type="tel" name="primary_phone" defaultValue={prospect?.primary_phone || ''} className="w-full text-sm rounded-none border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Otros Teléfonos (Raw)</label>
