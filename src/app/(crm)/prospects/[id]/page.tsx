@@ -89,7 +89,10 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
     notFound();
   }
 
-  const { prospect } = overview;
+  const prospect = {
+    ...overview.prospect,
+    is_favorite: Boolean(overview.prospect.is_favorite || overview.prospect.source_payload?.is_favorite),
+  };
 
   return (
     <div className="w-full px-4 md:px-8 pt-4 pb-24 md:pb-8">

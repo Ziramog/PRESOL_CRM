@@ -62,8 +62,8 @@ export default async function ProspectsPage({
 
   let baseQuery = supabaseAdmin.from('prospects').select('*, contacts(id, phone, is_primary)');
   
-  // Only apply DB sorting if it's not our custom open_tasks sort
-  if (sortCol !== 'open_tasks') {
+  // Only apply DB sorting if it's not our custom open_tasks or is_favorite sort
+  if (sortCol !== 'open_tasks' && sortCol !== 'is_favorite') {
     baseQuery = baseQuery.order(sortCol, { ascending: sortDir });
   }
 
@@ -72,7 +72,9 @@ export default async function ProspectsPage({
   if (selectedCities.length > 0) baseQuery = baseQuery.in('city', selectedCities);
   if (sector) baseQuery = baseQuery.eq('sector', sector);
   if (status) baseQuery = baseQuery.eq('contact_status', status);
-  if (favoritesOnly) baseQuery = baseQuery.eq('is_favorite', true);
+  if (favoritesOnly) {
+    baseQuery = baseQuery.eq('source_payload->is_favorite', true);
+  }
 
   const [prospectsResponse, citiesResponse, sectorsResponse, dirNotesResponse, tasksResponse] = await Promise.all([
     baseQuery,
@@ -103,16 +105,28 @@ export default async function ProspectsPage({
     taskCounts[t.prospect_id] = (taskCounts[t.prospect_id] || 0) + 1;
   });
 
-  // Attach has_direction_note flag and open_tasks count to each prospect
+  // Attach has_direction_note flag, is_favorite boolean, and open_tasks count to each prospect
   let prospectsWithFlags = (prospects ?? []).map((p) => ({
     ...p,
+    is_favorite: Boolean(p.is_favorite || p.source_payload?.is_favorite),
     has_direction_note: dirNoteProspects.has(p.id),
     open_tasks: taskCounts[p.id] || 0,
   }));
 
+  if (favoritesOnly) {
+    prospectsWithFlags = prospectsWithFlags.filter((p) => p.is_favorite);
+  }
+
   if (sortCol === 'open_tasks') {
     prospectsWithFlags.sort((a, b) => {
       const diff = a.open_tasks - b.open_tasks;
+      return sortDir ? diff : -diff;
+    });
+  } else if (sortCol === 'is_favorite') {
+    prospectsWithFlags.sort((a, b) => {
+      const aVal = a.is_favorite ? 1 : 0;
+      const bVal = b.is_favorite ? 1 : 0;
+      const diff = aVal - bVal;
       return sortDir ? diff : -diff;
     });
   }

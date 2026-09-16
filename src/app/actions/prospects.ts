@@ -160,19 +160,43 @@ export async function enrichProspectManual(id: string, updates: any) {
 }
 
 export async function toggleFavorite(prospectId: string, currentValue: boolean) {
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
+  const nextVal = !currentValue;
 
-  const { error } = await supabase
+  // 1. Fetch current source_payload
+  const { data: current } = await supabase
     .from('prospects')
-    .update({ is_favorite: !currentValue })
+    .select('source_payload')
+    .eq('id', prospectId)
+    .single();
+
+  const currentPayload = current?.source_payload || {};
+  const updatedPayload = { ...currentPayload, is_favorite: nextVal };
+
+  // 2. Try direct column update (succeeds if is_favorite column exists in DB)
+  let columnError: any = null;
+  try {
+    const res = await supabase
+      .from('prospects')
+      .update({ is_favorite: nextVal })
+      .eq('id', prospectId);
+    columnError = res.error;
+  } catch (e) {
+    columnError = e;
+  }
+
+  // 3. Always update source_payload as resilient storage
+  const { error: payloadError } = await supabase
+    .from('prospects')
+    .update({ source_payload: updatedPayload })
     .eq('id', prospectId);
 
-  if (error) {
-    console.error('Error toggling favorite:', error);
+  if (columnError && payloadError) {
+    console.error('Error toggling favorite:', { columnError, payloadError });
     return { error: 'Error al actualizar favorito' };
   }
 
   revalidatePath(`/prospects/${prospectId}`);
   revalidatePath('/prospects');
-  return { success: true, is_favorite: !currentValue };
+  return { success: true, is_favorite: nextVal };
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { Star } from 'lucide-react';
 import { toggleFavorite } from '@/app/actions/prospects';
 
@@ -15,13 +15,21 @@ export function FavoriteButton({ prospectId, isFavorite, variant = 'card' }: Fav
   const [optimistic, setOptimistic] = useState(isFavorite);
   const [isPending, startTransition] = useTransition();
 
+  useEffect(() => {
+    setOptimistic(isFavorite);
+  }, [isFavorite]);
+
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const next = !optimistic;
+    const prev = optimistic;
+    const next = !prev;
     setOptimistic(next); // instant feedback
     startTransition(async () => {
-      await toggleFavorite(prospectId, optimistic);
+      const res = await toggleFavorite(prospectId, prev);
+      if (res?.error) {
+        setOptimistic(prev); // rollback on error
+      }
     });
   };
 
