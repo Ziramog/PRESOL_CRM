@@ -32,14 +32,14 @@ export default async function TasksPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Agenda de Tareas</h1>
-        <p className="text-sm text-gray-500 mt-1">Planifica tus seguimientos y próximos pasos</p>
+        <h1 className="text-2xl font-bold text-gray-900">Agenda de Seguimientos</h1>
+        <p className="text-sm text-gray-500 mt-1">Planifica tus próximos pasos y reuniones</p>
       </div>
 
       <div className="space-y-8">
         {overdueTasks.length > 0 && (
           <section>
-            <h2 className="text-sm font-bold text-red-600 uppercase tracking-wider mb-3">Vencidas ({overdueTasks.length})</h2>
+            <h2 className="text-sm font-bold text-red-600 uppercase tracking-wider mb-3">Vencidos ({overdueTasks.length})</h2>
             <div className="space-y-3">
               {overdueTasks.map(task => <TaskListItem key={task.id} task={task} />)}
             </div>
@@ -49,7 +49,7 @@ export default async function TasksPage() {
         <section>
           <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">Para hoy ({todayTasks.length})</h2>
           {todayTasks.length === 0 ? (
-            <p className="text-sm text-gray-500 italic">No tienes tareas programadas para hoy.</p>
+            <p className="text-sm text-gray-500 italic">No tienes seguimientos programados para hoy.</p>
           ) : (
             <div className="space-y-3">
               {todayTasks.map(task => <TaskListItem key={task.id} task={task} />)}
@@ -59,7 +59,7 @@ export default async function TasksPage() {
 
         {upcomingTasks.length > 0 && (
           <section>
-            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Próximas ({upcomingTasks.length})</h2>
+            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Próximos ({upcomingTasks.length})</h2>
             <div className="space-y-3">
               {upcomingTasks.map(task => <TaskListItem key={task.id} task={task} />)}
             </div>

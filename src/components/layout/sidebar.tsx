@@ -11,7 +11,7 @@ const items = [
   { name: 'Cotizaciones', href: '/quotes', icon: FileText },
   { name: 'Giras', href: '/trips', icon: Map },
   // { name: 'Dirección', href: '/direction', icon: BarChart3 }, // hidden until fully developed
-  { name: 'Tareas', href: '/tasks', icon: CheckSquare },
+  { name: 'Seguimientos', href: '/tasks', icon: CheckSquare },
   { name: 'Oportunidades', href: '/opportunities', icon: Target },
   { name: 'Configuración', href: '/settings', icon: Settings },
 ];
