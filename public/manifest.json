@@ -1,7 +1,7 @@
-{
+﻿{
   "name": "PRESOL CRM",
   "short_name": "PRESOL",
-  "description": "Sistema de gestión comercial PRESOL",
+  "description": "Sistema de gestion comercial PRESOL",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#ffffff",
