@@ -1,53 +1,62 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { createContact, updateContact } from '@/app/actions/contacts';
 import { X, BookUser } from 'lucide-react';
+import { MobileContactImportModal } from '@/components/crm/v2/MobileContactImportModal';
 
 export function ContactForm({ 
   prospectId, 
-  contact,
+  contact, 
   onClose 
 }: { 
-  prospectId: string,
-  contact?: any,
+  prospectId: string, 
+  contact?: any, 
   onClose: () => void 
 }) {
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isSupported, setIsSupported] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    // Check if Contact Picker API is available
-    if (typeof navigator !== 'undefined' && 'contacts' in navigator) {
-      setIsSupported(true);
+  const applyContactData = (c: { name?: string; phone?: string; email?: string }) => {
+    if (c.name && nameRef.current) {
+      nameRef.current.value = c.name;
     }
-  }, []);
+    if (c.phone && phoneRef.current) {
+      phoneRef.current.value = c.phone.replace(/[\s-]/g, '');
+    }
+    if (c.email && emailRef.current) {
+      emailRef.current.value = c.email;
+    }
+  };
 
   const handleImportContact = async () => {
-    try {
-      const props = ['name', 'tel', 'email'];
-      const contacts = await (navigator as any).contacts.select(props, { multiple: false });
-      if (contacts.length > 0) {
-        const contact = contacts[0];
-        if (contact.name && contact.name.length > 0 && nameRef.current) {
-          nameRef.current.value = contact.name[0];
+    // If native Contact Picker API is supported (Chrome Android), try it directly
+    if (typeof navigator !== 'undefined' && 'contacts' in navigator && typeof (navigator as any).contacts?.select === 'function') {
+      try {
+        const props = ['name', 'tel', 'email'];
+        const contacts = await (navigator as any).contacts.select(props, { multiple: false });
+        if (contacts && contacts.length > 0) {
+          const item = contacts[0];
+          applyContactData({
+            name: item.name?.[0],
+            phone: item.tel?.[0],
+            email: item.email?.[0]
+          });
+          return;
         }
-        if (contact.tel && contact.tel.length > 0 && phoneRef.current) {
-          // Clean up the phone number (remove spaces, dashes)
-          phoneRef.current.value = contact.tel[0].replace(/[\s-]/g, '');
-        }
-        if (contact.email && contact.email.length > 0 && emailRef.current) {
-          emailRef.current.value = contact.email[0];
-        }
+      } catch (err: any) {
+        if (err.name === 'AbortError') return;
+        console.warn('Native contact picker error, opening fallback:', err);
       }
-    } catch (e) {
-      console.log('Error o cancelado al seleccionar contacto:', e);
     }
+
+    // Firefox, iOS, Desktop or native failed:
+    setShowImportModal(true);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -81,16 +90,14 @@ export function ContactForm({
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <input type="hidden" name="prospect_id" value={prospectId} />
           
-          {!contact && isSupported && (
-            <button 
-              type="button" 
-              onClick={handleImportContact}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-700 rounded-md border border-blue-200 text-sm font-medium hover:bg-blue-100 transition-colors"
-            >
-              <BookUser className="w-4 h-4" />
-              Importar de la Agenda del Celular
-            </button>
-          )}
+          <button 
+            type="button" 
+            onClick={handleImportContact}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-700 rounded-md border border-blue-200 text-sm font-medium hover:bg-blue-100 transition-colors"
+          >
+            <BookUser className="w-4 h-4" />
+            Importar de la Agenda del Celular / Móvil
+          </button>
           
           <div>
             <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Nombre Completo *</label>
@@ -174,6 +181,12 @@ export function ContactForm({
           </div>
         </form>
       </div>
+
+      <MobileContactImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImport={(c) => applyContactData(c)}
+      />
     </div>
   );
 }

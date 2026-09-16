@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Smartphone } from 'lucide-react';
 import { createProspect, updateProspect } from '@/app/actions/prospects';
+import { MobileContactImportModal } from '@/components/crm/v2/MobileContactImportModal';
 
 export function ProspectForm({ 
   onClose,
@@ -20,58 +21,62 @@ export function ProspectForm({
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('general');
-  const [canImportContacts, setCanImportContacts] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
-  useEffect(() => {
-    if (typeof navigator !== 'undefined' && 'contacts' in navigator) {
-      setCanImportContacts(true);
-    }
-  }, []);
-
-  const handleContactPicker = async () => {
-    try {
-      if (typeof navigator === 'undefined' || !('contacts' in navigator) || typeof (navigator as any).contacts?.select !== 'function') {
-        alert('El selector de contactos sólo está disponible en navegadores móviles compatibles (como Chrome en Android o PWA).');
-        return;
+  const applyContact = (contact: { name?: string; phone?: string; additionalPhones?: string[]; email?: string }) => {
+    const form = document.getElementById('prospect-form') as HTMLFormElement;
+    if (form) {
+      if (contact.name) {
+        const companyInput = form.querySelector('[name="company_name"]') as HTMLInputElement;
+        if (companyInput && (!companyInput.value || !prospect)) companyInput.value = contact.name;
+        const askForInput = form.querySelector('[name="ask_for"]') as HTMLInputElement;
+        if (askForInput) askForInput.value = contact.name;
       }
-      const props = ['name', 'tel', 'email'];
-      const opts = { multiple: false };
-      // @ts-ignore
-      const contacts = await navigator.contacts.select(props, opts);
-      if (contacts && contacts.length > 0) {
-        const contact = contacts[0];
-        const form = document.getElementById('prospect-form') as HTMLFormElement;
-        if (form) {
-          if (contact.name && contact.name.length > 0) {
-            const companyInput = form.querySelector('[name="company_name"]') as HTMLInputElement;
-            if (companyInput && (!companyInput.value || !prospect)) companyInput.value = contact.name[0];
-            const askForInput = form.querySelector('[name="ask_for"]') as HTMLInputElement;
-            if (askForInput) askForInput.value = contact.name[0];
-          }
-          if (contact.tel && contact.tel.length > 0) {
-            const clean = contact.tel[0].replace(/[\s-]/g, '');
-            const phoneInput = form.querySelector('[name="primary_phone"]') as HTMLInputElement;
-            if (phoneInput) phoneInput.value = clean;
-            
-            if (contact.tel.length > 1) {
-              const rawInput = form.querySelector('[name="phones_raw"]') as HTMLTextAreaElement;
-              if (rawInput) {
-                const extras = contact.tel.slice(1).join('\n');
-                rawInput.value = rawInput.value ? rawInput.value + '\n' + extras : extras;
-              }
-            }
-          }
-          if (contact.email && contact.email.length > 0) {
-            const emailInput = form.querySelector('[name="email"]') as HTMLInputElement;
-            if (emailInput) emailInput.value = contact.email[0];
-          }
+      if (contact.phone) {
+        const clean = contact.phone.replace(/[\s-]/g, '');
+        const phoneInput = form.querySelector('[name="primary_phone"]') as HTMLInputElement;
+        if (phoneInput) phoneInput.value = clean;
+      }
+      if (contact.additionalPhones && contact.additionalPhones.length > 0) {
+        const rawInput = form.querySelector('[name="phones_raw"]') as HTMLTextAreaElement;
+        if (rawInput) {
+          const extras = contact.additionalPhones.join('\n');
+          rawInput.value = rawInput.value ? rawInput.value + '\n' + extras : extras;
         }
       }
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        console.error('Contact picker error:', err);
+      if (contact.email) {
+        const emailInput = form.querySelector('[name="email"]') as HTMLInputElement;
+        if (emailInput) emailInput.value = contact.email;
       }
     }
+  };
+
+  const handleContactPicker = async () => {
+    // If native Contact Picker API is available (Chrome Android), use it directly
+    if (typeof navigator !== 'undefined' && 'contacts' in navigator && typeof (navigator as any).contacts?.select === 'function') {
+      try {
+        const props = ['name', 'tel', 'email'];
+        const opts = { multiple: false };
+        // @ts-ignore
+        const contacts = await navigator.contacts.select(props, opts);
+        if (contacts && contacts.length > 0) {
+          const c = contacts[0];
+          applyContact({
+            name: c.name?.[0],
+            phone: c.tel?.[0],
+            additionalPhones: c.tel?.slice(1),
+            email: c.email?.[0]
+          });
+          return;
+        }
+      } catch (err: any) {
+        if (err.name === 'AbortError') return; // User cancelled native picker
+        console.warn('Native picker error, opening fallback:', err);
+      }
+    }
+
+    // For Firefox, iOS, Desktop or whenever native picker is unavailable/fails:
+    setShowImportModal(true);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -127,18 +132,16 @@ export function ProspectForm({
         </div>
 
         <div className="overflow-y-auto p-5 flex-1">
-          {canImportContacts && (
-            <div className="mb-5">
-              <button
-                type="button"
-                onClick={handleContactPicker}
-                className="w-full py-2.5 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
-              >
-                <Smartphone className="w-4 h-4" />
-                Importar desde contactos del móvil
-              </button>
-            </div>
-          )}
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={handleContactPicker}
+              className="w-full py-2.5 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
+            >
+              <Smartphone className="w-4 h-4" />
+              Traer datos desde contactos del móvil
+            </button>
+          </div>
           <form id="prospect-form" onSubmit={handleSubmit} className="space-y-4">
             
             <div className={activeTab === 'general' ? 'space-y-4' : 'hidden'}>
@@ -221,16 +224,14 @@ export function ProspectForm({
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-sm font-medium text-gray-700">Teléfono Principal</label>
-                    {canImportContacts && (
-                      <button
-                        type="button"
-                        onClick={handleContactPicker}
-                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
-                        title="Importar de contactos del móvil"
-                      >
-                        <Smartphone className="w-3.5 h-3.5" /> Traer del móvil
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={handleContactPicker}
+                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                      title="Importar de contactos del móvil"
+                    >
+                      <Smartphone className="w-3.5 h-3.5" /> Traer del móvil
+                    </button>
                   </div>
                   <input type="tel" name="primary_phone" defaultValue={prospect?.primary_phone || ''} className="w-full text-sm rounded-none border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white" />
                 </div>
@@ -283,6 +284,12 @@ export function ProspectForm({
           </button>
         </div>
       </div>
+
+      <MobileContactImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImport={applyContact}
+      />
     </div>
   );
 }
