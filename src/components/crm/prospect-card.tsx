@@ -3,7 +3,9 @@ import { MapPin, Phone, MessageSquare, MessageCircle, Plus } from 'lucide-react'
 import { PROSPECT_STATUS } from '@/lib/constants';
 
 export function ProspectCard({ prospect }: { prospect: any }) {
-  const cleanPhone = prospect.primary_phone ? prospect.primary_phone.replace(/\D/g, '') : '';
+  const primaryContact = prospect.contacts?.find((c: any) => c.is_primary) || prospect.contacts?.[0];
+  const activePhone = primaryContact?.phone || prospect.primary_phone;
+  const cleanPhone = activePhone ? activePhone.replace(/\D/g, '') : '';
   
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md">
@@ -65,30 +67,30 @@ export function ProspectCard({ prospect }: { prospect: any }) {
       </Link>
       
       {/* ACTION BAR (Mobile First) */}
-      <div className="flex items-center px-3 py-2.5 bg-gray-50 border-t border-gray-200 gap-2">
-        {prospect.primary_phone ? (
+      <div className="flex items-center p-3 bg-gray-50 border-t border-gray-200 gap-2">
+        {activePhone ? (
           <>
             <a 
               href={`tel:${cleanPhone}`} 
-              className="flex-1 flex justify-center items-center gap-1.5 py-1.5 bg-white border border-gray-200 rounded-lg text-[13px] font-bold text-gray-700 shadow-sm active:bg-gray-100"
+              className="flex-1 flex justify-center items-center gap-1.5 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-[13px] font-bold text-white shadow-sm transition-colors"
             >
-              <Phone className="w-3.5 h-3.5 text-blue-600" /> Llamar
+              <Phone className="w-3.5 h-3.5" /> Llamar
             </a>
             <a 
               href={`https://wa.me/${cleanPhone}`} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex-1 flex justify-center items-center gap-1.5 py-1.5 bg-white border border-gray-200 rounded-lg text-[13px] font-bold text-gray-700 shadow-sm active:bg-gray-100"
+              className="flex-1 flex justify-center items-center gap-1.5 py-2 bg-[#25D366] hover:bg-[#128C7E] rounded-lg text-[13px] font-bold text-white shadow-sm transition-colors"
             >
-              <MessageCircle className="w-3.5 h-3.5 text-green-600" /> WhatsApp
+              <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
             </a>
           </>
         ) : (
-          <div className="flex-1 text-center py-1.5 text-[12px] text-gray-400 font-medium italic">Sin teléfono registrado</div>
+          <div className="flex-1 text-center py-2 text-[13px] text-gray-400 font-medium italic bg-white border border-gray-200 rounded-lg">Sin teléfono registrado</div>
         )}
         <Link 
           href={`/prospects/${prospect.id}`}
-          className="w-9 h-[34px] shrink-0 flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg font-bold transition-colors"
+          className="w-10 h-[36px] shrink-0 flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-bold transition-colors"
           title="Registrar Actividad"
         >
           <Plus className="w-4 h-4" />

@@ -58,7 +58,7 @@ export default async function ProspectsPage({
     : 'created_at';
   const sortDir = params.dir === 'asc';
 
-  let baseQuery = supabaseAdmin.from('prospects').select('*');
+  let baseQuery = supabaseAdmin.from('prospects').select('*, contacts(id, phone, is_primary)');
   
   // Only apply DB sorting if it's not our custom open_tasks sort
   if (sortCol !== 'open_tasks') {
