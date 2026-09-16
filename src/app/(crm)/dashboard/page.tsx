@@ -48,9 +48,9 @@ export default async function DashboardPage(props: {
   const resultsData = Object.entries(aggregated).map(([outcome, count]) => ({ outcome, count }));
 
   return (
-    <div className="space-y-8 pb-24 md:pb-8">
+    <div className="space-y-5 pb-24 md:pb-8">
       {/* Page header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 tracking-tight">Dashboard</h1>
           <p className="text-sm text-gray-400 mt-0.5">Actividad comercial en tiempo real</p>
@@ -58,16 +58,14 @@ export default async function DashboardPage(props: {
         <DashboardFilters currentParams={searchParams} />
       </div>
 
-      {/* Executive 3-card summary */}
+      {/* Executive 3-card summary / carousel */}
       <ExecutiveSummary summary={data.summary} baseDate={data.baseDate} />
 
       {/* Detail section */}
       <div>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
-          <div className="flex items-center gap-3 flex-1">
-            <h2 className="text-[11px] font-bold tracking-[0.2em] text-gray-400 uppercase whitespace-nowrap">Detalle: {periodTitle}</h2>
-            <div className="flex-1 h-px bg-gray-100" />
-          </div>
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-[11px] font-bold tracking-[0.2em] text-gray-400 uppercase whitespace-nowrap">Detalle · {periodTitle}</h2>
+          <div className="flex-1 h-px bg-gray-100" />
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6 mb-4 lg:mb-6">
