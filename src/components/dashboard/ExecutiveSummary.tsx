@@ -1,7 +1,7 @@
 'use client';
 
-import { X, TrendingUp } from 'lucide-react';
-import { useState } from 'react';
+import { X, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { getDashboardKPIList } from '@/app/actions/dashboard';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
@@ -102,10 +102,14 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   const [modal, setModal] = useState<{ open: boolean; title: string; period: string; periodLabel: string } | null>(null);
   const [modalData, setModalData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(1); // Start on "Hoy" (index 1)
 
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
 
   const userId = searchParams.get('user_id') || undefined;
   const city = searchParams.get('city') || undefined;
@@ -122,7 +126,7 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
 
   let titleYesterday = "Ayer";
   let titleToday = "Hoy";
-  let titleWeek = "Esta semana";
+  let titleWeek = "Semana";
 
   if (!isTodayDate) {
     if (isYesterdayDate) {
@@ -130,8 +134,8 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
       titleToday = "Ayer";
     } else {
       titleYesterday = "Día anterior";
-      titleToday = "Día seleccionado";
-      titleWeek = "Semana seleccionada";
+      titleToday = "Día sel.";
+      titleWeek = "Semana sel.";
     }
   }
 
@@ -139,13 +143,18 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   const yesterdayLabel = format(yesterday, "d MMM", { locale: es });
   const weekStart = format(startOfWeek(zonedNow, { weekStartsOn: 1 }), 'd', { locale: es });
   const weekEnd = format(endOfWeek(zonedNow, { weekStartsOn: 1 }), "d MMM", { locale: es });
-  const weekLabel = `${weekStart} — ${weekEnd}`;
+  const weekLabel = `${weekStart}–${weekEnd}`;
+
+  const periods = [
+    { title: titleYesterday, dateLabel: yesterdayLabel, data: summary?.yesterday, periodCode: 'yesterday' as const },
+    { title: titleToday,     dateLabel: todayLabel,     data: summary?.today,     periodCode: 'today'     as const },
+    { title: titleWeek,      dateLabel: weekLabel,      data: summary?.week,      periodCode: 'week'      as const },
+  ];
 
   const openModal = async (kpiKey: string, title: string, periodCode: string, periodLabel: string) => {
     setModal({ open: true, title, period: periodCode, periodLabel });
     setLoading(true);
     setModalData([]);
-    // Pass the shifted baseDate to the action so it resolves 'today', 'yesterday' relative to the time-traveled date
     const list = await getDashboardKPIList(kpiKey, periodCode, baseDate, undefined, userId, city, category, tripId);
     setModalData(list);
     setLoading(false);
@@ -156,63 +165,165 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   const rate = (contacts: number, visits: number) =>
     visits > 0 ? `${Math.round((contacts / visits) * 100)}%` : '—';
 
-  const handleCardClick = (periodCode: string) => {
-    if (currentPeriod === periodCode) return;
+  const goTo = (idx: number) => {
+    const clamped = Math.max(0, Math.min(periods.length - 1, idx));
+    setActiveIdx(clamped);
+    // Sync URL
     const params = new URLSearchParams(searchParams.toString());
-    params.set('period', periodCode);
-    if (periodCode !== 'custom') {
-      params.delete('from_date');
-      params.delete('to_date');
-    }
-    router.push(`${pathname}?${params.toString()}`);
+    params.set('period', periods[clamped].periodCode);
+    router.push(`${pathname}?${params.toString()}`, { scroll: false } as any);
   };
 
-  const isPrimaryToday = currentPeriod === 'today' || currentPeriod === 'custom';
-  const isPrimaryYesterday = currentPeriod === 'yesterday';
-  const isPrimaryWeek = currentPeriod === 'week';
+  // Touch handlers for swipe
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 40) {
+      goTo(activeIdx + (dx < 0 ? 1 : -1));
+    }
+    touchStartX.current = null;
+  };
+
+  const active = periods[activeIdx];
+  const d = active.data ?? { visited: 0, managed: 0, visits: 0, calls: 0, effective_contacts: 0, interested: 0, opportunities: 0 };
+  const totalManaged = d.managed !== undefined ? d.managed : d.visited;
+
+  const metrics = [
+    { key: 'managed',           label: 'Gestionados',           value: totalManaged,          indent: false },
+    { key: 'visits',            label: 'Visitas presenciales',  value: d.visits || 0,          indent: true  },
+    { key: 'calls',             label: 'Llamadas / Virtuales',  value: d.calls || 0,           indent: true  },
+    { key: 'effective_contacts',label: 'Contactos efectivos',   value: d.effective_contacts,   indent: false },
+    { key: 'interested',        label: 'Interesados',           value: d.interested,           indent: false },
+    { key: 'opportunities',     label: 'Oportunidades',         value: d.opportunities,        indent: false },
+  ];
+
+  let deltaText = activeIdx === 0 ? 'vs. día anterior' : activeIdx === 2 ? 'vs. semana anterior' : 'vs. ayer';
 
   return (
     <>
-      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-3 lg:gap-4">
-        {/* On mobile, order-1 means it comes first. order-2 means second. 
-            On lg (desktop), we reset order to default (which is DOM order or order-none) 
-            But grid order works best with classes like lg:order-1. 
-            Actually, let's just use grid and order classes carefully. */}
-        <div className="order-2 lg:order-1">
-          <PeriodCard
-            title={titleYesterday}
-            dateLabel={yesterdayLabel}
-            data={summary?.yesterday}
-            periodCode="yesterday"
-            isPrimary={isPrimaryYesterday}
+      {/* ── Desktop: 3-column grid (unchanged) ─────────────────── */}
+      <div className="hidden lg:grid lg:grid-cols-3 gap-4">
+        {periods.map((p) => (
+          <DesktopPeriodCard
+            key={p.periodCode}
+            title={p.title}
+            dateLabel={p.dateLabel}
+            data={p.data}
+            periodCode={p.periodCode}
+            isPrimary={currentPeriod === p.periodCode || (currentPeriod === 'custom' && p.periodCode === 'today')}
             rate={rate}
             onMetricClick={openModal}
-            onCardClick={handleCardClick}
+            onCardClick={(code) => {
+              const params = new URLSearchParams(searchParams.toString());
+              params.set('period', code);
+              router.push(`${pathname}?${params.toString()}`);
+            }}
           />
+        ))}
+      </div>
+
+      {/* ── Mobile: horizontal carousel ─────────────────────────── */}
+      <div className="lg:hidden">
+        {/* Tabs */}
+        <div className="flex gap-2 mb-3">
+          {periods.map((p, i) => (
+            <button
+              key={p.periodCode}
+              onClick={() => goTo(i)}
+              className={[
+                'flex-1 py-2 rounded-xl text-[12px] font-bold transition-all',
+                i === activeIdx
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200',
+              ].join(' ')}
+            >
+              {p.title}
+            </button>
+          ))}
         </div>
-        <div className="order-1 lg:order-2">
-          <PeriodCard
-            title={titleToday}
-            dateLabel={todayLabel}
-            data={summary?.today}
-            periodCode="today"
-            isPrimary={isPrimaryToday}
-            rate={rate}
-            onMetricClick={openModal}
-            onCardClick={handleCardClick}
-          />
-        </div>
-        <div className="order-3 lg:order-3">
-          <PeriodCard
-            title={titleWeek}
-            dateLabel={weekLabel}
-            data={summary?.week}
-            periodCode="week"
-            isPrimary={isPrimaryWeek}
-            rate={rate}
-            onMetricClick={openModal}
-            onCardClick={handleCardClick}
-          />
+
+        {/* Card */}
+        <div
+          ref={sliderRef}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          className="bg-white border border-gray-200 rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden select-none"
+        >
+          {/* Card header */}
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">{active.dateLabel}</p>
+              <p className="text-lg font-extrabold text-gray-900 leading-tight">{active.title}</p>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => goTo(activeIdx - 1)}
+                disabled={activeIdx === 0}
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 disabled:opacity-30 hover:bg-gray-200 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4 text-gray-600" />
+              </button>
+              <button
+                onClick={() => goTo(activeIdx + 1)}
+                disabled={activeIdx === periods.length - 1}
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 disabled:opacity-30 hover:bg-gray-200 transition-colors"
+              >
+                <ChevronRight className="w-4 h-4 text-gray-600" />
+              </button>
+            </div>
+          </div>
+
+          {/* Metrics */}
+          <div className="px-4 py-2">
+            {metrics.map(({ key, label, value, indent }) => (
+              <button
+                key={key}
+                onClick={() => {
+                  const apiName = key === 'managed' ? 'visited' : key;
+                  openModal(apiName, label, active.periodCode, active.title);
+                }}
+                className="w-full flex items-center justify-between py-2 px-2 text-left hover:bg-gray-50 rounded-lg transition-colors group"
+              >
+                <span className={`text-[13px] ${indent ? 'text-gray-400 pl-3 font-normal' : 'text-gray-700 font-semibold'}`}>
+                  {indent ? `· ${label}` : label}
+                </span>
+                <span className={`text-[13px] tabular-nums ${indent ? 'text-gray-400' : 'font-extrabold text-gray-900'}`}>
+                  {value}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Rate footer */}
+          <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600">
+              Tasa de contacto
+            </span>
+            {totalManaged > 0 ? (
+              <span className="text-xl font-extrabold text-blue-600">
+                {rate(d.effective_contacts, totalManaged)}
+              </span>
+            ) : (
+              <span className="text-[11px] text-gray-400 italic">Sin actividad</span>
+            )}
+          </div>
+
+          {/* Dot indicators */}
+          <div className="flex justify-center gap-1.5 pb-3">
+            {periods.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                className={[
+                  'rounded-full transition-all',
+                  i === activeIdx ? 'w-4 h-1.5 bg-blue-600' : 'w-1.5 h-1.5 bg-gray-300',
+                ].join(' ')}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
@@ -228,15 +339,10 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   );
 }
 
-function PeriodCard({
-  title,
-  dateLabel,
-  data,
-  periodCode,
-  isPrimary,
-  rate,
-  onMetricClick,
-  onCardClick,
+// ── Desktop card (unchanged logic, just renamed) ────────────────────────────
+
+function DesktopPeriodCard({
+  title, dateLabel, data, periodCode, isPrimary, rate, onMetricClick, onCardClick,
 }: {
   title: string;
   dateLabel: string;
@@ -247,19 +353,18 @@ function PeriodCard({
   onMetricClick: (kpiKey: string, title: string, period: string, periodLabel: string) => void;
   onCardClick: (periodCode: string) => void;
 }) {
-  const d = data ?? { visited: 0, managed: 0, visits: 0, calls: 0, effective_contacts: 0, interested: 0, opportunities: 0, followups: 0 };
+  const d = data ?? { visited: 0, managed: 0, visits: 0, calls: 0, effective_contacts: 0, interested: 0, opportunities: 0 };
   const totalManaged = d.managed !== undefined ? d.managed : d.visited;
 
   const metrics = [
-    { key: 'managed', label: 'Gestionados (Total)', value: totalManaged },
-    { key: 'visits', label: '• Visitas Presenciales', value: d.visits || 0 },
-    { key: 'calls', label: '• Llamadas / Virtuales', value: d.calls || 0 },
-    { key: 'effective_contacts', label: 'Contactos Efectivos', value: d.effective_contacts },
-    { key: 'interested', label: 'Interesados', value: d.interested },
-    { key: 'opportunities', label: 'Oportunidades', value: d.opportunities },
+    { key: 'managed',            label: 'Gestionados (Total)',   value: totalManaged },
+    { key: 'visits',             label: '• Visitas Presenciales', value: d.visits || 0 },
+    { key: 'calls',              label: '• Llamadas / Virtuales', value: d.calls || 0 },
+    { key: 'effective_contacts', label: 'Contactos Efectivos',    value: d.effective_contacts },
+    { key: 'interested',         label: 'Interesados',            value: d.interested },
+    { key: 'opportunities',      label: 'Oportunidades',          value: d.opportunities },
   ];
 
-  // Dummy delta for design matching
   let deltaText = '';
   if (title.toLowerCase().includes('ayer')) deltaText = 'vs. día anterior';
   else if (title.toLowerCase().includes('semana')) deltaText = 'vs. semana anterior';
@@ -271,22 +376,17 @@ function PeriodCard({
       className={[
         'flex flex-col rounded-xl transition-all duration-300 relative cursor-pointer',
         isPrimary
-          ? 'bg-white border-2 border-blue-500 shadow-sm' 
-          : 'bg-gray-50 border border-gray-100 opacity-70 hover:opacity-100 hover:bg-white scale-[0.98]'
+          ? 'bg-white border-2 border-blue-500 shadow-sm'
+          : 'bg-gray-50 border border-gray-100 opacity-70 hover:opacity-100 hover:bg-white scale-[0.98]',
       ].join(' ')}
     >
-      {/* Header */}
       <div className={['px-6 py-5 border-b', isPrimary ? 'border-blue-100 bg-blue-50/30' : 'border-gray-100'].join(' ')}>
         <div className="flex justify-between items-center mb-1">
-          <h3 className={['font-bold text-lg', isPrimary ? 'text-gray-900' : 'text-gray-700'].join(' ')}>
-            {title}
-          </h3>
+          <h3 className={['font-bold text-lg', isPrimary ? 'text-gray-900' : 'text-gray-700'].join(' ')}>{title}</h3>
           <span className={['text-[11px] font-bold tracking-wider uppercase', isPrimary ? 'text-blue-600' : 'text-gray-500'].join(' ')}>
             {dateLabel}
           </span>
         </div>
-        
-        {/* Minimal trend indicator */}
         {isPrimary && (
           <div className="flex items-center gap-1.5 mt-2 text-[11px] font-medium text-emerald-600 bg-emerald-50 w-fit px-2 py-0.5 rounded-full">
             <TrendingUp className="w-3 h-3" strokeWidth={3} />
@@ -295,7 +395,6 @@ function PeriodCard({
         )}
       </div>
 
-      {/* Metrics */}
       <div className="flex-1 px-4 py-3 space-y-0.5">
         {metrics.map(({ key, label, value }) => (
           <button
@@ -317,7 +416,6 @@ function PeriodCard({
         ))}
       </div>
 
-      {/* Rate footer */}
       <div className={['px-6 py-4 border-t flex items-center justify-between', isPrimary ? 'border-blue-100' : 'border-gray-100'].join(' ')}>
         {totalManaged > 0 ? (
           <>
