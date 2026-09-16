@@ -119,22 +119,13 @@ export function ProspectCard({ prospect }: { prospect: any }) {
         )}
         
         {/* Mic Button */}
-        <button 
-          onClick={() => {
-            // Because VoiceRecorderModal is part of ProspectHeader and needs state,
-            // we can trigger it by navigating with a query param if it's the list,
-            // but the cleanest way on mobile is an action that brings up the detail view anyway,
-            // or we add the VoiceModal inside the page list.
-            // Let's redirect to the prospect page and trigger the voice recording.
-            // A simple Link works best:
-          }}
+        <Link 
+          href={`/prospects/${prospect.id}?action=voice`}
           className="w-10 h-10 shrink-0 flex items-center justify-center bg-white border border-gray-200 text-purple-600 rounded-full shadow-sm hover:bg-purple-50 transition-transform active:scale-95"
           title="Grabar gestión"
         >
-          <Link href={`/prospects/${prospect.id}?action=voice`} className="flex w-full h-full items-center justify-center">
-            <Mic className="w-4 h-4" />
-          </Link>
-        </button>
+          <Mic className="w-4 h-4" />
+        </Link>
 
         {/* Plus Button */}
         <Link 
