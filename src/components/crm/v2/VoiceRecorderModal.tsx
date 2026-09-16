@@ -139,8 +139,8 @@ export function VoiceRecorderModal({ prospectId, onClose }: VoiceRecorderModalPr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-t-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60 backdrop-blur-sm">
+      <div className="bg-white rounded-t-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col" style={{ maxHeight: 'calc(100vh - 64px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         
         {/* Header */}
         <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100">
@@ -267,10 +267,10 @@ export function VoiceRecorderModal({ prospectId, onClose }: VoiceRecorderModalPr
 
         {/* Footer */}
         {proposal && !isProcessing && (
-          <div className="p-4 border-t border-gray-100 bg-gray-50 flex gap-2">
+          <div className="p-4 border-t border-gray-100 bg-gray-50 flex gap-2 shrink-0">
             <button 
               onClick={() => { setProposal(null); setRecordingTime(0); }}
-              className="flex-1 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold text-[14px] hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold text-[14px] hover:bg-gray-50 transition-colors"
               disabled={isSaving}
             >
               Descartar
@@ -278,7 +278,7 @@ export function VoiceRecorderModal({ prospectId, onClose }: VoiceRecorderModalPr
             <button 
               onClick={handleSave}
               disabled={isSaving}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-[14px] hover:bg-blue-700 transition-colors shadow-sm flex justify-center items-center gap-2"
+              className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-bold text-[14px] hover:bg-blue-700 transition-colors shadow-sm flex justify-center items-center gap-2"
             >
               {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Check className="w-5 h-5" /> Guardar</>}
             </button>
