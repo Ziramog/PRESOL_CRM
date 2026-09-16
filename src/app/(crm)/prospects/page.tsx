@@ -29,14 +29,13 @@ export default async function ProspectsPage({
   const supabaseUser = await createClient();
   const params = await searchParams;
 
-  const hasStructuralFilters = params.class || params.city || params.sector || params.status || params.favorites;
-  
-  if (!hasStructuralFilters && !params.search) {
+  // Only redirect if there are zero searchParams (clean /prospects entry)
+  if (Object.keys(params).length === 0) {
     const { data: { user } } = await supabaseUser.auth.getUser();
     if (user) {
       const { data: profile } = await supabaseAdmin.from('profiles').select('preferences').eq('id', user.id).single();
       const savedFilters = profile?.preferences?.prospect_filters;
-      if (savedFilters) {
+      if (savedFilters && typeof savedFilters === 'string' && savedFilters.trim().length > 0) {
         redirect(`/prospects?${savedFilters}`);
       }
     }

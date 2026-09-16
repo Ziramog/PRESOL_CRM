@@ -47,8 +47,8 @@ export function ProspectFilters({
   useEffect(() => {
     if (!searchParams.toString() && typeof window !== 'undefined') {
       const saved = localStorage.getItem('presol_prospect_filters');
-      if (saved) {
-        router.replace(`/prospects?${saved}`);
+      if (saved && saved.trim()) {
+        router.replace(`/prospects?${saved.trim()}`);
       }
     }
   }, [searchParams, router]);
