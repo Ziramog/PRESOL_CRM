@@ -208,9 +208,19 @@ export function ProspectForm({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Preguntar por (Contacto principal)</label>
                 <input type="text" name="ask_for" defaultValue={prospect?.ask_for || ''} className="w-full text-sm rounded-none border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white" />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono Principal</label>
+                  <input type="tel" name="primary_phone" defaultValue={prospect?.primary_phone || ''} className="w-full text-sm rounded-none border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email general</label>
+                  <input type="email" name="email" defaultValue={prospect?.email || ''} className="w-full text-sm rounded-none border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white" />
+                </div>
+              </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono Principal</label>
-                <input type="tel" name="primary_phone" defaultValue={prospect?.primary_phone || ''} className="w-full text-sm rounded-none border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sitio Web</label>
+                <input type="url" name="website" defaultValue={prospect?.website || ''} placeholder="https://" className="w-full text-sm rounded-none border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Otros Teléfonos (Raw)</label>
