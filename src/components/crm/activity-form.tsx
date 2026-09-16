@@ -88,8 +88,8 @@ export function ActivityForm({
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-white/60 backdrop-blur-md transition-all">
-      <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-sm w-full max-w-lg shadow-2xl overflow-hidden ring-1 ring-black/5 animate-in fade-in zoom-in-95">
-        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 bg-white/50">
+      <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-sm w-full max-w-lg shadow-2xl flex flex-col max-h-[95vh] overflow-hidden ring-1 ring-black/5 animate-in fade-in zoom-in-95">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 bg-white/50 shrink-0">
           <div>
             <h3 className="text-xl font-light tracking-tight text-gray-900">
               {activityToEdit ? 'Editar Actividad' : 'Registrar Actividad'}
@@ -103,7 +103,7 @@ export function ActivityForm({
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form id="activity-form" onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1">
           <input type="hidden" name="prospect_id" value={prospectId} />
           
           <div>
@@ -205,24 +205,25 @@ export function ActivityForm({
           </details>
 
           {error && <div className="text-xs text-rose-600 font-medium bg-rose-50 border border-rose-100 p-2.5 rounded-sm">{error}</div>}
-
-          <div className="flex gap-2.5 pt-3 border-t border-gray-100">
-            <button 
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-sm text-xs font-semibold uppercase tracking-wider hover:bg-gray-100 transition-colors cursor-pointer"
-            >
-              Cancelar
-            </button>
-            <button 
-              type="submit" 
-              disabled={isPending}
-              className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-sm text-xs font-semibold uppercase tracking-wider hover:bg-blue-700 focus:outline-none disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
-            >
-              {isPending ? 'Guardando...' : (activityToEdit ? 'Actualizar actividad' : 'Guardar actividad')}
-            </button>
-          </div>
         </form>
+
+        <div className="flex gap-2.5 px-6 py-4 border-t border-gray-100 bg-gray-50/50 shrink-0">
+          <button 
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm text-xs font-semibold uppercase tracking-wider hover:bg-gray-50 transition-colors cursor-pointer shadow-sm"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            form="activity-form"
+            disabled={isPending}
+            className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-sm text-xs font-semibold uppercase tracking-wider hover:bg-blue-700 focus:outline-none disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
+          >
+            {isPending ? 'Guardando...' : (activityToEdit ? 'Actualizar actividad' : 'Guardar actividad')}
+          </button>
+        </div>
       </div>
     </div>
   );
