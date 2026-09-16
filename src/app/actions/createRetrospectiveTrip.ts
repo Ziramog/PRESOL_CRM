@@ -1,17 +1,17 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 export async function createRetrospectiveTrip(dateString: string, tripName: string) {
   const supabase = await createAdminClient();
+  const authClient = await createClient();
   
-  // Use first admin user for MVP
-  const { data: profiles } = await supabase.from('profiles').select('id').limit(1);
-  const userId = profiles && profiles.length > 0 ? profiles[0].id : null;
+  const { data: { user } } = await authClient.auth.getUser();
+  const userId = user?.id;
 
   if (!userId) {
-    return { error: 'No user found' };
+    return { error: 'No user authenticated' };
   }
 
   // Find all activities for the user on this date without a trip_id

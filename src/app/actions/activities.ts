@@ -1,10 +1,11 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 export async function createActivity(formData: FormData) {
   const supabase = await createAdminClient();
+  const authClient = await createClient();
   
   const prospect_id = formData.get('prospect_id') as string;
   const type = formData.get('type') as string;
@@ -13,13 +14,11 @@ export async function createActivity(formData: FormData) {
   const notes = formData.get('notes') as string;
   const activity_at_str = formData.get('activity_at') as string;
 
-  // En MVP no tenemos un usuario logueado todavía en auth completo, usaremos el primer admin que encontremos
-  // O en caso de error, podríamos saltarnos esto. Pero RLS requiere un `created_by` válido.
-  const { data: profiles } = await supabase.from('profiles').select('id').limit(1);
-  const created_by = profiles && profiles.length > 0 ? profiles[0].id : null;
+  const { data: { user } } = await authClient.auth.getUser();
+  const created_by = user?.id;
 
   if (!created_by) {
-    return { error: 'No admin user found to assign created_by' };
+    return { error: 'No user authenticated' };
   }
 
   const activityData: any = {

@@ -1,21 +1,21 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 export async function createTrip(formData: FormData) {
   const supabase = await createAdminClient();
+  const authClient = await createClient();
   
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
   const trip_date = formData.get('trip_date') as string;
   
-  // Use first admin user for MVP
-  const { data: profiles } = await supabase.from('profiles').select('id').limit(1);
-  const userId = profiles && profiles.length > 0 ? profiles[0].id : null;
+  const { data: { user } } = await authClient.auth.getUser();
+  const userId = user?.id;
 
   if (!userId) {
-    return { error: 'No user found' };
+    return { error: 'No user authenticated' };
   }
 
   const { data: trip, error } = await supabase.from('trips').insert({

@@ -1,10 +1,11 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 export async function createComment(formData: FormData) {
   const supabase = await createAdminClient();
+  const authClient = await createClient();
   
   const prospect_id = formData.get('prospect_id') as string;
   const body = formData.get('body') as string;
@@ -14,11 +15,11 @@ export async function createComment(formData: FormData) {
     return { error: 'Comment body is empty' };
   }
 
-  const { data: profiles } = await supabase.from('profiles').select('id').limit(1);
-  const created_by = profiles && profiles.length > 0 ? profiles[0].id : null;
+  const { data: { user } } = await authClient.auth.getUser();
+  const created_by = user?.id;
 
   if (!created_by) {
-    return { error: 'No user found for created_by' };
+    return { error: 'No user authenticated' };
   }
 
   const { error } = await supabase.from('comments').insert({

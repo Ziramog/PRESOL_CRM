@@ -1,6 +1,6 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { fromZonedTime } from 'date-fns-tz';
 
@@ -8,6 +8,7 @@ const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
 export async function createTask(formData: FormData) {
   const supabase = await createAdminClient();
+  const authClient = await createClient();
   
   const prospect_id = formData.get('prospect_id') as string;
   const title = formData.get('title') as string;
@@ -15,12 +16,11 @@ export async function createTask(formData: FormData) {
   const due_at = formData.get('due_date') as string;
   const priority = formData.get('priority') as string;
   
-  // En MVP no tenemos un usuario logueado todavía en auth completo, usaremos el primer admin que encontremos
-  const { data: profiles } = await supabase.from('profiles').select('id').limit(1);
-  const created_by = profiles && profiles.length > 0 ? profiles[0].id : null;
+  const { data: { user } } = await authClient.auth.getUser();
+  const created_by = user?.id;
 
   if (!created_by) {
-    return { error: 'No user found to assign created_by' };
+    return { error: 'No user authenticated' };
   }
 
   // Parse in Argentina timezone at 12:00:00 to avoid UTC midnight shifting backward into previous date

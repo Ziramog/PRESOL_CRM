@@ -1,10 +1,11 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 export async function createOpportunity(formData: FormData) {
   const supabase = await createAdminClient();
+  const authClient = await createClient();
   
   const prospect_id = formData.get('prospect_id') as string;
   const title = formData.get('title') as string;
@@ -14,12 +15,11 @@ export async function createOpportunity(formData: FormData) {
   const probability = formData.get('probability') as string;
   const expected_close_date = formData.get('expected_close_date') as string;
   
-  // En MVP no tenemos un usuario logueado todavía en auth completo, usaremos el primer admin que encontremos
-  const { data: profiles } = await supabase.from('profiles').select('id').limit(1);
-  const userId = profiles && profiles.length > 0 ? profiles[0].id : null;
+  const { data: { user } } = await authClient.auth.getUser();
+  const userId = user?.id;
 
   if (!userId) {
-    return { error: 'No user found' };
+    return { error: 'No user authenticated' };
   }
 
   const { error } = await supabase.from('opportunities').insert({
