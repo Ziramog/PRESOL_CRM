@@ -16,7 +16,9 @@ export async function POST(req: Request) {
 
     // 1. Transcribe audio using Whisper
     const transcribeFormData = new FormData();
-    transcribeFormData.append('file', file, 'audio.webm');
+    // @ts-ignore - File is a Blob but might have a name property from FormData
+    const filename = file.name || 'audio.webm';
+    transcribeFormData.append('file', file, filename);
     transcribeFormData.append('model', 'whisper-1');
     transcribeFormData.append('language', 'es');
 

@@ -47,9 +47,16 @@ export function VoiceRecorderModal({ prospectId, onClose }: VoiceRecorderModalPr
       };
 
       mediaRecorder.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        // Detectar mime type soportado (Safari/iOS vs Chrome/Android)
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm') 
+          ? 'audio/webm' 
+          : (MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '');
+          
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        const ext = mimeType.includes('mp4') ? 'm4a' : 'webm';
+        
         stream.getTracks().forEach(track => track.stop()); // Stop microphone access
-        await processAudio(blob);
+        await processAudio(blob, ext);
       };
 
       mediaRecorder.start();
@@ -69,7 +76,7 @@ export function VoiceRecorderModal({ prospectId, onClose }: VoiceRecorderModalPr
 
     } catch (err) {
       console.error('Mic access error:', err);
-      setError('No se pudo acceder al micrófono. Verifica los permisos.');
+      setError('No se pudo acceder al micrófono. Verifica los permisos de tu navegador.');
     }
   };
 
@@ -81,11 +88,11 @@ export function VoiceRecorderModal({ prospectId, onClose }: VoiceRecorderModalPr
     }
   };
 
-  const processAudio = async (blob: Blob) => {
+  const processAudio = async (blob: Blob, ext: string = 'webm') => {
     setIsProcessing(true);
     try {
       const formData = new FormData();
-      formData.append('file', blob, 'audio.webm');
+      formData.append('file', blob, `audio.${ext}`);
 
       const response = await fetch('/api/voice', {
         method: 'POST',
