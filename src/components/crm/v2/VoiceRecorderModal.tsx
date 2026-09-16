@@ -24,12 +24,15 @@ export function VoiceRecorderModal({ prospectId, onClose }: VoiceRecorderModalPr
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // Auto-start recording immediately when modal opens
+    startRecording();
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         mediaRecorderRef.current.stop();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const startRecording = async () => {
@@ -136,13 +139,13 @@ export function VoiceRecorderModal({ prospectId, onClose }: VoiceRecorderModalPr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
+      <div className="bg-white rounded-t-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
         
         {/* Header */}
-        <div className="flex justify-between items-center px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+        <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100">
           <h2 className="font-bold text-gray-900 flex items-center gap-2">
-            <Mic className="w-5 h-5 text-blue-600" />
+            <Mic className="w-5 h-5 text-purple-600" />
             Registro por Voz
           </h2>
           <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
@@ -152,49 +155,55 @@ export function VoiceRecorderModal({ prospectId, onClose }: VoiceRecorderModalPr
 
         <div className="p-5 overflow-y-auto">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-[13px] border border-red-100">
+            <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-xl text-[13px] border border-red-100">
               {error}
+              <button onClick={startRecording} className="block mt-2 text-[12px] font-bold underline">
+                Intentar nuevamente
+              </button>
             </div>
           )}
 
+          {/* RECORDING state */}
           {!proposal && !isProcessing && (
-            <div className="flex flex-col items-center justify-center py-8">
-              <div className="mb-6 text-center">
-                <p className="text-gray-500 text-[14px] mb-2">Presiona para grabar un resumen de tu gestión.</p>
-                <p className="text-gray-400 text-[12px]">Máximo 60 segundos.</p>
-              </div>
-
-              {!isRecording ? (
-                <button
-                  onClick={startRecording}
-                  className="w-20 h-20 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-                >
-                  <Mic className="w-8 h-8" />
-                </button>
-              ) : (
-                <div className="flex flex-col items-center">
-                  <div className="text-2xl font-bold text-red-500 mb-6 font-mono">
-                    {formatTime(recordingTime)}
+            <div className="flex flex-col items-center justify-center py-8 gap-6">
+              {isRecording ? (
+                <>
+                  {/* Pulse animation ring */}
+                  <div className="relative flex items-center justify-center">
+                    <span className="absolute w-28 h-28 rounded-full bg-red-400/20 animate-ping" />
+                    <span className="absolute w-24 h-24 rounded-full bg-red-400/30 animate-pulse" />
+                    <button
+                      onClick={stopRecording}
+                      className="relative w-20 h-20 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 z-10"
+                    >
+                      <Square className="w-7 h-7" fill="currentColor" />
+                    </button>
                   </div>
-                  <button
-                    onClick={stopRecording}
-                    className="w-20 h-20 bg-red-100 hover:bg-red-200 text-red-600 border-2 border-red-500 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95"
-                  >
-                    <Square className="w-8 h-8" fill="currentColor" />
-                  </button>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-red-500 font-mono">{formatTime(recordingTime)}</div>
+                    <p className="text-[13px] text-gray-400 mt-1">Toca el cuadrado para finalizar</p>
+                  </div>
+                </>
+              ) : (
+                /* Idle state — only shown briefly before recording starts */
+                <div className="flex flex-col items-center gap-4">
+                  <Loader2 className="w-10 h-10 text-purple-600 animate-spin" />
+                  <p className="text-[14px] text-gray-500">Iniciando micrófono...</p>
                 </div>
               )}
             </div>
           )}
 
+          {/* PROCESSING */}
           {isProcessing && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
-              <p className="text-[14px] font-medium text-gray-700">Analizando con Inteligencia Artificial...</p>
-              <p className="text-[12px] text-gray-400 mt-2">Transcribiendo y estructurando datos</p>
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
+              <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+              <p className="text-[14px] font-medium text-gray-700">Analizando con IA...</p>
+              <p className="text-[12px] text-gray-400">Transcribiendo y estructurando datos</p>
             </div>
           )}
 
+          {/* RESULT */}
           {proposal && !isProcessing && (
             <div className="space-y-4">
               <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
