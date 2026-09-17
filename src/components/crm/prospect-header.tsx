@@ -269,22 +269,6 @@ export function ProspectHeader({
             <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">Prospecto</span>
           </button>
 
-        </div>
-
-        {/* 6. Información Card */}
-        <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors">
-          <div className="flex gap-4">
-            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 border border-slate-200">
-              <FileText className="w-5 h-5 text-slate-700" strokeWidth={2} />
-            </div>
-            <div>
-              <h3 className="text-[16px] font-bold text-slate-900 mb-0.5">Información</h3>
-              <p className="text-[13px] text-slate-500 leading-snug">Revisa y gestiona los detalles de este prospecto comercial.</p>
-            </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-slate-300 shrink-0 ml-2" />
-        </div>
-
       </div>
       
       {showEditModal && (
