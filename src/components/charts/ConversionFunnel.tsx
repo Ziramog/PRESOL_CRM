@@ -92,9 +92,9 @@ export function ConversionFunnel({ data }: { data: FunnelData }) {
         </select>
       </div>
       
-      <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 p-5">
+      <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 p-5 overflow-y-auto">
         {/* Gráfico SVG */}
-        <div className="w-48 h-48 flex flex-col items-center justify-start relative">
+        <div className="w-48 h-48 shrink-0 flex flex-col items-center justify-start relative">
           {steps.map((step, idx) => {
             // Calculate trapezoid widths. 
             // Top width starts at 100%, bottom width tapers down.
@@ -117,7 +117,7 @@ export function ConversionFunnel({ data }: { data: FunnelData }) {
         </div>
 
         {/* Leyenda */}
-        <div className="flex flex-col justify-center space-y-4">
+        <div className="flex flex-col justify-center space-y-4 shrink-0">
           {steps.map((step, idx) => {
             const pct = Math.round((step.value / maxVal) * 100);
             return (
