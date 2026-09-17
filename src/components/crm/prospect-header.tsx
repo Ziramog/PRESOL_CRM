@@ -268,7 +268,7 @@ export function ProspectHeader({
             <span className="text-[11px] sm:text-[13px] font-bold text-slate-900 leading-tight">Eliminar</span>
             <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">Prospecto</span>
           </button>
-
+        </div>
       </div>
       
       {showEditModal && (
