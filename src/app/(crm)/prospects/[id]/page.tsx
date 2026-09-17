@@ -99,10 +99,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
       <RealtimeListener prospectId={id} />
       
       <div>
-        <Link href="/prospects" className="inline-flex items-center text-[11px] font-semibold tracking-wider uppercase text-gray-500 hover:text-gray-900 mb-3 transition-colors">
-          <ChevronLeft className="w-3.5 h-3.5 mr-0.5" />
-          Volver a prospectos
-        </Link>
+        {/* Back link is now inside ProspectHeader */}
         <ProspectHeader 
           prospect={prospect} 
           availableCities={[]} 
