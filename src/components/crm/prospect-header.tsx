@@ -170,92 +170,108 @@ export function ProspectHeader({
           </div>
         </div>
 
-        {/* Action Buttons (Mobile Optimized) */}
-        <div className="flex flex-wrap items-center gap-2">
-          {cleanPhone ? (
-            <>
-              <a 
-                href={`tel:${cleanPhone}`} 
-                className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-blue-600 text-white rounded-lg text-[13px] font-bold hover:bg-blue-700 transition-colors shadow-sm"
-              >
-                <Phone className="w-4 h-4" /> Llamar
-              </a>
-              <a 
-                href={`https://wa.me/${cleanPhone}`} 
-                target="_blank" rel="noopener noreferrer"
-                className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-[#25D366] text-white rounded-lg text-[13px] font-bold hover:bg-[#128C7E] transition-colors shadow-sm"
-              >
-                <MessageCircle className="w-4 h-4" /> WhatsApp
-              </a>
-            </>
-          ) : (
-            <button 
-              onClick={() => setShowEditModal(true)}
-              className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[13px] font-bold hover:bg-amber-100 transition-colors shadow-sm"
-              title="Cargar teléfono desde el móvil o escribirlo"
-            >
-              <Phone className="w-4 h-4" /> + Teléfono
-            </button>
-          )}
-
-          <FavoriteButton
-            prospectId={prospect.id}
-            isFavorite={prospect.is_favorite ?? false}
-            variant="header"
-          />
-
-          <button 
-            onClick={() => setShowVoiceModal(true)}
-            className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-purple-600 text-white rounded-lg text-[13px] font-bold hover:bg-purple-700 transition-colors shadow-sm"
-            title="Nota de voz"
-          >
-            <Mic className="w-4 h-4" />
-            <span className="hidden sm:inline">Voz</span>
-          </button>
-
+        {/* Action Buttons (Mobile Optimized Layout) */}
+        <div className="flex flex-wrap items-center gap-2 mt-4 xl:mt-0 w-full xl:w-auto">
+          
+          {/* Main Action: Actividad */}
           <button 
             onClick={() => setShowActivityForm(true)}
-            className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-white border border-gray-200 rounded-lg text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+            className="h-[42px] flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 bg-[#25D366] text-black border border-transparent rounded-xl text-[15px] font-black hover:bg-[#20bd5a] transition-all shadow-md active:scale-95"
           >
-            <PlusCircle className="w-4 h-4 text-blue-600" />
-            <span className="hidden sm:inline">Actividad</span>
+            <PlusCircle className="w-6 h-6 text-black" strokeWidth={3} />
+            Actividad
           </button>
 
-          <button 
-            onClick={openMaps}
-            className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-white border border-gray-200 rounded-lg text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
-          >
-            <MapPin className="w-4 h-4 text-gray-400" />
-            <span className="hidden sm:inline">Maps</span>
-          </button>
+          {/* Group 1: Comms & Voice */}
+          <div className="flex items-center gap-2">
+            {cleanPhone ? (
+              <>
+                <a 
+                  href={`https://wa.me/${cleanPhone}`} 
+                  target="_blank" rel="noopener noreferrer"
+                  className="w-[42px] h-[42px] shrink-0 flex items-center justify-center bg-[#25D366] text-white rounded-xl hover:bg-[#128C7E] transition-all shadow-sm active:scale-95"
+                  title="WhatsApp"
+                >
+                  <MessageCircle className="w-5 h-5" strokeWidth={2.5} />
+                </a>
+                <a 
+                  href={`tel:${cleanPhone}`} 
+                  className="w-[42px] h-[42px] shrink-0 flex items-center justify-center bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm active:scale-95"
+                  title="Llamar"
+                >
+                  <Phone className="w-5 h-5" strokeWidth={2.5} />
+                </a>
+              </>
+            ) : (
+              <button 
+                onClick={() => setShowEditModal(true)}
+                className="h-[42px] flex items-center justify-center gap-1.5 px-4 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-[13px] font-bold hover:bg-amber-100 transition-all shadow-sm active:scale-95"
+                title="Cargar teléfono desde el móvil o escribirlo"
+              >
+                <Phone className="w-4 h-4" /> + Teléfono
+              </button>
+            )}
 
-          {prospect.website && (
-            <a 
-              href={prospect.website.startsWith('http') ? prospect.website : `https://${prospect.website}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-[36px] flex items-center justify-center gap-1.5 px-3 bg-white border border-gray-200 rounded-lg text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+            <button 
+              onClick={() => setShowVoiceModal(true)}
+              className="w-[42px] h-[42px] shrink-0 flex items-center justify-center bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all shadow-sm active:scale-95"
+              title="Nota de voz"
             >
-              <Globe className="w-4 h-4 text-gray-400" />
-              <span className="hidden sm:inline">Web</span>
-            </a>
-          )}
+              <Mic className="w-5 h-5" strokeWidth={2.5} />
+            </button>
+          </div>
 
-          <button 
-            onClick={() => setShowEditModal(true)}
-            title="Editar prospecto"
-            className="h-[36px] w-[36px] flex items-center justify-center bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors shadow-sm"
-          >
-            <Edit className="w-4 h-4" />
-          </button>
-          
-          <button 
-            onClick={() => setShowDeleteModal(true)}
-            title="Eliminar prospecto"
-            className="h-[36px] w-[36px] flex items-center justify-center bg-white border border-rose-200 rounded-lg text-rose-500 hover:bg-rose-50 hover:border-rose-300 transition-colors shadow-sm"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {/* Group 2: Utilities (Maps, Web, Favorite, Edit) */}
+          <div className="flex items-center gap-2 sm:border-l sm:border-gray-200 sm:pl-2 ml-0 sm:ml-1">
+            {/* Maps (Google Red style) */}
+            <button 
+              onClick={openMaps}
+              className="w-[42px] h-[42px] shrink-0 flex items-center justify-center bg-white border border-gray-200 rounded-xl text-[#EA4335] hover:bg-red-50 hover:border-red-200 transition-all shadow-sm active:scale-95"
+              title="Abrir en Maps"
+            >
+              <MapPin className="w-6 h-6" strokeWidth={2.5} />
+            </button>
+
+            {/* Favorite (Star only) */}
+            <div className="w-[42px] h-[42px] shrink-0 flex items-center justify-center bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all shadow-sm">
+              <FavoriteButton
+                prospectId={prospect.id}
+                isFavorite={prospect.is_favorite ?? false}
+                variant="card"
+              />
+            </div>
+
+            {/* Web */}
+            {prospect.website && (
+              <a 
+                href={prospect.website.startsWith('http') ? prospect.website : `https://${prospect.website}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-[42px] h-[42px] shrink-0 flex items-center justify-center bg-white border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-50 transition-all shadow-sm active:scale-95"
+                title="Visitar web"
+              >
+                <Globe className="w-5 h-5" />
+              </a>
+            )}
+
+            {/* Edit */}
+            <button 
+              onClick={() => setShowEditModal(true)}
+              title="Editar prospecto"
+              className="w-[42px] h-[42px] shrink-0 flex items-center justify-center bg-white border border-gray-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-all shadow-sm active:scale-95"
+            >
+              <Edit className="w-5 h-5" />
+            </button>
+
+            {/* Delete */}
+            <button 
+              onClick={() => setShowDeleteModal(true)}
+              title="Eliminar prospecto"
+              className="w-[42px] h-[42px] shrink-0 flex items-center justify-center bg-white border border-rose-200 rounded-xl text-rose-500 hover:bg-rose-50 hover:border-rose-300 transition-all shadow-sm active:scale-95"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
       
