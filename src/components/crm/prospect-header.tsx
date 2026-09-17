@@ -203,70 +203,70 @@ export function ProspectHeader({
         </button>
 
         {/* 5. Grid Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
           
           {/* Llamar */}
           {cleanPhone ? (
-            <a href={`tel:${cleanPhone}`} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[120px]">
-              <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-2">
-                <Phone className="w-6 h-6 text-blue-600" strokeWidth={2} />
+            <a href={`tel:${cleanPhone}`} className="bg-white rounded-[14px] p-2 sm:p-3 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[100px] sm:h-[110px]">
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-1.5 shrink-0">
+                <Phone className="w-5 h-5 text-blue-600" strokeWidth={2} />
               </div>
-              <span className="text-[14px] font-bold text-slate-900">Llamar</span>
-              <span className="text-[12px] text-slate-400 mt-0.5">{cleanPhone}</span>
+              <span className="text-[11px] sm:text-[13px] font-bold text-slate-900 leading-tight">Llamar</span>
+              <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">{cleanPhone}</span>
             </a>
           ) : (
-            <button onClick={() => setShowEditModal(true)} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[120px]">
-              <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-2">
-                <Phone className="w-6 h-6 text-slate-400" strokeWidth={2} />
+            <button onClick={() => setShowEditModal(true)} className="bg-white rounded-[14px] p-2 sm:p-3 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[100px] sm:h-[110px]">
+              <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center mb-1.5 shrink-0">
+                <Phone className="w-5 h-5 text-slate-400" strokeWidth={2} />
               </div>
-              <span className="text-[14px] font-bold text-slate-900">Llamar</span>
-              <span className="text-[12px] text-slate-400 mt-0.5">+ Teléfono</span>
+              <span className="text-[11px] sm:text-[13px] font-bold text-slate-900 leading-tight">Llamar</span>
+              <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">+ Teléfono</span>
             </button>
           )}
 
           {/* Nota de Voz */}
-          <button onClick={() => setShowVoiceModal(true)} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[120px]">
-            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-2">
-              <Mic className="w-6 h-6 text-blue-600" strokeWidth={2} />
+          <button onClick={() => setShowVoiceModal(true)} className="bg-white rounded-[14px] p-2 sm:p-3 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[100px] sm:h-[110px]">
+            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-1.5 shrink-0">
+              <Mic className="w-5 h-5 text-blue-600" strokeWidth={2} />
             </div>
-            <span className="text-[14px] font-bold text-slate-900">Nota de voz</span>
-            <span className="text-[12px] text-slate-400 mt-0.5">Registrar audio</span>
+            <span className="text-[11px] sm:text-[13px] font-bold text-slate-900 leading-tight">Nota voz</span>
+            <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">Audio</span>
           </button>
 
           {/* Ubicación */}
-          <button onClick={openMaps} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[120px]">
-            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-2">
-              <MapPin className="w-6 h-6 text-blue-600" strokeWidth={2} />
+          <button onClick={openMaps} className="bg-white rounded-[14px] p-2 sm:p-3 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[100px] sm:h-[110px]">
+            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-1.5 shrink-0">
+              <MapPin className="w-5 h-5 text-blue-600" strokeWidth={2} />
             </div>
-            <span className="text-[14px] font-bold text-slate-900">Ver ubicación</span>
-            <span className="text-[12px] text-slate-400 mt-0.5 truncate w-full px-2">{prospect.city || 'Abrir Maps'}</span>
+            <span className="text-[11px] sm:text-[13px] font-bold text-slate-900 leading-tight">Ubicación</span>
+            <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">{prospect.city || 'Mapa'}</span>
           </button>
 
           {/* Favorito */}
-          <button onClick={handleToggleFavorite} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[120px]">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${optimisticFav ? 'bg-blue-600' : 'bg-blue-50'}`}>
-              <Star className={`w-6 h-6 ${optimisticFav ? 'text-white fill-white' : 'text-blue-600'}`} strokeWidth={2} />
+          <button onClick={handleToggleFavorite} className="bg-white rounded-[14px] p-2 sm:p-3 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[100px] sm:h-[110px]">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1.5 shrink-0 ${optimisticFav ? 'bg-blue-600' : 'bg-blue-50'}`}>
+              <Star className={`w-5 h-5 ${optimisticFav ? 'text-white fill-white' : 'text-blue-600'}`} strokeWidth={2} />
             </div>
-            <span className="text-[14px] font-bold text-slate-900">{optimisticFav ? 'Favorito' : 'Marcar favorito'}</span>
-            <span className="text-[12px] text-slate-400 mt-0.5">{optimisticFav ? 'Quitar favorito' : 'Agregar a favoritos'}</span>
+            <span className="text-[11px] sm:text-[13px] font-bold text-slate-900 leading-tight">{optimisticFav ? 'Favorito' : 'Favorito'}</span>
+            <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">{optimisticFav ? 'Quitar' : 'Agregar'}</span>
           </button>
 
           {/* Editar */}
-          <button onClick={() => setShowEditModal(true)} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[120px]">
-            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-2">
-              <Edit className="w-6 h-6 text-blue-600" strokeWidth={2} />
+          <button onClick={() => setShowEditModal(true)} className="bg-white rounded-[14px] p-2 sm:p-3 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[100px] sm:h-[110px]">
+            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-1.5 shrink-0">
+              <Edit className="w-5 h-5 text-blue-600" strokeWidth={2} />
             </div>
-            <span className="text-[14px] font-bold text-slate-900">Editar</span>
-            <span className="text-[12px] text-slate-400 mt-0.5">Modificar datos</span>
+            <span className="text-[11px] sm:text-[13px] font-bold text-slate-900 leading-tight">Editar</span>
+            <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">Datos</span>
           </button>
 
           {/* Eliminar */}
-          <button onClick={() => setShowDeleteModal(true)} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[120px]">
-            <div className="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center mb-2">
-              <Trash2 className="w-6 h-6 text-rose-500" strokeWidth={2} />
+          <button onClick={() => setShowDeleteModal(true)} className="bg-white rounded-[14px] p-2 sm:p-3 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[100px] sm:h-[110px]">
+            <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center mb-1.5 shrink-0">
+              <Trash2 className="w-5 h-5 text-rose-500" strokeWidth={2} />
             </div>
-            <span className="text-[14px] font-bold text-slate-900">Eliminar</span>
-            <span className="text-[12px] text-slate-400 mt-0.5">Quitar prospecto</span>
+            <span className="text-[11px] sm:text-[13px] font-bold text-slate-900 leading-tight">Eliminar</span>
+            <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">Prospecto</span>
           </button>
 
         </div>
