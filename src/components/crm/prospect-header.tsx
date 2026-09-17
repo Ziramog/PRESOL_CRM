@@ -106,25 +106,25 @@ export function ProspectHeader({
         </button>
       </div>
 
-      <div className="flex flex-col mb-6 bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+      <div className="flex flex-col mb-4 bg-white rounded-[24px] p-4 shadow-sm border border-slate-100">
         {/* 2. Title Section */}
-        <div className="flex items-start gap-4 mb-6">
-          <div className="w-[72px] h-[72px] rounded-2xl bg-blue-50 flex items-center justify-center shrink-0">
-            <Building2 className="w-9 h-9 text-blue-600" strokeWidth={1.5} />
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-[56px] h-[56px] rounded-[14px] bg-blue-50 flex items-center justify-center shrink-0">
+            <Building2 className="w-7 h-7 text-blue-600" strokeWidth={1.5} />
           </div>
           
-          <div className="flex flex-col pt-1">
-            <h1 className="text-[22px] font-bold text-slate-900 leading-tight mb-2">
+          <div className="flex flex-col pt-0.5">
+            <h1 className="text-[18px] sm:text-[20px] font-bold text-slate-900 leading-tight mb-1">
               {prospect.company_name}
             </h1>
             
             {/* Status Dropdown */}
-            <div className="relative inline-flex items-center w-max mb-1.5">
+            <div className="relative inline-flex items-center w-max mb-1">
               <select
                 value={prospect.contact_status || 'pending'}
                 onChange={handleStatusChange}
                 disabled={isPending}
-                className={`appearance-none cursor-pointer outline-none transition-colors border pl-8 pr-8 py-1.5 rounded-full text-[13px] font-medium
+                className={`appearance-none cursor-pointer outline-none transition-colors border pl-7 pr-7 py-1 rounded-full text-[12px] font-medium
                   ${isPending ? 'opacity-50' : ''}
                   ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-800 border-blue-200' :
                     prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
@@ -140,8 +140,8 @@ export function ProspectHeader({
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
-              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
-                <span className={`w-2.5 h-2.5 rounded-full 
+              <div className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center">
+                <span className={`w-2 h-2 rounded-full 
                   ${prospect.contact_status === 'in_progress' ? 'bg-blue-500' :
                     prospect.contact_status === 'interested' ? 'bg-emerald-500' :
                     prospect.contact_status === 'opportunity' ? 'bg-indigo-500' :
@@ -152,41 +152,41 @@ export function ProspectHeader({
                   }
                 `}></span>
               </div>
-              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-current opacity-60">
-                <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+              <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-current opacity-60">
+                <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
                   <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
                 </svg>
               </div>
             </div>
             
-            <p className="text-[15px] text-slate-500">
+            <p className="text-[13px] text-slate-500">
               Prospecto comercial
             </p>
           </div>
         </div>
 
         {/* 3. Info List */}
-        <div className="flex flex-col gap-0 border-t border-slate-100 pt-2 mb-6">
-          <div className="flex items-center justify-between py-3 cursor-pointer group">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-slate-100 transition-colors">
-                <MapPin className="w-5 h-5 text-slate-700" strokeWidth={2} />
+        <div className="flex flex-col gap-0 border-t border-slate-100 pt-1.5 mb-4">
+          <div className="flex items-center justify-between py-2.5 cursor-pointer group">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-slate-100 transition-colors">
+                <MapPin className="w-4 h-4 text-slate-700" strokeWidth={2} />
               </div>
-              <span className="text-[16px] text-slate-900">{prospect.city || 'Sin ciudad'}</span>
+              <span className="text-[14px] sm:text-[15px] text-slate-900">{prospect.city || 'Sin ciudad'}</span>
             </div>
-            <ChevronRight className="w-5 h-5 text-slate-300" />
+            <ChevronRight className="w-4 h-4 text-slate-300" />
           </div>
           
-          <div className="w-full h-px bg-slate-100 ml-14"></div>
+          <div className="w-full h-px bg-slate-100 ml-11"></div>
           
-          <div className="flex items-center justify-between py-3 cursor-pointer group">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-slate-100 transition-colors">
-                <Factory className="w-5 h-5 text-slate-700" strokeWidth={2} />
+          <div className="flex items-center justify-between py-2.5 cursor-pointer group">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-slate-100 transition-colors">
+                <Factory className="w-4 h-4 text-slate-700" strokeWidth={2} />
               </div>
-              <span className="text-[16px] text-slate-900">{prospect.sector || prospect.commercial_category || 'Sin rubro'}</span>
+              <span className="text-[14px] sm:text-[15px] text-slate-900">{prospect.sector || prospect.commercial_category || 'Sin rubro'}</span>
             </div>
-            <ChevronRight className="w-5 h-5 text-slate-300" />
+            <ChevronRight className="w-4 h-4 text-slate-300" />
           </div>
         </div>
 
