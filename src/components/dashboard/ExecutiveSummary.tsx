@@ -99,12 +99,16 @@ function KpiModal({
 }
 
 export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate?: string }) {
+  const searchParams = useSearchParams();
+  const currentPeriod = searchParams.get('period') || 'today';
+
   const [modal, setModal] = useState<{ open: boolean; title: string; period: string; periodLabel: string } | null>(null);
   const [modalData, setModalData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeIdx, setActiveIdx] = useState(1); // Start on "Hoy" (index 1)
+  
+  // Initialize to 2 if week, else 1 (middle card)
+  const [activeIdx, setActiveIdx] = useState(currentPeriod === 'week' ? 2 : 1); 
 
-  const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -115,11 +119,17 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   const city = searchParams.get('city') || undefined;
   const category = searchParams.get('category') || undefined;
   const tripId = searchParams.get('trip_id') || undefined;
-  const currentPeriod = searchParams.get('period') || 'today';
 
   const realToday = toZonedTime(new Date(), TZ);
   const zonedNow = baseDate ? new Date(baseDate) : realToday;
   const yesterday = subDays(zonedNow, 1);
+
+  // Sync activeIdx when currentPeriod changes (e.g. after a swipe triggers a URL update)
+  import('react').then(react => {
+    react.useEffect(() => {
+      setActiveIdx(currentPeriod === 'week' ? 2 : 1);
+    }, [currentPeriod, baseDate]);
+  });
 
   const isTodayDate = isSameDay(zonedNow, realToday);
   const isYesterdayDate = isSameDay(zonedNow, subDays(realToday, 1));
@@ -146,9 +156,27 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   const weekLabel = `${weekStart}–${weekEnd}`;
 
   const periods = [
-    { title: titleYesterday, dateLabel: yesterdayLabel, data: summary?.yesterday, periodCode: 'yesterday' as const },
-    { title: titleToday,     dateLabel: todayLabel,     data: summary?.today,     periodCode: 'today'     as const },
-    { title: titleWeek,      dateLabel: weekLabel,      data: summary?.week,      periodCode: 'week'      as const },
+    { 
+      title: titleYesterday, 
+      dateLabel: yesterdayLabel, 
+      data: summary?.yesterday, 
+      periodCode: (currentPeriod === 'today' || currentPeriod === 'week') ? 'yesterday' : 'custom',
+      dateStr: format(yesterday, 'yyyy-MM-dd')
+    },
+    { 
+      title: titleToday,     
+      dateLabel: todayLabel,     
+      data: summary?.today,     
+      periodCode: currentPeriod === 'custom' ? 'custom' : (currentPeriod === 'week' ? 'today' : currentPeriod),
+      dateStr: format(zonedNow, 'yyyy-MM-dd')
+    },
+    { 
+      title: titleWeek,      
+      dateLabel: weekLabel,      
+      data: summary?.week,      
+      periodCode: 'week',
+      dateStr: ''
+    },
   ];
 
   const openModal = async (kpiKey: string, title: string, periodCode: string, periodLabel: string) => {
@@ -168,9 +196,20 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   const goTo = (idx: number) => {
     const clamped = Math.max(0, Math.min(periods.length - 1, idx));
     setActiveIdx(clamped);
-    // Sync URL
+    
+    const targetPeriod = periods[clamped];
     const params = new URLSearchParams(searchParams.toString());
-    params.set('period', periods[clamped].periodCode);
+    
+    if (targetPeriod.periodCode === 'custom') {
+      params.set('period', 'custom');
+      params.set('from_date', targetPeriod.dateStr);
+      params.set('to_date', targetPeriod.dateStr);
+    } else {
+      params.set('period', targetPeriod.periodCode);
+      params.delete('from_date');
+      params.delete('to_date');
+    }
+    
     router.push(`${pathname}?${params.toString()}`, { scroll: false } as any);
   };
 
@@ -208,17 +247,25 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
       <div className="hidden lg:grid lg:grid-cols-3 gap-4">
         {periods.map((p) => (
           <DesktopPeriodCard
-            key={p.periodCode}
+            key={p.periodCode + p.title} // Ensure unique key when titles shift
             title={p.title}
             dateLabel={p.dateLabel}
             data={p.data}
             periodCode={p.periodCode}
-            isPrimary={currentPeriod === p.periodCode || (currentPeriod === 'custom' && p.periodCode === 'today')}
+            isPrimary={currentPeriod === p.periodCode || (currentPeriod === 'custom' && p.periodCode === 'today') || (currentPeriod === 'yesterday' && p.periodCode === 'yesterday' && p.title === 'Ayer')}
             rate={rate}
             onMetricClick={openModal}
-            onCardClick={(code) => {
+            onCardClick={() => {
               const params = new URLSearchParams(searchParams.toString());
-              params.set('period', code);
+              if (p.periodCode === 'custom') {
+                params.set('period', 'custom');
+                params.set('from_date', p.dateStr);
+                params.set('to_date', p.dateStr);
+              } else {
+                params.set('period', p.periodCode);
+                params.delete('from_date');
+                params.delete('to_date');
+              }
               router.push(`${pathname}?${params.toString()}`);
             }}
           />
@@ -351,7 +398,7 @@ function DesktopPeriodCard({
   isPrimary: boolean;
   rate: (c: number, v: number) => string;
   onMetricClick: (kpiKey: string, title: string, period: string, periodLabel: string) => void;
-  onCardClick: (periodCode: string) => void;
+  onCardClick: () => void;
 }) {
   const d = data ?? { visited: 0, managed: 0, visits: 0, calls: 0, effective_contacts: 0, interested: 0, opportunities: 0 };
   const totalManaged = d.managed !== undefined ? d.managed : d.visited;
@@ -372,7 +419,7 @@ function DesktopPeriodCard({
 
   return (
     <div
-      onClick={() => onCardClick(periodCode)}
+      onClick={onCardClick}
       className={[
         'flex flex-col rounded-xl transition-all duration-300 relative cursor-pointer',
         isPrimary
