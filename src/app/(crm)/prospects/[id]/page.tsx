@@ -26,6 +26,9 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
   
   if (!rpcError && rpcData) {
     overview = rpcData;
+    // Fetch all contacts explicitly since RPC might only return primary_contact
+    const { data: contactsData } = await supabase.from('contacts').select('*').eq('prospect_id', id).order('created_at', { ascending: true });
+    overview.contacts = contactsData || [];
   } else {
     // Fallback if RPC is not yet applied
     const [
@@ -73,6 +76,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
 
     overview = {
       prospect: p,
+      contacts: contacts,
       primary_contact: primaryContact,
       secondary_contacts_count: Math.max(0, contacts.length - 1),
       next_task: tasks[0],
@@ -93,6 +97,8 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
     ...overview.prospect,
     is_favorite: Boolean(overview.prospect.is_favorite || overview.prospect.source_payload?.is_favorite),
   };
+
+  const displayContacts = overview.contacts || (overview.primary_contact ? [overview.primary_contact] : []);
 
   return (
     <div className="w-full px-4 md:px-8 pt-4 pb-24 md:pb-8">
@@ -115,7 +121,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
         {/* ROW 1: 3 columns */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
           <NextActionCard tasks={overview.next_task ? [overview.next_task] : []} prospectId={id} />
-          <PrimaryContactCard contacts={overview.primary_contact ? [overview.primary_contact] : []} prospect={prospect} secondaryCount={overview.secondary_contacts_count} />
+          <PrimaryContactCard contacts={displayContacts} prospect={prospect} secondaryCount={overview.secondary_contacts_count} />
           <CommercialStatusCard prospect={prospect} latestActivity={overview.latest_activity} />
         </div>
         
