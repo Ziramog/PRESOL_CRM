@@ -56,6 +56,29 @@ export function ProspectForm({
     prospect?.city && !initialIsPredefined ? prospect.city : ''
   );
 
+  const [corridor, setCorridor] = useState(prospect?.corridor || '');
+
+  // Basic corridor mapping based on city
+  const CITY_CORRIDORS: Record<string, string> = {
+    'Villa María': 'Ruta 9 Sur',
+    'Rosario': 'Ruta 9',
+    'Córdoba': 'Ruta 9',
+    'San Francisco': 'Ruta 19',
+    'Río Cuarto': 'Ruta 36',
+    'Mar del Plata': 'Ruta 2',
+    'Bahía Blanca': 'Ruta 3',
+    'Campana': 'Ruta 9',
+    'Zárate': 'Ruta 9'
+  };
+
+  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCity = e.target.value;
+    setCitySelect(newCity);
+    if (CITY_CORRIDORS[newCity]) {
+      setCorridor(CITY_CORRIDORS[newCity]);
+    }
+  };
+
   const currentProvinceCities = provinceSelect ? (ARGENTINA_LOCATIONS[provinceSelect] || []) : [];
 
   // Combine DB available cities with province cities if needed, but since we have a province selector, 
@@ -283,7 +306,7 @@ export function ProspectForm({
                   <label className="block text-sm font-bold text-slate-700 mb-1.5">Ciudad / Localidad</label>
                   <select 
                     value={citySelect} 
-                    onChange={(e) => setCitySelect(e.target.value)} 
+                    onChange={handleCityChange} 
                     disabled={!provinceSelect}
                     className="w-full text-sm rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white py-2.5 px-3 mb-2 disabled:opacity-50 disabled:bg-slate-50"
                   >
@@ -306,7 +329,14 @@ export function ProspectForm({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1.5">Corredor</label>
-                  <input type="text" name="corridor" defaultValue={prospect?.corridor || ''} className="w-full text-sm rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white py-2.5 px-3" placeholder="Ej: Ruta 9 Sur" />
+                  <input 
+                    type="text" 
+                    name="corridor" 
+                    value={corridor}
+                    onChange={(e) => setCorridor(e.target.value)}
+                    className="w-full text-sm rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white py-2.5 px-3" 
+                    placeholder="Ej: Ruta 9 Sur" 
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1.5">Microzona</label>
