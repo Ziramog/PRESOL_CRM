@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapPin, Phone, MessageCircle, PlusCircle, Trash2, AlertTriangle, X, Edit, Building2, Factory, Mic, ChevronLeft, MoreHorizontal, ChevronRight, Star, FileText } from 'lucide-react';
+import { MapPin, Phone, MessageCircle, PlusCircle, Trash2, AlertTriangle, X, Edit, Building2, Factory, Mic, ChevronLeft, MoreHorizontal, ChevronRight, Heart, Calendar, Clock, User, ArrowUpRight } from 'lucide-react';
 import { ActivityForm } from './activity-form';
 import { TaskForm } from './task-form';
 import { OpportunityForm } from './opportunity-form';
@@ -14,18 +14,41 @@ import { PROSPECT_STATUS } from '@/lib/constants';
 
 const STATUS_OPTIONS = Object.entries(PROSPECT_STATUS).map(([value, label]) => ({ value, label }));
 
+function formatDateDistance(dateString: string) {
+  if (!dateString) return '';
+  const d = new Date(dateString);
+  const now = new Date();
+  const diffInDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 3600 * 24));
+  
+  if (diffInDays === 0) return 'Hoy';
+  if (diffInDays === 1) return 'Ayer';
+  if (diffInDays < 7) return `Hace ${diffInDays} días`;
+  return new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'short' }).format(d);
+}
+
+function formatFutureDate(dateString: string) {
+  if (!dateString) return '';
+  const d = new Date(dateString);
+  return new Intl.DateTimeFormat('es-AR', { weekday: 'short', day: 'numeric', month: 'short' }).format(d);
+}
+
 export function ProspectHeader({ 
   prospect, 
   availableCities = [], 
-  availableSectors = [] 
+  availableSectors = [],
+  latestActivity,
+  nextTask
 }: { 
   prospect: any, 
   availableCities?: string[], 
-  availableSectors?: string[] 
+  availableSectors?: string[],
+  latestActivity?: any,
+  nextTask?: any
 }) {
   const router = useRouter();
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [showVoiceModal, setShowVoiceModal] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -36,6 +59,7 @@ export function ProspectHeader({
       }
     }
   }, [prospect.id]);
+
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showOpportunityForm, setShowOpportunityForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -93,182 +117,248 @@ export function ProspectHeader({
   return (
     <>
       {/* 1. Header Navigation */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 px-1">
         <button 
           onClick={() => router.push('/prospects')}
-          className="flex items-center gap-2 text-[17px] font-medium text-slate-900"
+          className="flex items-center gap-2 text-[17px] font-medium text-slate-900 active:opacity-70 transition-opacity"
         >
           <ChevronLeft className="w-6 h-6" strokeWidth={2.5} />
           Prospecto
         </button>
-        <button className="w-10 h-10 flex items-center justify-center rounded-full border border-slate-200 text-slate-700 bg-white shadow-sm hover:bg-slate-50 transition-colors">
-          <MoreHorizontal className="w-5 h-5" />
-        </button>
       </div>
 
-      <div className="flex flex-col mb-4 bg-white rounded-[24px] p-4 shadow-sm border border-slate-100">
-        {/* 2. Title Section */}
-        <div className="flex items-start gap-3 mb-4">
-          <div className="w-[56px] h-[56px] rounded-[14px] bg-blue-50 flex items-center justify-center shrink-0">
-            <Building2 className="w-7 h-7 text-blue-600" strokeWidth={1.5} />
-          </div>
+      <div className="relative flex flex-col mb-4 bg-white rounded-[24px] p-5 shadow-sm border border-slate-100">
+        
+        {/* Top Right Actions (Heart & Menu) */}
+        <div className="absolute top-4 right-4 flex items-center gap-1.5">
+          <button 
+            onClick={handleToggleFavorite}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors active:scale-90 ${optimisticFav ? 'bg-rose-50 text-rose-500' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+          >
+            <Heart className={`w-5 h-5 ${optimisticFav ? 'fill-rose-500' : ''}`} strokeWidth={optimisticFav ? 0 : 2} />
+          </button>
           
-          <div className="flex flex-col pt-0.5">
-            <h1 className="text-[18px] sm:text-[20px] font-bold text-slate-900 leading-tight mb-1">
-              {prospect.company_name}
-            </h1>
+          <div className="relative">
+            <button 
+              onClick={() => setShowMenu(!showMenu)}
+              className="w-9 h-9 flex items-center justify-center rounded-full text-slate-600 bg-slate-50 hover:bg-slate-100 transition-colors active:scale-90"
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
             
-            {/* Status Dropdown */}
-            <div className="relative inline-flex items-center w-max mb-1">
-              <select
-                value={prospect.contact_status || 'pending'}
-                onChange={handleStatusChange}
-                disabled={isPending}
-                className={`appearance-none cursor-pointer outline-none transition-colors border pl-7 pr-7 py-1 rounded-full text-[12px] font-medium
-                  ${isPending ? 'opacity-50' : ''}
-                  ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-800 border-blue-200' :
-                    prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
-                    prospect.contact_status === 'opportunity' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' :
-                    prospect.contact_status === 'quote' ? 'bg-purple-50 text-purple-800 border-purple-200' :
-                    prospect.contact_status === 'customer' ? 'bg-green-50 text-green-800 border-green-200' :
-                    prospect.contact_status === 'discarded' ? 'bg-rose-50 text-rose-800 border-rose-200' :
-                    'bg-amber-50 text-amber-800 border-amber-200'
-                  }
-                `}
-              >
-                {STATUS_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center">
-                <span className={`w-2 h-2 rounded-full 
-                  ${prospect.contact_status === 'in_progress' ? 'bg-blue-500' :
-                    prospect.contact_status === 'interested' ? 'bg-emerald-500' :
-                    prospect.contact_status === 'opportunity' ? 'bg-indigo-500' :
-                    prospect.contact_status === 'quote' ? 'bg-purple-500' :
-                    prospect.contact_status === 'customer' ? 'bg-green-500' :
-                    prospect.contact_status === 'discarded' ? 'bg-rose-500' :
-                    'bg-amber-500'
-                  }
-                `}></span>
-              </div>
-              <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-current opacity-60">
-                <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
-                  <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
-                </svg>
-              </div>
-            </div>
-            
-            <p className="text-[13px] text-slate-500">
-              Prospecto comercial
-            </p>
+            {showMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-100 z-50 py-1.5 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                  <button 
+                    onClick={() => { setShowMenu(false); setShowEditModal(true); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-[14px] font-medium text-slate-700 hover:bg-slate-50 transition-colors text-left"
+                  >
+                    <Edit className="w-4 h-4 text-slate-400" />
+                    Editar prospecto
+                  </button>
+                  <div className="w-full h-px bg-slate-100 my-1"></div>
+                  <button 
+                    onClick={() => { setShowMenu(false); setShowDeleteModal(true); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-[14px] font-medium text-rose-600 hover:bg-rose-50 transition-colors text-left"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-500" />
+                    Eliminar prospecto
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* 3. Info List */}
-        <div className="flex flex-col gap-0 border-t border-slate-100 pt-1.5 mb-4">
-          <div className="flex items-center justify-between py-2.5 cursor-pointer group">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-slate-100 transition-colors">
-                <MapPin className="w-4 h-4 text-slate-700" strokeWidth={2} />
-              </div>
-              <span className="text-[14px] sm:text-[15px] text-slate-900">{prospect.city || 'Sin ciudad'}</span>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-300" />
+        {/* 2. Title Section */}
+        <div className="flex flex-col items-center sm:items-start text-center sm:text-left gap-3 mb-5 mt-2">
+          <div className="w-[64px] h-[64px] rounded-[16px] bg-blue-50 flex items-center justify-center shrink-0 mx-auto sm:mx-0">
+            <Building2 className="w-8 h-8 text-blue-600" strokeWidth={1.5} />
           </div>
           
-          <div className="w-full h-px bg-slate-100 ml-11"></div>
-          
-          <div className="flex items-center justify-between py-2.5 cursor-pointer group">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-slate-100 transition-colors">
-                <Factory className="w-4 h-4 text-slate-700" strokeWidth={2} />
+          <div className="flex flex-col mt-1 w-full px-4 sm:px-0">
+            <h1 className="text-[22px] font-bold text-slate-900 leading-tight mb-1">
+              {prospect.company_name}
+            </h1>
+            <p className="text-[14px] text-slate-500 mb-3">
+              Prospecto comercial
+            </p>
+            
+            {/* Status & Priority Row */}
+            <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+              {/* Status Dropdown */}
+              <div className="relative inline-flex items-center">
+                <select
+                  value={prospect.contact_status || 'pending'}
+                  onChange={handleStatusChange}
+                  disabled={isPending}
+                  className={`appearance-none cursor-pointer outline-none transition-colors border pl-8 pr-7 py-1.5 rounded-full text-[12px] font-bold tracking-wide
+                    ${isPending ? 'opacity-50' : ''}
+                    ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-800 border-blue-200' :
+                      prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+                      prospect.contact_status === 'opportunity' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' :
+                      prospect.contact_status === 'quote' ? 'bg-purple-50 text-purple-800 border-purple-200' :
+                      prospect.contact_status === 'customer' ? 'bg-green-50 text-green-800 border-green-200' :
+                      prospect.contact_status === 'discarded' ? 'bg-rose-50 text-rose-800 border-rose-200' :
+                      'bg-amber-50 text-amber-800 border-amber-200'
+                    }
+                  `}
+                >
+                  {STATUS_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                  <span className={`w-2 h-2 rounded-full 
+                    ${prospect.contact_status === 'in_progress' ? 'bg-blue-500' :
+                      prospect.contact_status === 'interested' ? 'bg-emerald-500' :
+                      prospect.contact_status === 'opportunity' ? 'bg-indigo-500' :
+                      prospect.contact_status === 'quote' ? 'bg-purple-500' :
+                      prospect.contact_status === 'customer' ? 'bg-green-500' :
+                      prospect.contact_status === 'discarded' ? 'bg-rose-500' :
+                      'bg-amber-500'
+                    }
+                  `}></span>
+                </div>
+                <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-current opacity-60">
+                  <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
+                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                  </svg>
+                </div>
               </div>
-              <span className="text-[14px] sm:text-[15px] text-slate-900">{prospect.sector || prospect.commercial_category || 'Sin rubro'}</span>
+
+              {/* Priority */}
+              {prospect.priority === 'Alta' && (
+                <div className="flex items-center gap-1 bg-rose-50 border border-rose-100 text-rose-700 px-3 py-1.5 rounded-full text-[12px] font-bold">
+                  <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={3} />
+                  Alta prioridad
+                </div>
+              )}
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-300" />
+          </div>
+        </div>
+
+        {/* 3. Compact Info Row (Location | Sector) */}
+        <div className="flex items-center justify-center sm:justify-start gap-3 text-[13px] text-slate-600 mb-6 font-medium">
+          <div className="flex items-center gap-1.5">
+            <MapPin className="w-4 h-4 text-slate-400" />
+            <span className="truncate max-w-[120px]">{prospect.city || 'Sin ciudad'}</span>
+          </div>
+          <span className="text-slate-300">|</span>
+          <div className="flex items-center gap-1.5">
+            <Factory className="w-4 h-4 text-slate-400" />
+            <span className="truncate max-w-[120px]">{prospect.sector || prospect.commercial_category || 'Sin rubro'}</span>
           </div>
         </div>
 
         {/* 4. Primary Action Button */}
         <button 
           onClick={() => setShowActivityForm(true)}
-          className="w-full h-[56px] bg-[#1456c2] text-white rounded-[20px] flex items-center justify-between px-6 shadow-md hover:bg-blue-800 transition-all active:scale-[0.98] mb-6"
+          className="w-full h-[54px] bg-[#1456c2] text-white rounded-2xl flex items-center justify-center gap-2.5 shadow-md hover:bg-blue-800 transition-all active:scale-[0.98] mb-5"
         >
-          <div className="flex items-center gap-3">
-            <PlusCircle className="w-7 h-7" strokeWidth={2} />
-            <span className="text-[17px] font-semibold tracking-wide">Registrar actividad</span>
-          </div>
-          <ChevronRight className="w-5 h-5 opacity-70" />
+          <PlusCircle className="w-6 h-6" strokeWidth={2} />
+          <span className="text-[16px] font-semibold tracking-wide">Registrar actividad</span>
         </button>
 
-        {/* 5. Grid Actions */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
-          
+        {/* 5. Compact Quick Actions (4 items, 1 row) */}
+        <div className="flex items-center justify-between gap-2 mb-6">
           {/* Llamar */}
           {cleanPhone ? (
-            <a href={`tel:${cleanPhone}`} className="bg-white rounded-[14px] p-2 sm:p-3 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[100px] sm:h-[110px]">
-              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-1.5 shrink-0">
+            <a href={`tel:${cleanPhone}`} className="flex flex-col items-center flex-1 gap-1.5 group cursor-pointer active:scale-95 transition-transform">
+              <div className="w-12 h-12 rounded-2xl border border-slate-100 bg-white shadow-sm flex items-center justify-center group-hover:bg-slate-50 transition-colors">
                 <Phone className="w-5 h-5 text-blue-600" strokeWidth={2} />
               </div>
-              <span className="text-[11px] sm:text-[13px] font-bold text-slate-900 leading-tight">Llamar</span>
-              <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">{cleanPhone}</span>
+              <span className="text-[11px] font-semibold text-slate-700">Llamar</span>
             </a>
           ) : (
-            <button onClick={() => setShowEditModal(true)} className="bg-white rounded-[14px] p-2 sm:p-3 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[100px] sm:h-[110px]">
-              <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center mb-1.5 shrink-0">
+            <button onClick={() => setShowEditModal(true)} className="flex flex-col items-center flex-1 gap-1.5 group cursor-pointer active:scale-95 transition-transform">
+              <div className="w-12 h-12 rounded-2xl border border-slate-100 bg-white shadow-sm flex items-center justify-center group-hover:bg-slate-50 transition-colors">
                 <Phone className="w-5 h-5 text-slate-400" strokeWidth={2} />
               </div>
-              <span className="text-[11px] sm:text-[13px] font-bold text-slate-900 leading-tight">Llamar</span>
-              <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">+ Teléfono</span>
+              <span className="text-[11px] font-semibold text-slate-700">Llamar</span>
             </button>
           )}
 
           {/* Nota de Voz */}
-          <button onClick={() => setShowVoiceModal(true)} className="bg-white rounded-[14px] p-2 sm:p-3 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[100px] sm:h-[110px]">
-            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-1.5 shrink-0">
+          <button onClick={() => setShowVoiceModal(true)} className="flex flex-col items-center flex-1 gap-1.5 group cursor-pointer active:scale-95 transition-transform">
+            <div className="w-12 h-12 rounded-2xl border border-slate-100 bg-white shadow-sm flex items-center justify-center group-hover:bg-slate-50 transition-colors">
               <Mic className="w-5 h-5 text-blue-600" strokeWidth={2} />
             </div>
-            <span className="text-[11px] sm:text-[13px] font-bold text-slate-900 leading-tight">Nota voz</span>
-            <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">Audio</span>
+            <span className="text-[11px] font-semibold text-slate-700">Audio</span>
           </button>
+
+          {/* WhatsApp */}
+          {cleanPhone ? (
+            <a href={`whatsapp://send?phone=${cleanPhone}`} className="flex flex-col items-center flex-1 gap-1.5 group cursor-pointer active:scale-95 transition-transform">
+              <div className="w-12 h-12 rounded-2xl border border-slate-100 bg-white shadow-sm flex items-center justify-center group-hover:bg-slate-50 transition-colors">
+                <MessageCircle className="w-5 h-5 text-[#25D366]" strokeWidth={2} />
+              </div>
+              <span className="text-[11px] font-semibold text-slate-700">WhatsApp</span>
+            </a>
+          ) : (
+            <button onClick={() => setShowEditModal(true)} className="flex flex-col items-center flex-1 gap-1.5 group cursor-pointer active:scale-95 transition-transform">
+              <div className="w-12 h-12 rounded-2xl border border-slate-100 bg-white shadow-sm flex items-center justify-center group-hover:bg-slate-50 transition-colors">
+                <MessageCircle className="w-5 h-5 text-slate-400" strokeWidth={2} />
+              </div>
+              <span className="text-[11px] font-semibold text-slate-700">WhatsApp</span>
+            </button>
+          )}
 
           {/* Ubicación */}
-          <button onClick={openMaps} className="bg-white rounded-[14px] p-2 sm:p-3 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[100px] sm:h-[110px]">
-            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-1.5 shrink-0">
+          <button onClick={openMaps} className="flex flex-col items-center flex-1 gap-1.5 group cursor-pointer active:scale-95 transition-transform">
+            <div className="w-12 h-12 rounded-2xl border border-slate-100 bg-white shadow-sm flex items-center justify-center group-hover:bg-slate-50 transition-colors">
               <MapPin className="w-5 h-5 text-blue-600" strokeWidth={2} />
             </div>
-            <span className="text-[11px] sm:text-[13px] font-bold text-slate-900 leading-tight">Ubicación</span>
-            <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">{prospect.city || 'Mapa'}</span>
-          </button>
-
-          {/* Favorito */}
-          <button onClick={handleToggleFavorite} className="bg-white rounded-[14px] p-2 sm:p-3 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[100px] sm:h-[110px]">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1.5 shrink-0 ${optimisticFav ? 'bg-blue-600' : 'bg-blue-50'}`}>
-              <Star className={`w-5 h-5 ${optimisticFav ? 'text-white fill-white' : 'text-blue-600'}`} strokeWidth={2} />
-            </div>
-            <span className="text-[11px] sm:text-[13px] font-bold text-slate-900 leading-tight">{optimisticFav ? 'Favorito' : 'Favorito'}</span>
-            <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">{optimisticFav ? 'Quitar' : 'Agregar'}</span>
-          </button>
-
-          {/* Editar */}
-          <button onClick={() => setShowEditModal(true)} className="bg-white rounded-[14px] p-2 sm:p-3 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[100px] sm:h-[110px]">
-            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-1.5 shrink-0">
-              <Edit className="w-5 h-5 text-blue-600" strokeWidth={2} />
-            </div>
-            <span className="text-[11px] sm:text-[13px] font-bold text-slate-900 leading-tight">Editar</span>
-            <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">Datos</span>
-          </button>
-
-          {/* Eliminar */}
-          <button onClick={() => setShowDeleteModal(true)} className="bg-white rounded-[14px] p-2 sm:p-3 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer h-[100px] sm:h-[110px]">
-            <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center mb-1.5 shrink-0">
-              <Trash2 className="w-5 h-5 text-rose-500" strokeWidth={2} />
-            </div>
-            <span className="text-[11px] sm:text-[13px] font-bold text-slate-900 leading-tight">Eliminar</span>
-            <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5 truncate w-full px-1">Prospecto</span>
+            <span className="text-[11px] font-semibold text-slate-700">Mapa</span>
           </button>
         </div>
+
+        {/* 6. Context Rows (Executive Feature) */}
+        <div className="flex flex-col bg-slate-50/50 rounded-2xl border border-slate-100 overflow-hidden divide-y divide-slate-100">
+          
+          {/* Last Activity */}
+          <div className="flex items-center gap-3 p-3.5 hover:bg-slate-50 transition-colors">
+            <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+              <Clock className="w-4 h-4 text-slate-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Última actividad</p>
+              <p className="text-[14px] font-bold text-slate-900 truncate">
+                {latestActivity ? latestActivity.type : 'Sin actividad reciente'}
+              </p>
+              {latestActivity && (
+                <p className="text-[12px] text-slate-500 mt-0.5">
+                  {formatDateDistance(latestActivity.activity_at)} · {latestActivity.profiles?.full_name || 'Usuario'}
+                </p>
+              )}
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-300" />
+          </div>
+
+          {/* Next Task */}
+          <div className="flex items-center gap-3 p-3.5 hover:bg-slate-50 transition-colors">
+            <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+              <Calendar className="w-4 h-4 text-slate-600" />
+            </div>
+            <div className="flex-1 min-w-0 flex justify-between items-center">
+              <div>
+                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Próxima acción</p>
+                <p className="text-[14px] font-bold text-slate-900 truncate">
+                  {nextTask ? nextTask.title : 'Sin tareas pendientes'}
+                </p>
+              </div>
+              {nextTask && (
+                <span className="text-[12px] font-medium text-slate-600 bg-white border border-slate-200 px-2 py-1 rounded-lg shrink-0">
+                  {formatFutureDate(nextTask.due_at)}
+                </span>
+              )}
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-300 ml-1" />
+          </div>
+
+        </div>
+
       </div>
       
       {showEditModal && (

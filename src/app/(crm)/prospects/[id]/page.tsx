@@ -104,6 +104,8 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
           prospect={prospect} 
           availableCities={[]} 
           availableSectors={[]} 
+          latestActivity={overview.latest_activity}
+          nextTask={overview.next_task}
         />
       </div>
 
