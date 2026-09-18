@@ -76,5 +76,19 @@ export async function updateContact(id: string, formData: FormData) {
   return { success: true, contact: data };
 }
 
+export async function deleteContact(id: string, prospect_id: string) {
+  const supabase = createAdminClient();
 
+  const { error } = await supabase
+    .from('contacts')
+    .delete()
+    .eq('id', id);
 
+  if (error) {
+    console.error('Error deleting contact:', error);
+    return { error: 'Error al eliminar el contacto' };
+  }
+
+  revalidatePath(`/prospects/${prospect_id}`);
+  return { success: true };
+}

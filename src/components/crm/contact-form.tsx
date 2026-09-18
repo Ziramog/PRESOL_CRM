@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { createContact, updateContact } from '@/app/actions/contacts';
-import { X, BookUser, UserCircle, Briefcase, Phone, Mail, Camera } from 'lucide-react';
+import { createContact, updateContact, deleteContact } from '@/app/actions/contacts';
+import { X, BookUser, UserCircle, Briefcase, Phone, Mail, Camera, Trash2 } from 'lucide-react';
 import { MobileContactImportModal } from '@/components/crm/v2/MobileContactImportModal';
 
 export function ContactForm({ 
@@ -128,6 +128,18 @@ export function ContactForm({
     }
   };
 
+  const handleDelete = async () => {
+    if (!contact || !confirm('¿Estás seguro de que deseas eliminar este contacto?')) return;
+    setIsPending(true);
+    const result = await deleteContact(contact.id, prospectId);
+    if (result.error) {
+      setError(result.error);
+      setIsPending(false);
+    } else {
+      onClose();
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
@@ -143,9 +155,22 @@ export function ContactForm({
               <p className="text-[13px] text-slate-500 font-medium">Datos del perfil</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors bg-slate-50">
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {contact && (
+              <button 
+                type="button"
+                onClick={handleDelete}
+                disabled={isPending}
+                className="p-2 rounded-full text-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                title="Eliminar contacto"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            )}
+            <button onClick={onClose} className="p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors bg-slate-50">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
         
         <div className="overflow-y-auto p-5 sm:p-6 flex-1 bg-slate-50/50">

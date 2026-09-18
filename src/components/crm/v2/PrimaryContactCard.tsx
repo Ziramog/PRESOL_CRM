@@ -47,11 +47,19 @@ export function PrimaryContactCard({ contacts, prospect, secondaryCount = 0 }: {
   };
 
   const sliderRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   
   const scroll = (direction: 'left' | 'right') => {
     if (sliderRef.current) {
       const scrollAmount = sliderRef.current.offsetWidth;
       sliderRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const handleScroll = () => {
+    if (sliderRef.current) {
+      const index = Math.round(sliderRef.current.scrollLeft / sliderRef.current.offsetWidth);
+      setActiveIndex(index);
     }
   };
 
@@ -105,8 +113,10 @@ export function PrimaryContactCard({ contacts, prospect, secondaryCount = 0 }: {
             </button>
           </div>
         ) : (
+          <>
           <div 
             ref={sliderRef}
+            onScroll={handleScroll}
             className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 -mx-1 px-1 custom-scrollbar hide-scroll-mobile"
           >
             {sortedContacts.map((contact, idx) => {
@@ -179,8 +189,23 @@ export function PrimaryContactCard({ contacts, prospect, secondaryCount = 0 }: {
               );
             })}
           </div>
-        )}
-      </div>
+          
+          {/* Pagination Dots */}
+          {sortedContacts.length > 1 && (
+            <div className="flex justify-center items-center gap-1.5 mt-3">
+              {sortedContacts.map((_, idx) => (
+                <div 
+                  key={idx} 
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    idx === activeIndex ? 'w-4 bg-blue-400' : 'w-1.5 bg-slate-200'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
     </div>
   );
 }
