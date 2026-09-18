@@ -12,6 +12,7 @@ const PERIOD_TITLES: Record<string, string> = {
   today: 'Hoy',
   yesterday: 'Ayer',
   week: 'Esta semana',
+  month: 'Este mes',
   custom: 'Período personalizado',
 };
 

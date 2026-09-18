@@ -105,9 +105,9 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   const [modal, setModal] = useState<{ open: boolean; title: string; period: string; periodLabel: string } | null>(null);
   const [modalData, setModalData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  
-  // Initialize to 2 if week, else 1 (middle card)
-  const [activeIdx, setActiveIdx] = useState(currentPeriod === 'week' ? 2 : 1); 
+  // Initialize to 3 if month, 2 if week, else 1 (middle card)
+  const getIdx = (period: string) => period === 'month' ? 3 : period === 'week' ? 2 : 1;
+  const [activeIdx, setActiveIdx] = useState(getIdx(currentPeriod)); 
 
   const pathname = usePathname();
   const router = useRouter();
@@ -127,7 +127,7 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   // Sync activeIdx when currentPeriod changes (e.g. after a swipe triggers a URL update)
   import('react').then(react => {
     react.useEffect(() => {
-      setActiveIdx(currentPeriod === 'week' ? 2 : 1);
+      setActiveIdx(getIdx(currentPeriod));
     }, [currentPeriod, baseDate]);
   });
 
@@ -154,20 +154,21 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   const weekStart = format(startOfWeek(zonedNow, { weekStartsOn: 1 }), 'd', { locale: es });
   const weekEnd = format(endOfWeek(zonedNow, { weekStartsOn: 1 }), "d MMM", { locale: es });
   const weekLabel = `${weekStart}–${weekEnd}`;
+  const monthLabel = format(zonedNow, "MMMM", { locale: es });
 
   const periods = [
     { 
       title: titleYesterday, 
       dateLabel: yesterdayLabel, 
       data: summary?.yesterday, 
-      periodCode: (currentPeriod === 'today' || currentPeriod === 'week') ? 'yesterday' : 'custom',
+      periodCode: (currentPeriod === 'today' || currentPeriod === 'week' || currentPeriod === 'month') ? 'yesterday' : 'custom',
       dateStr: format(yesterday, 'yyyy-MM-dd')
     },
     { 
       title: titleToday,     
       dateLabel: todayLabel,     
       data: summary?.today,     
-      periodCode: currentPeriod === 'custom' ? 'custom' : (currentPeriod === 'week' ? 'today' : currentPeriod),
+      periodCode: currentPeriod === 'custom' ? 'custom' : (currentPeriod === 'week' || currentPeriod === 'month' ? 'today' : currentPeriod),
       dateStr: format(zonedNow, 'yyyy-MM-dd')
     },
     { 
@@ -175,6 +176,13 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
       dateLabel: weekLabel,      
       data: summary?.week,      
       periodCode: 'week',
+      dateStr: ''
+    },
+    { 
+      title: "Mes",      
+      dateLabel: monthLabel,      
+      data: summary?.month,      
+      periodCode: 'month',
       dateStr: ''
     },
   ];

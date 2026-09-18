@@ -29,6 +29,8 @@ export function DashboardFilters({ currentParams }: { currentParams?: Record<str
     baseDateLabel = 'Ayer';
   } else if (currentPeriod === 'week') {
     baseDateLabel = 'Esta semana';
+  } else if (currentPeriod === 'month') {
+    baseDateLabel = 'Este mes';
   }
 
   const openCalendar = () => setShowCalendar(true);
@@ -50,11 +52,11 @@ export function DashboardFilters({ currentParams }: { currentParams?: Record<str
           className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center bg-black/30 backdrop-blur-[2px] animate-in fade-in duration-200"
           onClick={(e) => e.target === e.currentTarget && setShowCalendar(false)}
         >
-          <div className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-xl shadow-2xl ring-1 ring-black/8 animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 overflow-hidden">
+          <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-xl shadow-2xl ring-1 ring-black/8 animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 overflow-hidden">
             <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100">
               <div>
                 <h3 className="text-sm font-bold text-gray-900">Fecha base</h3>
-                <p className="text-[11px] text-gray-400 mt-0.5">Ayer / Hoy / Semana se calculan desde aquí</p>
+                <p className="text-[11px] text-gray-400 mt-0.5">Los periodos se calculan desde aquí</p>
               </div>
               <button
                 onClick={() => setShowCalendar(false)}
@@ -64,11 +66,12 @@ export function DashboardFilters({ currentParams }: { currentParams?: Record<str
               </button>
             </div>
             {/* Quick presets */}
-            <div className="flex gap-2 px-5 pt-4 pb-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 px-5 pt-4 pb-2">
               {[
                 { label: 'Hoy', value: 'today' },
                 { label: 'Ayer', value: 'yesterday' },
-                { label: 'Esta semana', value: 'week' },
+                { label: 'Semana', value: 'week' },
+                { label: 'Este mes', value: 'month' },
               ].map(({ label, value }) => (
                 <button
                   key={value}
@@ -81,9 +84,9 @@ export function DashboardFilters({ currentParams }: { currentParams?: Record<str
                     setShowCalendar(false);
                   }}
                   className={[
-                    'flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-colors',
+                    'py-2 rounded-lg text-[11px] font-bold transition-colors text-center w-full',
                     currentPeriod === value && !fromDate
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-blue-600 text-white shadow-sm'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
                   ].join(' ')}
                 >

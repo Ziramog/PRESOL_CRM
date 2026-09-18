@@ -39,9 +39,13 @@ export async function getDashboardData(params: DashboardParams) {
   const weekFrom = fromZonedTime(startOfWeek(zonedNow, { weekStartsOn: 1 }), TZ).toISOString();
   const weekTo = fromZonedTime(endOfWeek(zonedNow, { weekStartsOn: 1 }), TZ).toISOString();
 
-  // Fetch the 3-period summary manually to fix rate mismatches
-  const minFrom = yesterdayFrom < weekFrom ? yesterdayFrom : weekFrom;
-  const maxTo = weekTo > todayTo ? weekTo : todayTo;
+  // Calculate Month boundaries
+  const monthFrom = fromZonedTime(startOfMonth(zonedNow), TZ).toISOString();
+  const monthTo = fromZonedTime(endOfMonth(zonedNow), TZ).toISOString();
+
+  // Fetch the 4-period summary manually to fix rate mismatches
+  const minFrom = monthFrom < yesterdayFrom ? monthFrom : yesterdayFrom; // monthFrom is always <= weekFrom
+  const maxTo = monthTo > todayTo ? monthTo : todayTo;
 
   // Helper to apply filters to JS queries
   const applyFilters = (q: any, isTask = false) => {
@@ -108,7 +112,8 @@ export async function getDashboardData(params: DashboardParams) {
       data: {
         yesterday: calcPeriod(yesterdayFrom, yesterdayTo),
         today: calcPeriod(todayFrom, todayTo),
-        week: calcPeriod(weekFrom, weekTo)
+        week: calcPeriod(weekFrom, weekTo),
+        month: calcPeriod(monthFrom, monthTo)
       },
       error: null
     };
@@ -121,6 +126,9 @@ export async function getDashboardData(params: DashboardParams) {
   if (params.period === 'week') {
     periodFromIso = weekFrom;
     periodToIso = weekTo;
+  } else if (params.period === 'month') {
+    periodFromIso = monthFrom;
+    periodToIso = monthTo;
   }
 
   // Fetch Results (Raw activities to aggregate and show in modal)
