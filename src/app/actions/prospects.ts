@@ -36,7 +36,7 @@ export async function createProspect(formData: FormData) {
   };
 
   const fields = [
-    'class', 'visit_priority', 'sector', 'city', 'commercial_category', 
+    'class', 'visit_priority', 'sector', 'city', 'address', 'email', 'commercial_category', 
     'pending_data', 'corridor', 'microzone', 'primary_phone', 'phones_raw', 
     'google_maps_url', 'ask_for', 'probable_need', 'presol_offer', 
     'sales_hook', 'suggested_action', 'evidence'
@@ -73,7 +73,7 @@ export async function updateProspect(id: string, formData: FormData) {
   const payload: any = { company_name };
 
   const fields = [
-    'class', 'visit_priority', 'sector', 'city', 'commercial_category', 
+    'class', 'visit_priority', 'sector', 'city', 'address', 'email', 'commercial_category', 
     'pending_data', 'corridor', 'microzone', 'primary_phone', 'phones_raw', 
     'google_maps_url', 'ask_for', 'probable_need', 'presol_offer', 
     'sales_hook', 'suggested_action', 'evidence'

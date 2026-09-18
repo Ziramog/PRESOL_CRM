@@ -286,6 +286,76 @@ export function ProspectForm({
 
             {/* UBICACION TAB */}
             <div className={activeTab === 'ubicacion' ? 'space-y-5 animate-in fade-in duration-300' : 'hidden'}>
+              <div className="mb-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!navigator.geolocation) {
+                      alert('Tu navegador no soporta geolocalización');
+                      return;
+                    }
+                    const btn = document.getElementById('geo-btn');
+                    if (btn) btn.innerHTML = '<span class="animate-pulse">Obteniendo ubicación...</span>';
+                    
+                    navigator.geolocation.getCurrentPosition(async (pos) => {
+                      const { latitude, longitude } = pos.coords;
+                      try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                        const data = await res.json();
+                        if (data && data.address) {
+                          const road = data.address.road || '';
+                          const houseNumber = data.address.house_number || '';
+                          const addressFull = `${road} ${houseNumber}`.trim();
+                          
+                          const city = data.address.city || data.address.town || data.address.village || '';
+                          const state = data.address.state || '';
+                          
+                          if (addressFull) {
+                            const addrInput = document.querySelector('[name="address"]') as HTMLInputElement;
+                            if (addrInput) addrInput.value = addressFull;
+                          }
+                          
+                          let matchedProv = '';
+                          if (state) {
+                            matchedProv = PROVINCES.find(p => state.toLowerCase().includes(p.toLowerCase())) || '';
+                            if (matchedProv) setProvinceSelect(matchedProv);
+                          }
+                          
+                          if (city) {
+                            setCitySelect('Otra');
+                            setCityCustom(city);
+                          }
+                          
+                          // Also save maps URL just in case
+                          const mapsInput = document.querySelector('[name="google_maps_url"]') as HTMLInputElement;
+                          if (mapsInput) mapsInput.value = `https://maps.google.com/?q=${latitude},${longitude}`;
+                          
+                          if (btn) btn.innerHTML = '¡Ubicación obtenida!';
+                          setTimeout(() => {
+                            if (btn) btn.innerHTML = '📍 Usar mi ubicación actual';
+                          }, 3000);
+                        }
+                      } catch (err) {
+                        alert('Error al traducir las coordenadas');
+                        if (btn) btn.innerHTML = '📍 Usar mi ubicación actual';
+                      }
+                    }, () => {
+                      alert('Permiso denegado o error de ubicación');
+                      if (btn) btn.innerHTML = '📍 Usar mi ubicación actual';
+                    });
+                  }}
+                  id="geo-btn"
+                  className="w-full py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-sm font-bold transition-all shadow-sm active:scale-[0.98]"
+                >
+                  📍 Usar mi ubicación actual
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5">Dirección</label>
+                <input type="text" name="address" defaultValue={prospect?.address || ''} className="w-full text-sm rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white py-2.5 px-3" placeholder="Ej: San Martín 1234" />
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1.5">Provincia</label>
