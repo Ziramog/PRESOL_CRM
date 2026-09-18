@@ -81,16 +81,23 @@ export function ProspectCard({ prospect }: { prospect: any }) {
             </div>
           </div>
           
-          {/* Class Badge */}
-          {prospect.class && (
-            <span className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide shrink-0
-              ${prospect.class === 'A' ? 'bg-green-50 text-green-700' : 
-                prospect.class === 'B' ? 'bg-blue-50 text-blue-700' : 
-                'bg-gray-50 text-gray-600'}`
-            }>
-              Clase {prospect.class}
-            </span>
-          )}
+          {/* Class Badge & Favorite */}
+          <div className="flex items-center gap-2 shrink-0">
+            <FavoriteButton
+              prospectId={prospect.id}
+              isFavorite={prospect.is_favorite ?? false}
+              variant="card"
+            />
+            {prospect.class && (
+              <span className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide
+                ${prospect.class === 'A' ? 'bg-green-50 text-green-700' : 
+                  prospect.class === 'B' ? 'bg-blue-50 text-blue-700' : 
+                  'bg-gray-50 text-gray-600'}`
+              }>
+                Clase {prospect.class}
+              </span>
+            )}
+          </div>
         </div>
         
         {/* ROW 3: Categories and Status */}
@@ -104,54 +111,56 @@ export function ProspectCard({ prospect }: { prospect: any }) {
         </div>
       </Link>
       
-      {/* ACTION BAR (Buttons row) */}
-      <div className="px-4 pb-4 pt-3 flex items-center gap-2 border-t border-gray-50">
-        {activePhone ? (
-          <>
-            <a 
-              href={`tel:${cleanPhone}`} 
-              className="flex-1 flex justify-center items-center gap-1.5 h-[38px] bg-[#5A87CE] hover:bg-[#4873B8] rounded-[19px] text-[13px] font-semibold text-white shadow-sm transition-transform active:scale-95"
-            >
-              <Phone className="w-4 h-4 fill-current" /> Llamar
-            </a>
-            <a 
-              href={`https://wa.me/${cleanPhone}`} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex-1 flex justify-center items-center gap-1.5 h-[38px] bg-[#52B774] hover:bg-[#43A062] rounded-[19px] text-[13px] font-semibold text-white shadow-sm transition-transform active:scale-95"
-            >
-              <MessageCircle className="w-4 h-4 fill-current" /> WhatsApp
-            </a>
-          </>
+      {/* ACTION BAR (Square buttons) */}
+      <div className="px-4 pb-4 pt-3 flex items-center justify-between gap-1.5 border-t border-slate-100 bg-slate-50/50">
+        {/* Llamar */}
+        {cleanPhone ? (
+          <a href={`tel:${cleanPhone}`} className="flex flex-col items-center flex-1 gap-1 group cursor-pointer active:scale-95 transition-transform">
+            <div className="w-10 h-10 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center group-hover:bg-blue-50 group-hover:border-blue-200 transition-colors">
+              <Phone className="w-4 h-4 text-blue-600" strokeWidth={2} />
+            </div>
+            <span className="text-[10px] font-bold text-slate-600">Llamar</span>
+          </a>
         ) : (
-          <div className="flex-1 flex justify-center items-center h-[38px] bg-gray-50 rounded-[19px] text-[12px] font-medium text-gray-400 italic">
-            Sin teléfono registrado
+          <div className="flex flex-col items-center flex-1 gap-1 opacity-50 cursor-not-allowed">
+            <div className="w-10 h-10 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center">
+              <Phone className="w-4 h-4 text-slate-400" strokeWidth={2} />
+            </div>
+            <span className="text-[10px] font-bold text-slate-400">Llamar</span>
           </div>
         )}
-        
-        {/* Mic Button */}
-        <Link 
-          href={`/prospects/${prospect.id}?action=voice`}
-          className="w-[38px] h-[38px] shrink-0 flex items-center justify-center bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-full border border-purple-100 shadow-sm transition-transform active:scale-95"
-          title="Grabar gestión"
-        >
-          <Mic className="w-4 h-4" />
+
+        {/* WhatsApp */}
+        {cleanPhone ? (
+          <a href={`whatsapp://send?phone=${cleanPhone}`} className="flex flex-col items-center flex-1 gap-1 group cursor-pointer active:scale-95 transition-transform">
+            <div className="w-10 h-10 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center group-hover:bg-[#25D366]/10 group-hover:border-[#25D366]/30 transition-colors">
+              <MessageCircle className="w-4 h-4 text-[#25D366]" strokeWidth={2} />
+            </div>
+            <span className="text-[10px] font-bold text-slate-600">WhatsApp</span>
+          </a>
+        ) : (
+          <div className="flex flex-col items-center flex-1 gap-1 opacity-50 cursor-not-allowed">
+            <div className="w-10 h-10 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center">
+              <MessageCircle className="w-4 h-4 text-slate-400" strokeWidth={2} />
+            </div>
+            <span className="text-[10px] font-bold text-slate-400">WhatsApp</span>
+          </div>
+        )}
+
+        {/* Audio */}
+        <Link href={`/prospects/${prospect.id}?action=voice`} className="flex flex-col items-center flex-1 gap-1 group cursor-pointer active:scale-95 transition-transform">
+          <div className="w-10 h-10 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center group-hover:bg-purple-50 group-hover:border-purple-200 transition-colors">
+            <Mic className="w-4 h-4 text-purple-600" strokeWidth={2} />
+          </div>
+          <span className="text-[10px] font-bold text-slate-600">Audio</span>
         </Link>
 
-        {/* Favorite Star Button */}
-        <FavoriteButton
-          prospectId={prospect.id}
-          isFavorite={prospect.is_favorite ?? false}
-          variant="card"
-        />
-
-        {/* Chevron Button */}
-        <Link 
-          href={`/prospects/${prospect.id}`}
-          className="w-[38px] h-[38px] shrink-0 flex items-center justify-center bg-white hover:bg-gray-50 text-gray-500 rounded-full border border-gray-200 shadow-sm transition-transform active:scale-95"
-          title="Ver Detalle"
-        >
-          <ChevronRight className="w-5 h-5" />
+        {/* Detalle */}
+        <Link href={`/prospects/${prospect.id}`} className="flex flex-col items-center flex-1 gap-1 group cursor-pointer active:scale-95 transition-transform">
+          <div className="w-10 h-10 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center group-hover:bg-slate-100 transition-colors">
+            <ChevronRight className="w-4 h-4 text-slate-700" strokeWidth={2.5} />
+          </div>
+          <span className="text-[10px] font-bold text-slate-600">Detalle</span>
         </Link>
       </div>
     </div>

@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { Star } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { toggleFavorite } from '@/app/actions/prospects';
 
 interface FavoriteButtonProps {
   prospectId: string;
   isFavorite: boolean;
-  /** 'card' = small, inline star in card action bar | 'header' = larger, in detail header */
+  /** 'card' = small, inline heart in card action bar | 'header' = larger, in detail header */
   variant?: 'card' | 'header';
 }
 
@@ -42,11 +42,11 @@ export function FavoriteButton({ prospectId, isFavorite, variant = 'card' }: Fav
         className={[
           'flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-bold transition-all',
           optimistic
-            ? 'bg-amber-50 text-amber-600 border border-amber-200'
-            : 'bg-white text-gray-400 border border-gray-200 hover:bg-amber-50 hover:text-amber-500',
+            ? 'bg-rose-50 text-rose-600 border border-rose-200'
+            : 'bg-white text-gray-400 border border-gray-200 hover:bg-rose-50 hover:text-rose-500',
         ].join(' ')}
       >
-        <Star
+        <Heart
           className="w-4 h-4"
           fill={optimistic ? 'currentColor' : 'none'}
           strokeWidth={2}
@@ -63,13 +63,13 @@ export function FavoriteButton({ prospectId, isFavorite, variant = 'card' }: Fav
       disabled={isPending}
       title={optimistic ? 'Quitar de favoritos' : 'Marcar favorito'}
       className={[
-        'w-[38px] h-[38px] shrink-0 flex items-center justify-center rounded-full border shadow-sm transition-all active:scale-95',
+        'w-8 h-8 shrink-0 flex items-center justify-center rounded-full border shadow-sm transition-all active:scale-95',
         optimistic
-          ? 'bg-amber-50 text-amber-500 border-amber-200'
-          : 'bg-white text-gray-400 border-gray-200 hover:bg-amber-50 hover:text-amber-400',
+          ? 'bg-rose-50 text-rose-500 border-rose-200'
+          : 'bg-white text-slate-300 border-slate-200 hover:bg-rose-50 hover:text-rose-400 hover:border-rose-200',
       ].join(' ')}
     >
-      <Star
+      <Heart
         className="w-4 h-4"
         fill={optimistic ? 'currentColor' : 'none'}
         strokeWidth={2}
