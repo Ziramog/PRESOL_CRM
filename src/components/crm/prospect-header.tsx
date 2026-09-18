@@ -172,21 +172,21 @@ export function ProspectHeader({
         </div>
 
         {/* 2. Title Section */}
-        <div className="flex flex-col items-center sm:items-start text-center sm:text-left gap-3 mb-5 mt-2">
-          <div className="w-[64px] h-[64px] rounded-[16px] bg-blue-50 flex items-center justify-center shrink-0 mx-auto sm:mx-0">
+        <div className="flex flex-row items-center sm:items-start text-left gap-3 mb-5 mt-2 px-1">
+          <div className="w-[64px] h-[64px] rounded-[16px] bg-blue-50 flex items-center justify-center shrink-0">
             <Building2 className="w-8 h-8 text-blue-600" strokeWidth={1.5} />
           </div>
           
-          <div className="flex flex-col mt-1 w-full px-4 sm:px-0">
-            <h1 className="text-[22px] font-bold text-slate-900 leading-tight mb-1">
+          <div className="flex flex-col mt-0.5 w-full">
+            <h1 className="text-[20px] sm:text-[22px] font-bold text-slate-900 leading-tight mb-1">
               {prospect.company_name}
             </h1>
-            <p className="text-[14px] text-slate-500 mb-3">
+            <p className="text-[13px] sm:text-[14px] text-slate-500 mb-2.5">
               Prospecto comercial
             </p>
             
             {/* Status & Priority Row */}
-            <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+            <div className="flex items-center justify-start gap-2 flex-wrap">
               {/* Status Dropdown */}
               <div className="relative inline-flex items-center">
                 <select
@@ -240,7 +240,7 @@ export function ProspectHeader({
         </div>
 
         {/* 3. Compact Info Row (Location | Sector) */}
-        <div className="flex items-center justify-center sm:justify-start gap-3 text-[13px] text-slate-600 mb-6 font-medium">
+        <div className="flex items-center justify-start gap-3 text-[13px] text-slate-600 mb-6 font-medium px-1">
           <div className="flex items-center gap-1.5">
             <MapPin className="w-4 h-4 text-slate-400" />
             <span className="truncate max-w-[120px]">{prospect.city || 'Sin ciudad'}</span>

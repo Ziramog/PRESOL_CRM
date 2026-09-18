@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { createContact, updateContact } from '@/app/actions/contacts';
-import { X, BookUser, UserCircle, Briefcase, Phone, Mail } from 'lucide-react';
+import { X, BookUser, UserCircle, Briefcase, Phone, Mail, Camera } from 'lucide-react';
 import { MobileContactImportModal } from '@/components/crm/v2/MobileContactImportModal';
 
 export function ContactForm({ 
@@ -59,6 +59,57 @@ export function ContactForm({
     setShowImportModal(true);
   };
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const roleRef = useRef<HTMLInputElement>(null);
+  const [isScanning, setIsScanning] = useState(false);
+
+  const toBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsScanning(true);
+    setError(null);
+
+    try {
+      const base64 = await toBase64(file);
+      const res = await fetch('/api/process-business-card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64 }),
+      });
+      
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Error procesando la tarjeta');
+
+      const data = json.parsed;
+      
+      applyContactData({
+        name: data.contactName,
+        phone: data.phone,
+        email: data.email
+      });
+      
+      if (data.roleTitle && roleRef.current) {
+        roleRef.current.value = data.roleTitle;
+      }
+
+    } catch (err: any) {
+      setError(err.message || 'Error al procesar la tarjeta');
+    } finally {
+      setIsScanning(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsPending(true);
@@ -98,14 +149,42 @@ export function ContactForm({
         </div>
         
         <div className="overflow-y-auto p-5 sm:p-6 flex-1 bg-slate-50/50">
-          <button 
-            type="button" 
-            onClick={handleImportContact}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white text-indigo-700 rounded-xl border border-indigo-200 text-sm font-bold hover:bg-indigo-50 hover:border-indigo-300 transition-all shadow-sm active:scale-[0.98] mb-6"
-          >
-            <BookUser className="w-5 h-5" />
-            Importar de la Agenda del Móvil
-          </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            <button 
+              type="button" 
+              onClick={handleImportContact}
+              className="flex items-center justify-center gap-2 px-3 py-3 bg-white text-indigo-700 rounded-xl border border-indigo-200 text-[13px] font-bold hover:bg-indigo-50 hover:border-indigo-300 transition-all shadow-sm active:scale-[0.98]"
+            >
+              <BookUser className="w-4 h-4" />
+              Importar de Agenda
+            </button>
+            <button 
+              type="button" 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isScanning}
+              className="flex items-center justify-center gap-2 px-3 py-3 bg-slate-800 text-white rounded-xl border border-slate-700 text-[13px] font-bold hover:bg-slate-700 transition-all shadow-sm active:scale-[0.98] disabled:opacity-50"
+            >
+              {isScanning ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Escaneando...
+                </>
+              ) : (
+                <>
+                  <Camera className="w-4 h-4" />
+                  Escanear Tarjeta
+                </>
+              )}
+            </button>
+            <input 
+              type="file" 
+              accept="image/*" 
+              capture="environment" 
+              ref={fileInputRef} 
+              className="hidden" 
+              onChange={handleFileChange} 
+            />
+          </div>
           
           <form id="contact-form" onSubmit={handleSubmit} className="space-y-5">
             <input type="hidden" name="prospect_id" value={prospectId} />
