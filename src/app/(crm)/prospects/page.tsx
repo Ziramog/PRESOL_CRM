@@ -17,7 +17,7 @@ const SORTABLE_COLUMNS: Record<string, string> = {
   commercial_category: 'commercial_category',
   contact_status: 'contact_status',
   created_at: 'created_at',
-  last_contact_date: 'last_contact_date',
+  last_contact_date: 'updated_at',
   open_tasks: 'open_tasks',
 };
 
