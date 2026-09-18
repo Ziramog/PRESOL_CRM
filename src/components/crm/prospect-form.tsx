@@ -6,13 +6,7 @@ import { X, Smartphone, Building2, MapPin, Contact, Briefcase } from 'lucide-rea
 import { createProspect, updateProspect } from '@/app/actions/prospects';
 import { MobileContactImportModal } from '@/components/crm/v2/MobileContactImportModal';
 
-const PREDEFINED_CITIES = [
-  'Buenos Aires', 'CABA', 'Córdoba', 'Rosario', 'Mendoza', 
-  'San Miguel de Tucumán', 'La Plata', 'Mar del Plata', 'Salta', 
-  'Santa Fe', 'San Juan', 'Resistencia', 'Neuquén', 'Formosa', 
-  'San Salvador de Jujuy', 'Bariloche', 'Bahía Blanca', 'Posadas', 
-  'Paraná', 'Villa María'
-];
+import { ARGENTINA_LOCATIONS, PROVINCES } from '@/lib/argentina-cities';
 
 const PREDEFINED_EVIDENCE = [
   'Referido', 'Redes Sociales', 'Búsqueda Web', 'Visita Fría', 
@@ -40,19 +34,32 @@ export function ProspectForm({
   const [activeTab, setActiveTab] = useState('general');
   const [showImportModal, setShowImportModal] = useState(false);
 
-  // Combine and sort cities
-  const allCities = Array.from(new Set([...PREDEFINED_CITIES, ...availableCities]))
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b));
+  // Province and City state
+  const findProvinceForCity = (cityName: string) => {
+    if (!cityName) return '';
+    for (const [prov, cities] of Object.entries(ARGENTINA_LOCATIONS)) {
+      if (cities.includes(cityName)) return prov;
+    }
+    return '';
+  };
 
-  // City state
-  const initialCityIsPredefined = allCities.includes(prospect?.city);
+  const initialProvince = prospect?.city ? findProvinceForCity(prospect.city) : '';
+  const initialIsPredefined = !!initialProvince;
+
+  const [provinceSelect, setProvinceSelect] = useState(initialProvince || '');
+  
   const [citySelect, setCitySelect] = useState(
-    prospect?.city ? (initialCityIsPredefined ? prospect.city : 'Otra') : ''
+    prospect?.city ? (initialIsPredefined ? prospect.city : 'Otra') : ''
   );
+  
   const [cityCustom, setCityCustom] = useState(
-    prospect?.city && !initialCityIsPredefined ? prospect.city : ''
+    prospect?.city && !initialIsPredefined ? prospect.city : ''
   );
+
+  const currentProvinceCities = provinceSelect ? (ARGENTINA_LOCATIONS[provinceSelect] || []) : [];
+
+  // Combine DB available cities with province cities if needed, but since we have a province selector, 
+  // we'll just show the static ones for the province, plus "Otra".
 
   // Evidence state
   const initialEvidenceIsPredefined = PREDEFINED_EVIDENCE.includes(prospect?.evidence);
@@ -256,27 +263,45 @@ export function ProspectForm({
 
             {/* UBICACION TAB */}
             <div className={activeTab === 'ubicacion' ? 'space-y-5 animate-in fade-in duration-300' : 'hidden'}>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">Ciudad</label>
-                <select 
-                  value={citySelect} 
-                  onChange={(e) => setCitySelect(e.target.value)} 
-                  className="w-full text-sm rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white py-2.5 px-3 mb-2"
-                >
-                  <option value="">Seleccionar ciudad...</option>
-                  {allCities.map(c => <option key={c} value={c}>{c}</option>)}
-                  <option value="Otra">Otra...</option>
-                </select>
-                
-                {citySelect === 'Otra' && (
-                  <input 
-                    type="text" 
-                    value={cityCustom}
-                    onChange={(e) => setCityCustom(e.target.value)}
-                    className="w-full text-sm rounded-xl border-blue-300 ring-1 ring-blue-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-blue-50/30 py-2.5 px-3 animate-in slide-in-from-top-2 mt-2" 
-                    placeholder="Escribe la ciudad..." 
-                  />
-                )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1.5">Provincia</label>
+                  <select 
+                    value={provinceSelect} 
+                    onChange={(e) => {
+                      setProvinceSelect(e.target.value);
+                      setCitySelect('');
+                      setCityCustom('');
+                    }} 
+                    className="w-full text-sm rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white py-2.5 px-3 mb-2"
+                  >
+                    <option value="">Seleccionar provincia...</option>
+                    {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1.5">Ciudad / Localidad</label>
+                  <select 
+                    value={citySelect} 
+                    onChange={(e) => setCitySelect(e.target.value)} 
+                    disabled={!provinceSelect}
+                    className="w-full text-sm rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white py-2.5 px-3 mb-2 disabled:opacity-50 disabled:bg-slate-50"
+                  >
+                    <option value="">Seleccionar ciudad...</option>
+                    {currentProvinceCities.map(c => <option key={c} value={c}>{c}</option>)}
+                    <option value="Otra">Otra...</option>
+                  </select>
+                  
+                  {citySelect === 'Otra' && (
+                    <input 
+                      type="text" 
+                      value={cityCustom}
+                      onChange={(e) => setCityCustom(e.target.value)}
+                      className="w-full text-sm rounded-xl border-blue-300 ring-1 ring-blue-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-blue-50/30 py-2.5 px-3 animate-in slide-in-from-top-2 mt-2" 
+                      placeholder="Escribe la ciudad..." 
+                    />
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
