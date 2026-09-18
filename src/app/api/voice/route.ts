@@ -49,8 +49,9 @@ Debes extraer la información y clasificarla en un formato JSON estricto.
 
 Estructura JSON requerida:
 {
-  "activity_type": "Llamada" | "Visita" | "WhatsApp" | "Correo" | "Nota",
-  "note_body": "Texto profesional en tercera persona resumiendo lo que sucedió.",
+  "action_type": "activity" | "note" | "task_only",
+  "activity_type": "call" | "visit" | "whatsapp" | "email" | "note" | null,
+  "summary": "Texto profesional en tercera persona resumiendo lo que sucedió o la nota.",
   "has_next_step": boolean,
   "next_step_date": "YYYY-MM-DD" (si se menciona para cuándo es, calcula la fecha relativa a hoy. Si no se especifica, usa nulo),
   "next_step_description": "Descripción corta de la tarea a realizar (ej: Mandar cotización, Llamar de nuevo) o nulo si no hay tarea."
@@ -58,9 +59,12 @@ Estructura JSON requerida:
 
 Reglas:
 - Hoy es: ${new Date().toISOString().split('T')[0]}
-- Si el vendedor dice "lo llamé" o "hablamos", activity_type es "Llamada".
-- Si dice "fui a verlo", "estoy saliendo del cliente", activity_type es "Visita".
-- En note_body, redacta un resumen claro y directo de los puntos clave.
+- action_type determina el foco principal: 
+  - "activity": Si el vendedor relata una interacción (llamada, visita, mensaje).
+  - "note": Si es solo información interna, observaciones del lugar o datos, sin interacción directa reciente.
+  - "task_only": Si el vendedor solo está dictando un recordatorio para el futuro (ej: "Acuérdate de llamarlo el viernes").
+- activity_type: Si es action_type="activity", clasifica en "call" (llamada), "visit" (visita), "whatsapp" (mensaje). Si action_type="note", usa "note".
+- summary: Redacta un resumen claro y directo de los puntos clave.
 `;
 
     const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {

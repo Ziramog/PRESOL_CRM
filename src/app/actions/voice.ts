@@ -15,29 +15,29 @@ export async function saveVoiceInteraction(prospectId: string, data: any) {
     // 1. Iniciar transacción "virtual" (Supabase REST no tiene transacciones completas, pero hacemos operaciones seguidas)
     
     // a. Crear comentario/nota
-    if (data.note_body) {
+    if (data.action_type === 'note' && data.summary) {
       const { error: commentError } = await supabase.from('comments').insert({
         prospect_id: prospectId,
         user_id: user.id,
-        body: data.note_body,
+        body: data.summary,
         is_direction_note: false
       });
       if (commentError) throw commentError;
     }
 
     // b. Crear actividad en timeline
-    if (data.activity_type) {
+    if (data.action_type === 'activity' && data.activity_type && data.summary) {
       const { error: activityError } = await supabase.from('activities').insert({
         prospect_id: prospectId,
         user_id: user.id,
         type: data.activity_type,
-        notes: data.note_body
+        summary: data.summary
       });
       if (activityError) throw activityError;
       
       // Update last_contact_date
       await supabase.from('prospects')
-        .update({ last_contact_date: new Date().toISOString() })
+        .update({ updated_at: new Date().toISOString() }) // use updated_at since last_contact_date doesn't exist
         .eq('id', prospectId);
     }
 
