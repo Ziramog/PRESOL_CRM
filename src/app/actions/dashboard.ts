@@ -39,6 +39,15 @@ export async function getDashboardKPIList(
   } else if (period === 'month') {
     fromDate = startOfMonth(zonedNow);
     toDate = endOfMonth(zonedNow);
+  } else if (period === 'last_month') {
+    const lastMonth = require('date-fns').subMonths(zonedNow, 1);
+    fromDate = startOfMonth(lastMonth);
+    toDate = endOfMonth(lastMonth);
+  } else if (period === 'year') {
+    const startOfYear = require('date-fns').startOfYear;
+    const endOfYear = require('date-fns').endOfYear;
+    fromDate = startOfYear(zonedNow);
+    toDate = endOfYear(zonedNow);
   }
 
   let fromIso: string;

@@ -1,11 +1,11 @@
 import { createAdminClient } from '@/lib/supabase/server';
-import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } from 'date-fns';
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subMonths, startOfYear, endOfYear } from 'date-fns';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
 export interface DashboardParams {
-  period?: 'today' | 'yesterday' | 'week' | 'month' | 'custom';
+  period?: 'today' | 'yesterday' | 'week' | 'month' | 'last_month' | 'year' | 'custom';
   from_date?: string;
   to_date?: string;
   user_id?: string;
@@ -43,9 +43,18 @@ export async function getDashboardData(params: DashboardParams) {
   const monthFrom = fromZonedTime(startOfMonth(zonedNow), TZ).toISOString();
   const monthTo = fromZonedTime(endOfMonth(zonedNow), TZ).toISOString();
 
-  // Fetch the 4-period summary manually to fix rate mismatches
-  const minFrom = monthFrom < yesterdayFrom ? monthFrom : yesterdayFrom; // monthFrom is always <= weekFrom
-  const maxTo = monthTo > todayTo ? monthTo : todayTo;
+  // Calculate Last Month boundaries
+  const lastMonthDate = subMonths(zonedNow, 1);
+  const lastMonthFrom = fromZonedTime(startOfMonth(lastMonthDate), TZ).toISOString();
+  const lastMonthTo = fromZonedTime(endOfMonth(lastMonthDate), TZ).toISOString();
+
+  // Calculate Year boundaries
+  const yearFrom = fromZonedTime(startOfYear(zonedNow), TZ).toISOString();
+  const yearTo = fromZonedTime(endOfYear(zonedNow), TZ).toISOString();
+
+  // Fetch the all-period summary manually to fix rate mismatches
+  const minFrom = yearFrom < yesterdayFrom ? yearFrom : yesterdayFrom; // yearFrom is usually the earliest
+  const maxTo = yearTo > todayTo ? yearTo : todayTo;
 
   // Helper to apply filters to JS queries
   const applyFilters = (q: any, isTask = false) => {
@@ -113,13 +122,14 @@ export async function getDashboardData(params: DashboardParams) {
         yesterday: calcPeriod(yesterdayFrom, yesterdayTo),
         today: calcPeriod(todayFrom, todayTo),
         week: calcPeriod(weekFrom, weekTo),
-        month: calcPeriod(monthFrom, monthTo)
+        month: calcPeriod(monthFrom, monthTo),
+        last_month: calcPeriod(lastMonthFrom, lastMonthTo),
+        year: calcPeriod(yearFrom, yearTo)
       },
       error: null
     };
   });
 
-  // Calculate selected period boundaries for the Details section
   let periodFromIso: string = todayFrom;
   let periodToIso: string = todayTo;
 
@@ -129,6 +139,12 @@ export async function getDashboardData(params: DashboardParams) {
   } else if (params.period === 'month') {
     periodFromIso = monthFrom;
     periodToIso = monthTo;
+  } else if (params.period === 'last_month') {
+    periodFromIso = lastMonthFrom;
+    periodToIso = lastMonthTo;
+  } else if (params.period === 'year') {
+    periodFromIso = yearFrom;
+    periodToIso = yearTo;
   }
 
   // Fetch Results (Raw activities to aggregate and show in modal)

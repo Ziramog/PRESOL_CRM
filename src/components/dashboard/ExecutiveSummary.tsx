@@ -5,7 +5,7 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { getDashboardKPIList } from '@/app/actions/dashboard';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
-import { format, subDays, startOfWeek, endOfWeek, isSameDay } from 'date-fns';
+import { format, subDays, subMonths, startOfWeek, endOfWeek, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toZonedTime } from 'date-fns-tz';
 
@@ -105,8 +105,13 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   const [modal, setModal] = useState<{ open: boolean; title: string; period: string; periodLabel: string } | null>(null);
   const [modalData, setModalData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  // Initialize to 3 if month, 2 if week, else 1 (middle card)
-  const getIdx = (period: string) => period === 'month' ? 3 : period === 'week' ? 2 : 1;
+  // Initialize active card index
+  const getIdx = (period: string) => {
+    if (period === 'last_month' || period === 'yesterday') return 0;
+    if (period === 'month' || period === 'today' || period === 'custom') return 1;
+    if (period === 'year' || period === 'week') return 2;
+    return 1;
+  };
   const [activeIdx, setActiveIdx] = useState(getIdx(currentPeriod)); 
 
   const pathname = usePathname();
@@ -155,37 +160,59 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   const weekEnd = format(endOfWeek(zonedNow, { weekStartsOn: 1 }), "d MMM", { locale: es });
   const weekLabel = `${weekStart}–${weekEnd}`;
   const monthLabel = format(zonedNow, "MMMM", { locale: es });
+  const lastMonthLabel = format(subMonths(zonedNow, 1), "MMMM", { locale: es });
+  const yearLabel = format(zonedNow, "yyyy", { locale: es });
 
-  const periods = [
-    { 
-      title: titleYesterday, 
-      dateLabel: yesterdayLabel, 
-      data: summary?.yesterday, 
-      periodCode: (currentPeriod === 'today' || currentPeriod === 'week' || currentPeriod === 'month') ? 'yesterday' : 'custom',
-      dateStr: format(yesterday, 'yyyy-MM-dd')
-    },
-    { 
-      title: titleToday,     
-      dateLabel: todayLabel,     
-      data: summary?.today,     
-      periodCode: currentPeriod === 'custom' ? 'custom' : (currentPeriod === 'week' || currentPeriod === 'month' ? 'today' : currentPeriod),
-      dateStr: format(zonedNow, 'yyyy-MM-dd')
-    },
-    { 
-      title: titleWeek,      
-      dateLabel: weekLabel,      
-      data: summary?.week,      
-      periodCode: 'week',
-      dateStr: ''
-    },
-    { 
-      title: "Mes",      
-      dateLabel: monthLabel,      
-      data: summary?.month,      
-      periodCode: 'month',
-      dateStr: ''
-    },
-  ];
+  let periods = [];
+  if (currentPeriod === 'month' || currentPeriod === 'last_month' || currentPeriod === 'year') {
+    periods = [
+      {
+        title: "Mes anterior",
+        dateLabel: lastMonthLabel,
+        data: summary?.last_month,
+        periodCode: 'last_month',
+        dateStr: ''
+      },
+      {
+        title: "Este mes",
+        dateLabel: monthLabel,
+        data: summary?.month,
+        periodCode: 'month',
+        dateStr: ''
+      },
+      {
+        title: "Todo el año",
+        dateLabel: yearLabel,
+        data: summary?.year,
+        periodCode: 'year',
+        dateStr: ''
+      }
+    ];
+  } else {
+    periods = [
+      { 
+        title: titleYesterday, 
+        dateLabel: yesterdayLabel, 
+        data: summary?.yesterday, 
+        periodCode: (currentPeriod === 'today' || currentPeriod === 'week') ? 'yesterday' : 'custom',
+        dateStr: format(yesterday, 'yyyy-MM-dd')
+      },
+      { 
+        title: titleToday,     
+        dateLabel: todayLabel,     
+        data: summary?.today,     
+        periodCode: currentPeriod === 'custom' ? 'custom' : (currentPeriod === 'week' ? 'today' : currentPeriod),
+        dateStr: format(zonedNow, 'yyyy-MM-dd')
+      },
+      { 
+        title: titleWeek,      
+        dateLabel: weekLabel,      
+        data: summary?.week,      
+        periodCode: 'week',
+        dateStr: ''
+      },
+    ];
+  }
 
   const openModal = async (kpiKey: string, title: string, periodCode: string, periodLabel: string) => {
     setModal({ open: true, title, period: periodCode, periodLabel });

@@ -31,6 +31,10 @@ export function DashboardFilters({ currentParams }: { currentParams?: Record<str
     baseDateLabel = 'Esta semana';
   } else if (currentPeriod === 'month') {
     baseDateLabel = 'Este mes';
+  } else if (currentPeriod === 'last_month') {
+    baseDateLabel = 'Mes anterior';
+  } else if (currentPeriod === 'year') {
+    baseDateLabel = 'Todo el año';
   }
 
   const openCalendar = () => setShowCalendar(true);
@@ -85,7 +89,7 @@ export function DashboardFilters({ currentParams }: { currentParams?: Record<str
                   }}
                   className={[
                     'py-2 rounded-lg text-[11px] font-bold transition-colors text-center w-full',
-                    currentPeriod === value && !fromDate
+                    (currentPeriod === value || (value === 'month' && (currentPeriod === 'last_month' || currentPeriod === 'year'))) && !fromDate
                       ? 'bg-blue-600 text-white shadow-sm'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
                   ].join(' ')}
