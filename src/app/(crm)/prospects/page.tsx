@@ -64,7 +64,11 @@ export default async function ProspectsPage({
   
   // Only apply DB sorting if it's not our custom open_tasks or is_favorite sort
   if (sortCol !== 'open_tasks' && sortCol !== 'is_favorite') {
-    baseQuery = baseQuery.order(sortCol, { ascending: sortDir });
+    baseQuery = baseQuery.order(sortCol, { ascending: sortDir, nullsFirst: false });
+  }
+  // Always add a fallback sort to ensure stable ordering (especially for in-memory sorts)
+  if (sortCol !== 'created_at') {
+    baseQuery = baseQuery.order('created_at', { ascending: false });
   }
 
   if (search) baseQuery = baseQuery.ilike('company_name', `%${search}%`);
