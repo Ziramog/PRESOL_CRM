@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 
 import { ProspectHeader } from '@/components/crm/prospect-header';
+import { BusinessCardScanner } from '@/components/crm/v2/BusinessCardScanner';
+import { SmartCheckIn } from '@/components/crm/SmartCheckIn';
 import { NextActionCard } from '@/components/crm/v2/NextActionCard';
 import { PrimaryContactCard } from '@/components/crm/v2/PrimaryContactCard';
 import { CommercialStatusCard } from '@/components/crm/v2/CommercialStatusCard';
@@ -112,6 +114,14 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
           availableSectors={[]} 
           latestActivity={overview.latest_activity}
           nextTask={overview.next_task}
+        />
+      </div>
+
+      <div className="mt-4">
+        <SmartCheckIn 
+          prospectId={id} 
+          prospectLat={prospect.source_payload?.lat} 
+          prospectLng={prospect.source_payload?.lng} 
         />
       </div>
 

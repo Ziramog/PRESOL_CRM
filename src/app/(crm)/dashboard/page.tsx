@@ -6,6 +6,8 @@ import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { FollowUpsBlock } from '@/components/dashboard/FollowUpsBlock';
 import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
 import { MorningSummaryModal } from '@/components/dashboard/MorningSummaryModal';
+import Link from 'next/link';
+import { Compass, ArrowRight } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,6 +65,22 @@ export default async function DashboardPage(props: {
       </div>
 
       <MorningSummaryModal />
+
+      {/* Radar Shortcut for Mobile */}
+      <div className="md:hidden">
+        <Link href="/radar" className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-sm text-white">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/20">
+              <Compass className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-bold text-[15px]">Radar de Oportunidades</p>
+              <p className="text-xs text-blue-100 font-medium mt-0.5">Buscá prospectos cerca tuyo</p>
+            </div>
+          </div>
+          <ArrowRight className="w-5 h-5 text-white/70" />
+        </Link>
+      </div>
 
       {/* Executive 3-card summary / carousel */}
       <ExecutiveSummary summary={data.summary} baseDate={data.baseDate} />

@@ -325,6 +325,11 @@ export function ProspectForm({
                             if (addrInput) addrInput.value = addressFull;
                           }
                           
+                          const latInput = document.querySelector('[name="lat"]') as HTMLInputElement;
+                          const lngInput = document.querySelector('[name="lng"]') as HTMLInputElement;
+                          if (latInput) latInput.value = latitude.toString();
+                          if (lngInput) lngInput.value = longitude.toString();
+                          
                           let matchedProv = '';
                           if (state) {
                             matchedProv = PROVINCES.find(p => state.toLowerCase().includes(p.toLowerCase())) || '';
@@ -364,6 +369,8 @@ export function ProspectForm({
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1.5">Dirección</label>
                 <input type="text" name="address" defaultValue={prospect?.address || ''} className="w-full text-sm rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white py-2.5 px-3" placeholder="Ej: San Martín 1234" />
+                <input type="hidden" name="lat" defaultValue={prospect?.source_payload?.lat || ''} />
+                <input type="hidden" name="lng" defaultValue={prospect?.source_payload?.lng || ''} />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

@@ -47,6 +47,13 @@ export async function createProspect(formData: FormData) {
     if (val) payload[field === 'class' ? 'class' : field] = val;
   }
 
+  const lat = formData.get('lat') as string;
+  const lng = formData.get('lng') as string;
+  
+  if (lat && lng) {
+    payload.source_payload = { lat: parseFloat(lat), lng: parseFloat(lng) };
+  }
+
   const { data, error } = await supabase
     .from('prospects')
     .insert([payload])
@@ -82,6 +89,18 @@ export async function updateProspect(id: string, formData: FormData) {
   for (const field of fields) {
     const val = formData.get(field) as string;
     payload[field === 'class' ? 'class' : field] = val || null;
+  }
+
+  const lat = formData.get('lat') as string;
+  const lng = formData.get('lng') as string;
+  
+  if (lat && lng) {
+    // Need to fetch existing first, or just override. 
+    // To be safe we will just override the source_payload for now since we only use it for lat/lng and favorites which is handled elsewhere.
+    // Wait, favorites is handled in source_payload!
+    // So we need to fetch first or do a JSONB set.
+    const { data: existing } = await supabase.from('prospects').select('source_payload').eq('id', id).single();
+    payload.source_payload = { ...(existing?.source_payload || {}), lat: parseFloat(lat), lng: parseFloat(lng) };
   }
 
   const { data, error } = await supabase

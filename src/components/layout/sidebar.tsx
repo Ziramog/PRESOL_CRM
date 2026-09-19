@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Map, Users, CheckSquare, Settings, Home, Target, BarChart3, FileText, Calculator } from 'lucide-react';
+import { Map, Users, CheckSquare, Settings, Home, Target, BarChart3, FileText, Calculator, Compass } from 'lucide-react';
 import Image from 'next/image';
 
 import { NotificationsBell } from './notifications-bell';
@@ -10,6 +10,7 @@ import { NotificationsBell } from './notifications-bell';
 const items = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Prospectos', href: '/prospects', icon: Users },
+  { name: 'Radar', href: '/radar', icon: Compass },
   { name: 'Cotizaciones', href: '/quotes', icon: FileText },
   { name: 'Giras', href: '/trips', icon: Map },
   // { name: 'Dirección', href: '/direction', icon: BarChart3 }, // hidden until fully developed
