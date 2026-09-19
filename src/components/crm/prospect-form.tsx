@@ -158,18 +158,28 @@ export function ProspectForm({
     if (evidenceSelect) formData.set('evidence', evidenceSelect === 'Otra' ? evidenceCustom : evidenceSelect);
     
     let result;
-    if (prospect) {
-      result = await updateProspect(prospect.id, formData);
-    } else {
-      result = await createProspect(formData);
-    }
-    
-    if (result.error) {
-      setError(result.error);
-      setIsPending(false);
-    } else {
-      router.push(`/prospects/${result.prospect.id}`);
-      onClose();
+    try {
+      if (prospect) {
+        result = await updateProspect(prospect.id, formData);
+      } else {
+        result = await createProspect(formData);
+      }
+      
+      if (result.error) {
+        setError(result.error);
+        setIsPending(false);
+      } else {
+        router.push(result.prospect?.id ? `/prospects/${result.prospect.id}` : '/prospects');
+        onClose();
+      }
+    } catch (err: any) {
+      if (err.message?.includes('fetch') || !navigator.onLine) {
+        alert('Guardado en la cola offline. Se sincronizará automáticamente cuando recuperes la conexión.');
+        onClose();
+      } else {
+        setError('Ocurrió un error inesperado');
+        setIsPending(false);
+      }
     }
   };
 
