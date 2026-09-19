@@ -81,3 +81,52 @@ export async function completeTask(taskId: string) {
   revalidatePath('/tasks');
   return { success: true };
 }
+
+export async function getPendingTasksSummary() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) return { success: false, error: 'Unauthorized' };
+
+  // Convert current time to local Argentina string for comparison
+  const today = new Date().toISOString().split('T')[0];
+
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('id, due_at, title, priority, status')
+    .eq('assigned_to', user.id)
+    .eq('status', 'pending');
+
+  if (error) {
+    console.error('Error fetching tasks summary:', error);
+    return { success: false, error: error.message };
+  }
+
+  let overdueCount = 0;
+  let todayCount = 0;
+  const overdueTasks: any[] = [];
+  const todayTasks: any[] = [];
+
+  for (const task of data) {
+    if (!task.due_at) continue;
+    // Task dates are stored as UTC iso strings (e.g. 2026-09-18T15:00:00Z)
+    // We can extract just the YYYY-MM-DD to compare
+    const taskDate = task.due_at.split('T')[0];
+    
+    if (taskDate < today) {
+      overdueCount++;
+      overdueTasks.push(task);
+    } else if (taskDate === today) {
+      todayCount++;
+      todayTasks.push(task);
+    }
+  }
+
+  return { 
+    success: true, 
+    overdueCount, 
+    todayCount,
+    totalAlerts: overdueCount + todayCount,
+    tasks: { overdue: overdueTasks, today: todayTasks }
+  };
+}

@@ -5,6 +5,7 @@ import { ConversionFunnel } from '@/components/charts/ConversionFunnel';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { FollowUpsBlock } from '@/components/dashboard/FollowUpsBlock';
 import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
+import { MorningSummaryModal } from '@/components/dashboard/MorningSummaryModal';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,6 +61,8 @@ export default async function DashboardPage(props: {
         </div>
         <DashboardFilters currentParams={searchParams} />
       </div>
+
+      <MorningSummaryModal />
 
       {/* Executive 3-card summary / carousel */}
       <ExecutiveSummary summary={data.summary} baseDate={data.baseDate} />

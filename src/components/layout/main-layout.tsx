@@ -1,5 +1,6 @@
 import { BottomNav } from './bottom-nav';
 import { Sidebar } from './sidebar';
+import { MobileHeader } from './mobile-header';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,7 +12,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         }}
       />
       <Sidebar />
-      <main className="flex-1 md:pl-64 pb-16 md:pb-0">
+      <main className="flex-1 md:pl-64 pb-16 md:pb-0 flex flex-col">
+        <MobileHeader />
         <div className="h-full w-full p-4 md:p-8">
           {children}
         </div>

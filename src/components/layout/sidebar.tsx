@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { Map, Users, CheckSquare, Settings, Home, Target, BarChart3, FileText, Calculator } from 'lucide-react';
 import Image from 'next/image';
 
+import { NotificationsBell } from './notifications-bell';
+
 const items = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Prospectos', href: '/prospects', icon: Users },
@@ -20,15 +22,18 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-gray-900 border-r border-gray-800 h-screen fixed top-0 left-0 text-white">
-      <div className="flex h-16 shrink-0 items-center justify-center bg-white border-b border-gray-200">
+    <aside className="hidden md:flex flex-col w-64 bg-gray-900 border-r border-gray-800 h-screen fixed top-0 left-0 text-white z-40">
+      <div className="flex h-16 shrink-0 items-center justify-between px-4 bg-white border-b border-gray-200">
         <Image 
           src="/logo-presol.png" 
           alt="PRESOL Logo" 
-          width={160} 
-          height={45} 
+          width={140} 
+          height={40} 
           className="object-contain"
         />
+        <div className="flex items-center">
+          <NotificationsBell />
+        </div>
       </div>
       
       <div className="flex-1 overflow-y-auto py-4">
