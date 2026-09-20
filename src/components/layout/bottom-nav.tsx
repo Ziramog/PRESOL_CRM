@@ -2,15 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Map, Users, CheckSquare, MoreHorizontal, Home, Calculator } from 'lucide-react';
+import { Users, CheckSquare, Settings, Home, Calculator } from 'lucide-react';
 
 const items = [
   { name: 'Inicio', href: '/dashboard', icon: Home },
   { name: 'CRM', href: '/prospects', icon: Users },
-  { name: 'Cotizar', href: '/quotes', icon: Calculator },
-  { name: 'Ruta', href: '/trips', icon: Map },
   { name: 'Tareas', href: '/tasks', icon: CheckSquare },
-  { name: 'Más', href: '/settings', icon: MoreHorizontal },
+  { name: 'Cotizar', href: '/quotes', icon: Calculator },
+  { name: 'Config', href: '/settings', icon: Settings },
 ];
 
 export function BottomNav() {
