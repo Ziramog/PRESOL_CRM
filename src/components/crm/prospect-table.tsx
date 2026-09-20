@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { PROSPECT_STATUS } from '@/lib/constants';
-import { ArrowUpDown, ArrowUp, ArrowDown, MessageSquare, Star } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, MessageSquare } from 'lucide-react';
 import { FavoriteButton } from './FavoriteButton';
 
 type SortDir = 'asc' | 'desc';
@@ -16,7 +16,7 @@ interface Column {
 }
 
 const COLUMNS: Column[] = [
-  { key: 'is_favorite', label: '⭐', sortable: true },
+  { key: 'is_favorite', label: '❤️', sortable: true },
   { key: 'external_id', label: 'ID', sortable: true },
   { key: 'company_name', label: 'Empresa', sortable: true },
   { key: 'city', label: 'Ciudad', sortable: true },

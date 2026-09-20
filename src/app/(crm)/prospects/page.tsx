@@ -59,81 +59,123 @@ export default async function ProspectsPage({
     ? SORTABLE_COLUMNS[params.sort]
     : 'created_at';
   const sortDir = params.dir === 'asc';
+  const page = parseInt(typeof params.page === 'string' ? params.page : '1', 10) || 1;
+  const pageSize = 50;
+  const startRange = (page - 1) * pageSize;
+  const endRange = startRange + pageSize - 1;
 
-  let baseQuery = supabaseAdmin.from('prospects').select('*, contacts(id, phone, is_primary)');
+  // We will build the prospect query dynamically
+  let baseQuery = supabaseAdmin.from('prospects').select('*, contacts(id, phone, is_primary)', { count: 'exact' });
   
-  // Only apply DB sorting if it's not our custom open_tasks or is_favorite sort
+  // If we need to sort by a normal column, apply it
   if (sortCol !== 'open_tasks' && sortCol !== 'is_favorite') {
     baseQuery = baseQuery.order(sortCol, { ascending: sortDir, nullsFirst: false });
+  } else if (sortCol === 'is_favorite') {
+    baseQuery = baseQuery.order('is_favorite', { ascending: sortDir, nullsFirst: false });
   }
-  // Always add a fallback sort to ensure stable ordering (especially for in-memory sorts)
   if (sortCol !== 'created_at') {
     baseQuery = baseQuery.order('created_at', { ascending: false });
   }
 
+  // Filters
   if (search) baseQuery = baseQuery.ilike('company_name', `%${search}%`);
   if (prospectClass) baseQuery = baseQuery.eq('class', prospectClass);
   if (selectedCities.length > 0) baseQuery = baseQuery.in('city', selectedCities);
   if (sector) baseQuery = baseQuery.eq('sector', sector);
   if (status) baseQuery = baseQuery.eq('contact_status', status);
   if (favoritesOnly) {
-    baseQuery = baseQuery.eq('source_payload->is_favorite', true);
+    baseQuery = baseQuery.eq('is_favorite', true);
   }
 
-  const [prospectsResponse, citiesResponse, sectorsResponse, dirNotesResponse, tasksResponse] = await Promise.all([
-    baseQuery,
-    supabaseAdmin.from('prospects').select('city'),
-    supabaseAdmin.from('prospects').select('sector'),
-    // Get all prospect IDs that have at least one direction note
-    supabaseAdmin
-      .from('comments')
-      .select('prospect_id')
-      .eq('is_direction_note', true)
-      .is('deleted_at', null),
-    supabaseAdmin
-      .from('tasks')
-      .select('prospect_id')
-      .eq('status', 'pending'),
+  // OPTIMIZATION: Only fetch distinct cities and sectors lightly (without full records)
+  const [citiesResponse, sectorsResponse] = await Promise.all([
+    supabaseAdmin.from('prospects').select('city').not('city', 'is', null),
+    supabaseAdmin.from('prospects').select('sector').not('sector', 'is', null)
   ]);
 
-  const { data: prospects, error } = prospectsResponse;
-  if (error) console.error(error);
+  let prospects: any[] = [];
+  let totalCount = 0;
+  let taskCounts: Record<string, number> = {};
+  
+  // OPTIMIZATION: If sorting by open_tasks, we calculate it using only the lightweight tasks table
+  if (sortCol === 'open_tasks') {
+    // 1. Fetch all pending tasks to compute counts
+    const { data: allTasks } = await supabaseAdmin.from('tasks').select('prospect_id').eq('status', 'pending');
+    (allTasks ?? []).forEach((t: any) => {
+      taskCounts[t.prospect_id] = (taskCounts[t.prospect_id] || 0) + 1;
+    });
 
-  // Build a Set for O(1) lookup
-  const dirNoteProspects = new Set<string>(
-    (dirNotesResponse.data ?? []).map((c: any) => c.prospect_id),
-  );
+    // 2. Fetch lightweight prospect IDs matching filters to sort them in memory
+    const lightweightQuery = supabaseAdmin.from('prospects').select('id');
+    if (search) lightweightQuery.ilike('company_name', `%${search}%`);
+    if (prospectClass) lightweightQuery.eq('class', prospectClass);
+    if (selectedCities.length > 0) lightweightQuery.in('city', selectedCities);
+    if (sector) lightweightQuery.eq('sector', sector);
+    if (status) lightweightQuery.eq('contact_status', status);
+    if (favoritesOnly) lightweightQuery.eq('is_favorite', true);
+    
+    const { data: idData } = await lightweightQuery;
+    const matchingIds = (idData ?? []).map(p => p.id);
+    totalCount = matchingIds.length;
 
-  const taskCounts: Record<string, number> = {};
-  (tasksResponse.data ?? []).forEach((t: any) => {
-    taskCounts[t.prospect_id] = (taskCounts[t.prospect_id] || 0) + 1;
-  });
+    // 3. Sort IDs in memory by task count
+    matchingIds.sort((a, b) => {
+      const diff = (taskCounts[a] || 0) - (taskCounts[b] || 0);
+      return sortDir ? diff : -diff;
+    });
 
-  // Attach has_direction_note flag, is_favorite boolean, and open_tasks count to each prospect
-  let prospectsWithFlags = (prospects ?? []).map((p) => ({
+    // 4. Paginate IDs and fetch ONLY full data for the current page
+    const pageIds = matchingIds.slice(startRange, endRange + 1);
+    
+    if (pageIds.length > 0) {
+      const { data: pData } = await supabaseAdmin.from('prospects')
+        .select('*, contacts(id, phone, is_primary)')
+        .in('id', pageIds);
+      
+      // Restore sorted order
+      prospects = (pData ?? []).sort((a, b) => pageIds.indexOf(a.id) - pageIds.indexOf(b.id));
+    }
+  } else {
+    // STANDARD SORTING: Apply pagination directly to the database query
+    baseQuery = baseQuery.range(startRange, endRange);
+    const res = await baseQuery;
+    prospects = res.data ?? [];
+    totalCount = res.count ?? 0;
+
+    // Fetch tasks ONLY for the paginated prospects
+    if (prospects.length > 0) {
+      const pageIds = prospects.map(p => p.id);
+      const { data: pageTasks } = await supabaseAdmin.from('tasks')
+        .select('prospect_id')
+        .eq('status', 'pending')
+        .in('prospect_id', pageIds);
+      
+      (pageTasks ?? []).forEach((t: any) => {
+        taskCounts[t.prospect_id] = (taskCounts[t.prospect_id] || 0) + 1;
+      });
+    }
+  }
+
+  // Fetch direction notes ONLY for the paginated prospects
+  const dirNoteProspects = new Set<string>();
+  if (prospects.length > 0) {
+    const pageIds = prospects.map(p => p.id);
+    const { data: dirNotes } = await supabaseAdmin.from('comments')
+      .select('prospect_id')
+      .eq('is_direction_note', true)
+      .is('deleted_at', null)
+      .in('prospect_id', pageIds);
+    
+    (dirNotes ?? []).forEach((n: any) => dirNoteProspects.add(n.prospect_id));
+  }
+
+  // Attach has_direction_note flag, is_favorite boolean, and open_tasks count
+  let prospectsWithFlags = prospects.map((p) => ({
     ...p,
-    is_favorite: Boolean(p.is_favorite || p.source_payload?.is_favorite),
+    is_favorite: Boolean(p.is_favorite), // Now uses native DB column
     has_direction_note: dirNoteProspects.has(p.id),
     open_tasks: taskCounts[p.id] || 0,
   }));
-
-  if (favoritesOnly) {
-    prospectsWithFlags = prospectsWithFlags.filter((p) => p.is_favorite);
-  }
-
-  if (sortCol === 'open_tasks') {
-    prospectsWithFlags.sort((a, b) => {
-      const diff = a.open_tasks - b.open_tasks;
-      return sortDir ? diff : -diff;
-    });
-  } else if (sortCol === 'is_favorite') {
-    prospectsWithFlags.sort((a, b) => {
-      const aVal = a.is_favorite ? 1 : 0;
-      const bVal = b.is_favorite ? 1 : 0;
-      const diff = aVal - bVal;
-      return sortDir ? diff : -diff;
-    });
-  }
 
   const cities = Array.from(
     new Set(citiesResponse.data?.map((c) => c.city).filter(Boolean)),

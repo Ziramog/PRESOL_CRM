@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, Filter, X, Check, Star } from 'lucide-react';
+import { Search, Filter, X, Check, Heart } from 'lucide-react';
 import { useTransition, useState, useRef, useEffect, useCallback } from 'react';
 import { PROSPECT_STATUS } from '@/lib/constants';
 import { saveProspectFilters } from '@/app/actions/preferences';
@@ -208,12 +208,12 @@ export function ProspectFilters({
           }}
           className={`relative flex-none h-[38px] px-2.5 rounded-lg border transition-all flex items-center gap-1.5 active:scale-95 ${
             currentFavorites === 'true'
-              ? 'bg-amber-500 border-amber-500 text-white shadow-sm'
-              : 'bg-white border-gray-200 text-gray-500 hover:border-amber-300 hover:text-amber-500 hover:bg-amber-50/50'
+              ? 'bg-rose-500 border-rose-500 text-white shadow-sm'
+              : 'bg-white border-gray-200 text-gray-500 hover:border-rose-300 hover:text-rose-500 hover:bg-rose-50/50'
           }`}
           title={currentFavorites === 'true' ? 'Mostrando solo favoritos' : 'Filtrar por favoritos'}
         >
-          <Star
+          <Heart
             className="h-4 w-4"
             fill={currentFavorites === 'true' ? 'currentColor' : 'none'}
             strokeWidth={2}
@@ -239,7 +239,7 @@ export function ProspectFilters({
           >
             <option value="created_at-desc">Más recientes primero</option>
             <option value="created_at-asc">Más antiguos primero</option>
-            <option value="is_favorite-desc">⭐ Favoritos primero</option>
+            <option value="is_favorite-desc">❤️ Favoritos primero</option>
             <option value="open_tasks-desc">Más seguimientos abiertos</option>
             <option value="open_tasks-asc">Menos seguimientos abiertos</option>
             <option value="last_contact_date-desc">Mayor interacción (recientes)</option>
