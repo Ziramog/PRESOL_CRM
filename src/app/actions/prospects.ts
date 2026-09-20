@@ -22,6 +22,22 @@ export async function searchProspects(query: string) {
   return { data };
 }
 
+async function geocodeAddress(address: string, city: string) {
+  try {
+    const q = encodeURIComponent(`${address}, ${city}, Argentina`);
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`, {
+      headers: { 'User-Agent': 'PRESOL_CRM/1.0' }
+    });
+    const data = await res.json();
+    if (data && data.length > 0) {
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    }
+  } catch (error) {
+    console.error('Geocoding error:', error);
+  }
+  return null;
+}
+
 export async function createProspect(formData: FormData) {
   const supabase = await createAdminClient();
   
@@ -52,6 +68,11 @@ export async function createProspect(formData: FormData) {
   
   if (lat && lng) {
     payload.source_payload = { lat: parseFloat(lat), lng: parseFloat(lng) };
+  } else if (payload.address && payload.city) {
+    const coords = await geocodeAddress(payload.address, payload.city);
+    if (coords) {
+      payload.source_payload = { lat: coords.lat, lng: coords.lng };
+    }
   }
 
   const { data, error } = await supabase
@@ -96,11 +117,15 @@ export async function updateProspect(id: string, formData: FormData) {
   
   if (lat && lng) {
     // Need to fetch existing first, or just override. 
-    // To be safe we will just override the source_payload for now since we only use it for lat/lng and favorites which is handled elsewhere.
-    // Wait, favorites is handled in source_payload!
-    // So we need to fetch first or do a JSONB set.
     const { data: existing } = await supabase.from('prospects').select('source_payload').eq('id', id).single();
     payload.source_payload = { ...(existing?.source_payload || {}), lat: parseFloat(lat), lng: parseFloat(lng) };
+  } else if (payload.address && payload.city) {
+    // Auto-geocode if missing
+    const coords = await geocodeAddress(payload.address, payload.city);
+    if (coords) {
+      const { data: existing } = await supabase.from('prospects').select('source_payload').eq('id', id).single();
+      payload.source_payload = { ...(existing?.source_payload || {}), lat: coords.lat, lng: coords.lng };
+    }
   }
 
   const { data, error } = await supabase
