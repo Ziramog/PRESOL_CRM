@@ -6,6 +6,7 @@ import { ProspectFilters } from '@/components/crm/prospect-filters';
 import { NewProspectButton } from '@/components/crm/new-prospect-button';
 import { ExportProspectsButton } from '@/components/crm/v2/ExportProspectsButton';
 import { BusinessCardScanner } from '@/components/crm/v2/BusinessCardScanner';
+import { ProspectPagination } from '@/components/crm/prospect-pagination';
 
 // Columns the user can sort by
 const SORTABLE_COLUMNS: Record<string, string> = {
@@ -220,6 +221,8 @@ export default async function ProspectsPage({
           currentDir={sortDir ? 'asc' : 'desc'}
         />
       </div>
+
+      <ProspectPagination totalCount={totalCount} pageSize={pageSize} currentPage={page} />
     </div>
   );
 }
