@@ -111,14 +111,15 @@ export default async function ProspectsPage({
   let totalCount = 0;
   let taskCounts: Record<string, number> = {};
   
-  // Status weight for logical sorting
+  // Status weight for logical sorting (ascending = funnel order, active first)
+  // Lower weight = higher priority (shows first in asc sort)
   const STATUS_WEIGHTS: Record<string, number> = {
-    pending: 1,
-    in_progress: 2,
-    interested: 3,
-    opportunity: 4,
-    quote: 5,
-    customer: 6,
+    in_progress: 1,
+    interested: 2,
+    opportunity: 3,
+    quote: 4,
+    customer: 5,
+    pending: 6,
     discarded: 7,
   };
 
