@@ -141,7 +141,7 @@ export function EnrichmentModal({ prospect }: { prospect: any }) {
               </div>
             )}
 
-            <div className="p-4 flex-1 overflow-y-auto">
+            <div className="p-4 flex-1 min-h-0 overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-sm font-medium text-gray-700">Prospecto: {prospect.company_name}</span>
                 <button 

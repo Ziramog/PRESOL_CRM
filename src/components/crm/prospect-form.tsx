@@ -228,7 +228,7 @@ export function ProspectForm({
           })}
         </div>
 
-        <div className="overflow-y-auto p-5 sm:p-6 flex-1 bg-slate-50/50">
+        <div className="overflow-y-auto min-h-0 p-5 sm:p-6 flex-1 bg-slate-50/50">
           <div className="mb-6">
             <button
               type="button"

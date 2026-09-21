@@ -47,7 +47,7 @@ function KpiModal({
           </button>
         </div>
         {/* Body */}
-        <div className="overflow-y-auto flex-1 py-2">
+        <div className="overflow-y-auto min-h-0 flex-1 py-2">
           {loading ? (
             <div className="flex justify-center items-center py-16">
               <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />

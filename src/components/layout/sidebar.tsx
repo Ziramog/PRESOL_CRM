@@ -37,7 +37,7 @@ export function Sidebar() {
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto py-4">
+      <div className="flex-1 min-h-0 overflow-y-auto py-4">
         <nav className="space-y-1 px-3">
           {items.map((item) => {
             const isActive = item.href === '/' ? pathname === '/' : pathname?.startsWith(item.href);

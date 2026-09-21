@@ -173,7 +173,7 @@ export function ContactForm({
           </div>
         </div>
         
-        <div className="overflow-y-auto p-5 sm:p-6 flex-1 bg-slate-50/50">
+        <div className="overflow-y-auto min-h-0 p-5 sm:p-6 flex-1 bg-slate-50/50">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
             <button 
               type="button" 

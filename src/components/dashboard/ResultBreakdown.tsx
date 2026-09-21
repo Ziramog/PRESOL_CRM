@@ -93,7 +93,7 @@ export function ResultBreakdown({ results }: { results: any[] }) {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="overflow-y-auto flex-1 py-2">
+            <div className="overflow-y-auto min-h-0 flex-1 py-2">
               <ul>
                 {modal.items.map((item, idx) => {
                   const prospect = Array.isArray(item.prospects) ? item.prospects[0] : item.prospects;

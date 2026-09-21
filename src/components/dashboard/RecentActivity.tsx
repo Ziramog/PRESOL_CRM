@@ -99,7 +99,7 @@ export function RecentActivity({ activities, showDate = false }: { activities: a
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 relative z-0 max-h-[450px]">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-5 py-4 relative z-0 max-h-[450px]">
         <div className="absolute left-[74px] sm:left-[82px] top-6 bottom-4 w-px bg-slate-200 z-0" />
         <div className="relative z-10 flex flex-col gap-4">
           {activities.map((a) => {

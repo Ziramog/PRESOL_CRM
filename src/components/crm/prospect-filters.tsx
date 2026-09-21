@@ -291,7 +291,7 @@ export function ProspectFilters({
                   </button>
                 </div>
                 
-                <div className="p-4 overflow-y-auto bg-gray-50/50 flex-1 space-y-5">
+                <div className="p-4 overflow-y-auto min-h-0 bg-gray-50/50 flex-1 space-y-5">
                   {/* Regla Principal */}
                   <div>
                     <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">1. Regla Principal</h4>
@@ -438,7 +438,7 @@ export function ProspectFilters({
             </div>
 
             {/* Tab content */}
-            <div className="p-3 overflow-y-auto flex-1">
+            <div className="p-3 overflow-y-auto min-h-0 flex-1">
               {/* CIUDAD */}
               {activeTab === 'city' && (
                 <div className="space-y-0.5 pb-16 sm:pb-0">

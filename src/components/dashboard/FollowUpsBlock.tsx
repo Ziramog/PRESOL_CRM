@@ -79,7 +79,7 @@ export function FollowUpsBlock({ followups }: { followups: any[] }) {
           <p className="text-sm text-gray-400">No hay tareas pendientes.</p>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto pb-2">
+        <div className="flex-1 min-h-0 overflow-y-auto pb-2">
           <p className="px-5 pb-2 text-[13px] font-bold text-slate-700">Próximas acciones</p>
           <div className="flex flex-col">
             {followups.slice(0, 5).map((task) => {

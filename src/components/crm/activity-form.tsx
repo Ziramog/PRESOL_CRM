@@ -103,7 +103,7 @@ export function ActivityForm({
           </button>
         </div>
         
-        <form id="activity-form" onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1">
+        <form id="activity-form" onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto min-h-0 flex-1">
           <input type="hidden" name="prospect_id" value={prospectId} />
           
           <div>
