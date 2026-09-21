@@ -4,6 +4,13 @@ export function getLeadTemperature(updatedAt: string | null | undefined): { colo
   if (!updatedAt) return { color: null, label: '', animate: false };
   
   const updatedDate = new Date(updatedAt);
+  const iso = updatedDate.toISOString();
+  // HACK: Ignore mass updates from the geocoding script to prevent all prospects from lighting up
+  if (iso.startsWith('2026-09-21T02:22:') || iso.startsWith('2026-09-21T02:23:') || 
+      iso.startsWith('2026-09-21T14:35:') || iso.startsWith('2026-09-21T14:36:')) {
+    return { color: null, label: '', animate: false };
+  }
+  
   const now = new Date();
   
   // Calculate raw difference in milliseconds
