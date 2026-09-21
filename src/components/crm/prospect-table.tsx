@@ -109,7 +109,10 @@ export function ProspectTable({
               </td>
             </tr>
           ) : (
-            prospects.map((prospect) => (
+            prospects.map((prospect) => {
+              const isUpdatedToday = prospect.updated_at && new Date(prospect.updated_at).toDateString() === new Date().toDateString();
+
+              return (
               <tr
                 key={prospect.id}
                 className="hover:bg-gray-50/80 transition-colors group"
@@ -137,6 +140,12 @@ export function ProspectTable({
                     >
                       {prospect.company_name}
                     </Link>
+                    {isUpdatedToday && (
+                      <span className="relative flex h-2.5 w-2.5 shrink-0" title="Actividad hoy">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                      </span>
+                    )}
                     {prospect.has_direction_note && (
                       <span
                         title="Tiene nota de dirección"
@@ -200,7 +209,6 @@ export function ProspectTable({
                   )}
                 </td>
 
-                {/* Acciones */}
                 <td className="px-5 py-3.5 text-right">
                   <Link
                     href={`/prospects/${prospect.id}`}
@@ -210,7 +218,8 @@ export function ProspectTable({
                   </Link>
                 </td>
               </tr>
-            ))
+            );
+          })
           )}
         </tbody>
       </table>
