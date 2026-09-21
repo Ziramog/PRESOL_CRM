@@ -41,9 +41,51 @@ export function ProspectPagination({ totalCount, pageSize, currentPage }: { tota
               <span className="sr-only">Anterior</span>
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </button>
-            <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-20 focus:outline-offset-0">
-              {currentPage} / {totalPages}
-            </span>
+            
+            {/* Numeric Pages */}
+            {(() => {
+              const pages: (number | string)[] = [];
+              if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+              } else {
+                if (currentPage <= 3) {
+                  pages.push(1, 2, 3, 4, '...', totalPages - 1, totalPages);
+                } else if (currentPage >= totalPages - 2) {
+                  pages.push(1, 2, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                } else {
+                  pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                }
+              }
+
+              return pages.map((p, i) => {
+                if (p === '...') {
+                  return (
+                    <span
+                      key={`ellipsis-${i}`}
+                      className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300 focus:outline-offset-0"
+                    >
+                      ...
+                    </span>
+                  );
+                }
+                const isActive = p === currentPage;
+                return (
+                  <button
+                    key={`page-${p}`}
+                    onClick={() => handlePage(p as number)}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus:outline-offset-0 ${
+                      isActive
+                        ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
+                        : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                );
+              });
+            })()}
+
             <button
               onClick={() => handlePage(currentPage + 1)}
               disabled={currentPage === totalPages}
