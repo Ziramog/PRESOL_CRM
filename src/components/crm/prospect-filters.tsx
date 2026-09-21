@@ -11,7 +11,7 @@ type Tab = 'class' | 'sector' | 'city' | 'status';
 const SORT_OPTIONS = [
   { value: 'created_at-desc', label: 'Más recientes primero', icon: <Calendar /> },
   { value: 'created_at-asc', label: 'Más antiguos primero', icon: <Calendar /> },
-  { value: 'contact_status-desc', label: 'Por Estado (Embudo)', icon: <Activity /> },
+  { value: 'contact_status-asc', label: 'Por Estado (Embudo)', icon: <Activity /> },
   { value: 'is_favorite-desc', label: '❤️ Favoritos primero', icon: <Heart /> },
   { value: 'open_tasks-desc', label: 'Más seguimientos abiertos', icon: <ListTodo /> },
   { value: 'last_contact_date-desc', label: 'Mayor interacción (recientes)', icon: <Activity /> },
