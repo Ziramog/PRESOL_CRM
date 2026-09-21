@@ -291,6 +291,7 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
             dateLabel={p.dateLabel}
             data={p.data}
             periodCode={p.periodCode}
+            dateStr={p.dateStr}
             isPrimary={currentPeriod === p.periodCode || (currentPeriod === 'custom' && p.periodCode === 'today') || (currentPeriod === 'yesterday' && p.periodCode === 'yesterday' && p.title === 'Ayer')}
             rate={rate}
             onMetricClick={openModal}
@@ -408,7 +409,7 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
 // ── Desktop card (unchanged logic, just renamed) ────────────────────────────
 
 function DesktopPeriodCard({
-  title, dateLabel, data, periodCode, isPrimary, rate, onMetricClick, onCardClick,
+  title, dateLabel, data, periodCode, dateStr, isPrimary, rate, onMetricClick, onCardClick,
 }: {
   title: string;
   dateLabel: string;
