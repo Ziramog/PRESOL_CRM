@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { PROSPECT_STATUS } from '@/lib/constants';
@@ -57,6 +58,8 @@ export function ProspectTable({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const [isPending, startTransition] = React.useTransition();
+
   const handleSort = (colKey: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (currentSort === colKey) {
@@ -66,7 +69,9 @@ export function ProspectTable({
       params.set('sort', colKey);
       params.set('dir', 'asc');
     }
-    router.push(`${pathname}?${params.toString()}`);
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
   };
 
   const SortIcon = ({ colKey }: { colKey: string }) => {

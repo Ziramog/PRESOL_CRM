@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React from 'react';
 
 export function ProspectPagination({ totalCount, pageSize, currentPage }: { totalCount: number, pageSize: number, currentPage: number }) {
   const router = useRouter();
@@ -12,10 +13,14 @@ export function ProspectPagination({ totalCount, pageSize, currentPage }: { tota
 
   if (totalPages <= 1) return null;
 
+  const [isPending, startTransition] = React.useTransition();
+
   const handlePage = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', page.toString());
-    router.push(`${pathname}?${params.toString()}`);
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
   };
 
   return (
