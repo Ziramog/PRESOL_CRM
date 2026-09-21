@@ -134,7 +134,7 @@ export function ProspectHeader({
         </button>
       </div>
 
-      <div className="relative flex flex-col lg:flex-row lg:flex-wrap lg:justify-between lg:items-start mb-4 bg-white rounded-[24px] p-5 shadow-sm border border-slate-100 lg:gap-y-6">
+      <div className="relative flex flex-col lg:grid lg:grid-cols-[1fr_360px] lg:gap-6 mb-4 bg-white rounded-[24px] p-5 shadow-sm border border-slate-100">
         
         {/* Top Right Actions (Heart & Menu) */}
         <div className="absolute top-4 right-4 flex items-center gap-1.5 z-10">
@@ -178,10 +178,10 @@ export function ProspectHeader({
           </div>
         </div>
 
-        {/* --- LEFT SECTION (Identity & Info) --- */}
-        <div className="flex flex-col flex-1 min-w-0 lg:pr-4">
+        {/* --- LEFT SECTION (Identity, Info & Actions) --- */}
+        <div className="flex flex-col min-w-0 pr-12 lg:pr-0">
           {/* 2. Title Section */}
-          <div className="flex flex-row items-center sm:items-start text-left gap-3 mb-5 mt-2 lg:mb-3 px-1">
+          <div className="flex flex-row items-center sm:items-start text-left gap-3 mb-5 mt-2 lg:mb-4 px-1">
             <div className="w-[64px] h-[64px] rounded-[16px] bg-blue-50 flex items-center justify-center shrink-0">
               <Building2 className="w-8 h-8 text-blue-600" strokeWidth={1.5} />
             </div>
@@ -252,7 +252,7 @@ export function ProspectHeader({
           </div>
 
           {/* 3. Compact Info Row (Location | Sector) */}
-          <div className="flex items-center justify-start gap-3 text-[13px] text-slate-600 mb-6 lg:mb-0 font-medium px-1">
+          <div className="flex items-center justify-start gap-3 text-[13px] text-slate-600 mb-6 lg:mb-5 font-medium px-1">
             <div className="flex items-center gap-1.5 min-w-0">
               <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
               <span className="truncate max-w-[120px] lg:max-w-none">{prospect.city || 'Sin ciudad'}</span>
@@ -263,59 +263,58 @@ export function ProspectHeader({
               <span className="truncate max-w-[120px] lg:max-w-none">{prospect.sector || prospect.commercial_category || 'Sin rubro'}</span>
             </div>
           </div>
-        </div>
 
-        {/* --- RIGHT SECTION (Actions) --- */}
-        <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4 w-full lg:w-auto shrink-0 mt-2 lg:mt-6 lg:pr-12">
-          {/* 4. Primary Action Button */}
-          <button 
-            onClick={() => setShowActivityForm(true)}
-            className="w-full lg:w-auto lg:px-5 h-[54px] lg:h-[48px] bg-[#1456c2] text-white rounded-2xl flex items-center justify-center gap-2.5 shadow-md hover:bg-blue-800 transition-all active:scale-[0.98] mb-5 lg:mb-0"
-          >
-            <PlusCircle className="w-6 h-6 lg:w-5 lg:h-5" strokeWidth={2} />
-            <span className="text-[16px] lg:text-[14px] font-semibold tracking-wide whitespace-nowrap">Registrar actividad</span>
-          </button>
-
-          {/* 5. Compact Quick Actions (4 items, 1 row) */}
-          <div className="flex items-center justify-between lg:justify-end gap-3 lg:gap-2.5 mb-6 lg:mb-0 px-1 lg:px-0">
-            {/* Llamar */}
-            {cleanPhone ? (
-              <a href={`tel:${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors active:scale-95">
-                <Phone className="w-6 h-6 lg:w-5 lg:h-5 text-blue-600" strokeWidth={2.5} />
-              </a>
-            ) : (
-              <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50">
-                <Phone className="w-6 h-6 lg:w-5 lg:h-5 text-slate-400" strokeWidth={2.5} />
-              </button>
-            )}
-
-            {/* Nota de Voz */}
-            <button onClick={() => setShowVoiceModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-purple-50 hover:border-purple-200 transition-colors active:scale-95">
-              <Mic className="w-6 h-6 lg:w-5 lg:h-5 text-purple-600" strokeWidth={2.5} />
+          {/* 4. Action Buttons (Moved under identity for desktop) */}
+          <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4 w-full px-1 lg:px-0">
+            {/* Primary Action Button */}
+            <button 
+              onClick={() => setShowActivityForm(true)}
+              className="w-full lg:w-auto lg:px-5 h-[54px] lg:h-[48px] bg-[#1456c2] text-white rounded-2xl flex items-center justify-center gap-2.5 shadow-md hover:bg-blue-800 transition-all active:scale-[0.98] mb-3 lg:mb-0 shrink-0"
+            >
+              <PlusCircle className="w-6 h-6 lg:w-5 lg:h-5" strokeWidth={2} />
+              <span className="text-[16px] lg:text-[14px] font-semibold tracking-wide whitespace-nowrap">Registrar actividad</span>
             </button>
 
-            {/* WhatsApp */}
-            {cleanPhone ? (
-              <a href={`whatsapp://send?phone=${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-[#25D366]/10 hover:border-[#25D366]/30 transition-colors active:scale-95">
-                <WhatsAppIcon className="w-7 h-7 lg:w-6 lg:h-6 text-[#25D366]" />
-              </a>
-            ) : (
-              <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50">
-                <WhatsAppIcon className="w-7 h-7 lg:w-6 lg:h-6 text-slate-400" />
-              </button>
-            )}
+            {/* Compact Quick Actions (4 items) */}
+            <div className="flex items-center justify-between lg:justify-start gap-3 lg:gap-2.5 w-full lg:w-auto">
+              {/* Llamar */}
+              {cleanPhone ? (
+                <a href={`tel:${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors active:scale-95 shrink-0">
+                  <Phone className="w-6 h-6 lg:w-5 lg:h-5 text-blue-600" strokeWidth={2.5} />
+                </a>
+              ) : (
+                <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50 shrink-0">
+                  <Phone className="w-6 h-6 lg:w-5 lg:h-5 text-slate-400" strokeWidth={2.5} />
+                </button>
+              )}
 
-            {/* Ubicación */}
-            <button onClick={openMaps} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95">
-              <MapPin className="w-6 h-6 lg:w-5 lg:h-5 text-blue-600" strokeWidth={2.5} />
-            </button>
+              {/* Nota de Voz */}
+              <button onClick={() => setShowVoiceModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-purple-50 hover:border-purple-200 transition-colors active:scale-95 shrink-0">
+                <Mic className="w-6 h-6 lg:w-5 lg:h-5 text-purple-600" strokeWidth={2.5} />
+              </button>
+
+              {/* WhatsApp */}
+              {cleanPhone ? (
+                <a href={`whatsapp://send?phone=${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-[#25D366]/10 hover:border-[#25D366]/30 transition-colors active:scale-95 shrink-0">
+                  <WhatsAppIcon className="w-7 h-7 lg:w-6 lg:h-6 text-[#25D366]" />
+                </a>
+              ) : (
+                <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50 shrink-0">
+                  <WhatsAppIcon className="w-7 h-7 lg:w-6 lg:h-6 text-slate-400" />
+                </button>
+              )}
+
+              {/* Ubicación */}
+              <button onClick={openMaps} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 shrink-0">
+                <MapPin className="w-6 h-6 lg:w-5 lg:h-5 text-blue-600" strokeWidth={2.5} />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* --- BOTTOM SECTION (Context Rows) --- */}
-        <div className="w-full mt-2 lg:mt-3">
-          {/* 6. Context Rows */}
-          <div className="flex flex-col lg:grid lg:grid-cols-2 bg-slate-50/50 rounded-2xl border border-slate-100 overflow-hidden divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
+        {/* --- RIGHT SECTION (Events Context Rows) --- */}
+        <div className="flex flex-col h-full lg:justify-center mt-6 lg:mt-0">
+          <div className="flex flex-col bg-slate-50/50 rounded-2xl border border-slate-100 overflow-hidden divide-y divide-slate-100 shadow-inner">
             
             {/* Last Activity */}
             <div className="flex items-center gap-3 p-3.5 hover:bg-slate-50 transition-colors">
