@@ -214,11 +214,15 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
     ];
   }
 
-  const openModal = async (kpiKey: string, title: string, periodCode: string, periodLabel: string) => {
+  const openModal = async (kpiKey: string, title: string, periodCode: string, periodLabel: string, dateStr?: string) => {
     setModal({ open: true, title, period: periodCode, periodLabel });
     setLoading(true);
-    setModalData([]);
-    const list = await getDashboardKPIList(kpiKey, periodCode, baseDate, undefined, userId, city, category, tripId);
+    // For 'custom' periods (e.g. specific days like Día anterior/Día sel in custom mode), we pass dateStr as both boundaries.
+    // For normal periods ('today', 'yesterday', 'week', etc.), we just pass baseDate so the server computes relative to it.
+    const fromDate = periodCode === 'custom' ? (dateStr || baseDate) : baseDate;
+    const toDate = periodCode === 'custom' ? (dateStr || undefined) : undefined;
+    
+    const list = await getDashboardKPIList(kpiKey, periodCode, fromDate, toDate, userId, city, category, tripId);
     setModalData(list);
     setLoading(false);
   };
@@ -345,7 +349,7 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
                 key={key}
                 onClick={() => {
                   const apiName = key === 'managed' ? 'visited' : key;
-                  openModal(apiName, label, active.periodCode, active.title);
+                  openModal(apiName, label.replace('• ', ''), active.periodCode, active.title, active.dateStr);
                 }}
                 className="w-full flex items-center justify-between py-2 px-2 text-left hover:bg-gray-50 rounded-lg transition-colors group"
               >
@@ -410,9 +414,10 @@ function DesktopPeriodCard({
   dateLabel: string;
   data: any;
   periodCode: string;
+  dateStr: string;
   isPrimary: boolean;
   rate: (c: number, v: number) => string;
-  onMetricClick: (kpiKey: string, title: string, period: string, periodLabel: string) => void;
+  onMetricClick: (kpiKey: string, title: string, period: string, periodLabel: string, dateStr: string) => void;
   onCardClick: () => void;
 }) {
   const d = data ?? { visited: 0, managed: 0, visits: 0, calls: 0, effective_contacts: 0, interested: 0, opportunities: 0 };
@@ -464,7 +469,7 @@ function DesktopPeriodCard({
             onClick={(e) => {
               e.stopPropagation();
               const apiName = key === 'managed' ? 'visited' : key;
-              onMetricClick(apiName, label.replace('• ', ''), periodCode, title);
+              onMetricClick(apiName, label.replace('• ', ''), periodCode, title, dateStr);
             }}
             className="w-full flex items-center justify-between py-1 px-2 text-left transition-colors group hover:bg-gray-50 rounded"
           >
