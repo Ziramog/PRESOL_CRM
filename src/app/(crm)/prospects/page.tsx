@@ -98,7 +98,7 @@ export default async function ProspectsPage({
   if (sector) baseQuery = baseQuery.eq('sector', sector);
   if (status) baseQuery = baseQuery.eq('contact_status', status);
   if (favoritesOnly) {
-    baseQuery = baseQuery.eq('is_favorite', true);
+    baseQuery = baseQuery.contains('source_payload', { is_favorite: true });
   }
 
   // OPTIMIZATION: Only fetch distinct cities and sectors lightly (without full records)
@@ -133,13 +133,13 @@ export default async function ProspectsPage({
     });
 
     // 2. Fetch lightweight prospect IDs matching filters to sort them in memory
-    const lightweightQuery = supabaseAdmin.from('prospects').select('id, contact_status, company_name, is_favorite, created_at, updated_at, city, class, commercial_category, external_id');
+    const lightweightQuery = supabaseAdmin.from('prospects').select('id, contact_status, company_name, source_payload, created_at, updated_at, city, class, commercial_category, external_id');
     if (search) lightweightQuery.ilike('company_name', `%${search}%`);
     if (prospectClass) lightweightQuery.eq('class', prospectClass);
     if (selectedCities.length > 0) lightweightQuery.in('city', selectedCities);
     if (sector) lightweightQuery.eq('sector', sector);
     if (status) lightweightQuery.eq('contact_status', status);
-    if (favoritesOnly) lightweightQuery.eq('is_favorite', true);
+    if (favoritesOnly) lightweightQuery.contains('source_payload', { is_favorite: true });
     
     const { data: idData } = await lightweightQuery;
     const matchingData = idData ?? [];
@@ -154,7 +154,7 @@ export default async function ProspectsPage({
       if (col === 'class') return item.class?.toLowerCase() || '';
       if (col === 'commercial_category') return item.commercial_category?.toLowerCase() || '';
       if (col === 'external_id') return item.external_id?.toLowerCase() || '';
-      if (col === 'is_favorite') return item.is_favorite ? 1 : 0;
+      if (col === 'is_favorite') return item.source_payload?.is_favorite ? 1 : 0;
       if (col === 'created_at') return new Date(item.created_at).getTime();
       if (col === 'updated_at') return new Date(item.updated_at || item.created_at).getTime();
       return null;
@@ -261,7 +261,7 @@ export default async function ProspectsPage({
   // Attach has_direction_note flag, is_favorite boolean, open_tasks count, and real manual activity
   let prospectsWithFlags = prospects.map((p) => ({
     ...p,
-    is_favorite: Boolean(p.is_favorite), // Now uses native DB boolean
+    is_favorite: Boolean(p.source_payload?.is_favorite), // Fallback to source_payload since column doesn't exist
     has_direction_note: dirNoteProspects.has(p.id),
     open_tasks: taskCounts[p.id] || 0,
     last_manual_activity_at: manualActivityMap[p.id] ? new Date(manualActivityMap[p.id]).toISOString() : null
