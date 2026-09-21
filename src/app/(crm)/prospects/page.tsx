@@ -223,8 +223,12 @@ export default async function ProspectsPage({
 
   // Fetch direction notes ONLY for the paginated prospects
   const dirNoteProspects = new Set<string>();
+  const manualActivityMap: Record<string, number> = {};
+  
   if (prospects.length > 0) {
     const pageIds = prospects.map(p => p.id);
+    
+    // 1. Fetch direction notes
     const { data: dirNotes } = await supabaseAdmin.from('comments')
       .select('prospect_id')
       .eq('is_direction_note', true)
@@ -232,14 +236,35 @@ export default async function ProspectsPage({
       .in('prospect_id', pageIds);
     
     (dirNotes ?? []).forEach((n: any) => dirNoteProspects.add(n.prospect_id));
+    
+    // 2. Fetch real manual activities to bypass updated_at mass-updates
+    const [actsRes, tasksRes, commentsRes] = await Promise.all([
+      supabaseAdmin.from('activities').select('prospect_id, created_at').in('prospect_id', pageIds),
+      supabaseAdmin.from('tasks').select('prospect_id, created_at').in('prospect_id', pageIds),
+      supabaseAdmin.from('comments').select('prospect_id, created_at').in('prospect_id', pageIds)
+    ]);
+    
+    const processItems = (items: any[] | null) => {
+      (items || []).forEach(item => {
+        const time = new Date(item.created_at).getTime();
+        if (!manualActivityMap[item.prospect_id] || time > manualActivityMap[item.prospect_id]) {
+          manualActivityMap[item.prospect_id] = time;
+        }
+      });
+    };
+    
+    processItems(actsRes.data);
+    processItems(tasksRes.data);
+    processItems(commentsRes.data);
   }
 
-  // Attach has_direction_note flag, is_favorite boolean, and open_tasks count
+  // Attach has_direction_note flag, is_favorite boolean, open_tasks count, and real manual activity
   let prospectsWithFlags = prospects.map((p) => ({
     ...p,
-    is_favorite: Boolean(p.is_favorite), // Now uses native DB column
+    is_favorite: Boolean(p.is_favorite), // Now uses native DB boolean
     has_direction_note: dirNoteProspects.has(p.id),
     open_tasks: taskCounts[p.id] || 0,
+    last_manual_activity_at: manualActivityMap[p.id] ? new Date(manualActivityMap[p.id]).toISOString() : null
   }));
 
   const cities = Array.from(

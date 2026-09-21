@@ -95,9 +95,22 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
     notFound();
   }
 
+  // Determine last manual activity from the fetched lists
+  let lastManualActivityAt = null;
+  const activityDates = [
+    ...(overview.recent_activities || []).map((a: any) => new Date(a.created_at).getTime()),
+    ...(overview.open_tasks || []).map((t: any) => new Date(t.created_at).getTime()),
+    ...(overview.comments || []).map((c: any) => new Date(c.created_at).getTime())
+  ].filter(t => !isNaN(t));
+  
+  if (activityDates.length > 0) {
+    lastManualActivityAt = new Date(Math.max(...activityDates)).toISOString();
+  }
+
   const prospect = {
     ...overview.prospect,
     is_favorite: Boolean(overview.prospect.is_favorite || overview.prospect.source_payload?.is_favorite),
+    last_manual_activity_at: lastManualActivityAt
   };
 
   const displayContacts = overview.contacts || (overview.primary_contact ? [overview.primary_contact] : []);

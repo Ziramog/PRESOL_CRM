@@ -111,7 +111,7 @@ export function ProspectTable({
             </tr>
           ) : (
             prospects.map((prospect) => {
-              const leadTemp = getLeadTemperature(prospect.updated_at);
+              const leadTemp = getLeadTemperature(prospect.last_manual_activity_at);
 
               return (
               <tr

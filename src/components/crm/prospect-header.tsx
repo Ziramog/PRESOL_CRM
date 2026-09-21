@@ -189,7 +189,7 @@ export function ProspectHeader({
               <h1 className="text-[20px] sm:text-[22px] font-bold text-slate-900 leading-tight mb-1">
                 {prospect.company_name}
               </h1>
-              <PulseIndicator temp={getLeadTemperature(prospect.updated_at)} />
+              <PulseIndicator temp={getLeadTemperature(prospect.last_manual_activity_at)} />
             </div>
             <p className="text-[13px] sm:text-[14px] text-slate-500 mb-2.5">
               Prospecto comercial

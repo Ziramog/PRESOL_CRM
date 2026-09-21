@@ -58,7 +58,7 @@ export function ProspectCard({ prospect }: { prospect: any }) {
   const cleanPhone = activePhone ? activePhone.replace(/\D/g, '') : '';
   const { Icon, bg, text, border } = getIconProps(prospect.commercial_category, prospect.company_name);
   
-  const leadTemp = getLeadTemperature(prospect.updated_at);
+  const leadTemp = getLeadTemperature(prospect.last_manual_activity_at);
 
   return (
     <div className="bg-white rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-200 overflow-hidden transition-all hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] relative mb-3">
