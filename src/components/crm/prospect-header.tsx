@@ -184,9 +184,17 @@ export function ProspectHeader({
           </div>
           
           <div className="flex flex-col mt-0.5 w-full">
-            <h1 className="text-[20px] sm:text-[22px] font-bold text-slate-900 leading-tight mb-1">
-              {prospect.company_name}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-[20px] sm:text-[22px] font-bold text-slate-900 leading-tight mb-1">
+                {prospect.company_name}
+              </h1>
+              {isUpdatedToday && (
+                <span className="relative flex h-3 w-3 shrink-0" title="Actividad hoy">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+              )}
+            </div>
             <p className="text-[13px] sm:text-[14px] text-slate-500 mb-2.5">
               Prospecto comercial
             </p>
