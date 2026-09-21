@@ -75,16 +75,16 @@ export default async function ProspectsPage({
   let baseQuery = supabaseAdmin.from('prospects').select('*, contacts(id, phone, is_primary)', { count: 'exact' });
   
   // If we need to sort by a normal column, apply it
-  if (sortCol !== 'open_tasks' && sortCol !== 'is_favorite' && sortCol !== 'contact_status') {
+  // NOTE: is_favorite, open_tasks, contact_status are NOT real DB columns for sorting -
+  // they are handled via in-memory sort below.
+  const dbSortable = (col: string) => col !== 'open_tasks' && col !== 'is_favorite' && col !== 'contact_status';
+  
+  if (dbSortable(sortCol)) {
     baseQuery = baseQuery.order(sortCol, { ascending: sortDir, nullsFirst: false });
-  } else if (sortCol === 'is_favorite') {
-    baseQuery = baseQuery.order('is_favorite', { ascending: sortDir, nullsFirst: false });
   }
 
-  if (sortCol2 && sortCol2 !== 'open_tasks' && sortCol2 !== 'is_favorite' && sortCol2 !== 'contact_status') {
+  if (sortCol2 && dbSortable(sortCol2)) {
     baseQuery = baseQuery.order(sortCol2, { ascending: sortDir2, nullsFirst: false });
-  } else if (sortCol2 === 'is_favorite') {
-    baseQuery = baseQuery.order('is_favorite', { ascending: sortDir2, nullsFirst: false });
   }
 
   if (sortCol !== 'created_at' && sortCol2 !== 'created_at') {
@@ -122,7 +122,8 @@ export default async function ProspectsPage({
     discarded: 7,
   };
 
-  const isMemorySort = sortCol === 'open_tasks' || sortCol === 'contact_status' || sortCol2 === 'open_tasks' || sortCol2 === 'contact_status';
+  const MEMORY_SORT_COLS = ['open_tasks', 'contact_status', 'is_favorite'];
+  const isMemorySort = MEMORY_SORT_COLS.includes(sortCol) || (sortCol2 !== null && MEMORY_SORT_COLS.includes(sortCol2));
 
   // OPTIMIZATION: If sorting by open_tasks or contact_status, we sort in memory
   if (isMemorySort) {
