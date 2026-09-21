@@ -57,7 +57,7 @@ function KpiModal({
               <p className="text-sm text-gray-400">Sin registros para este período.</p>
             </div>
           ) : (
-            <ul>
+            <ul className="pb-2">
               {data.map((item, idx) => {
                 const prospect = Array.isArray(item.prospects) ? item.prospects[0] : item.prospects;
                 if (!prospect) return null;
