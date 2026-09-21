@@ -134,10 +134,10 @@ export function ProspectHeader({
         </button>
       </div>
 
-      <div className="relative flex flex-col mb-4 bg-white rounded-[24px] p-5 shadow-sm border border-slate-100">
+      <div className="relative flex flex-col lg:flex-row lg:flex-wrap lg:justify-between lg:items-start mb-4 bg-white rounded-[24px] p-5 shadow-sm border border-slate-100 lg:gap-y-6">
         
         {/* Top Right Actions (Heart & Menu) */}
-        <div className="absolute top-4 right-4 flex items-center gap-1.5">
+        <div className="absolute top-4 right-4 flex items-center gap-1.5 z-10">
           <button 
             onClick={handleToggleFavorite}
             className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors active:scale-90 ${optimisticFav ? 'bg-rose-50 text-rose-500' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
@@ -178,177 +178,186 @@ export function ProspectHeader({
           </div>
         </div>
 
-        {/* 2. Title Section */}
-        <div className="flex flex-row items-center sm:items-start text-left gap-3 mb-5 mt-2 px-1">
-          <div className="w-[64px] h-[64px] rounded-[16px] bg-blue-50 flex items-center justify-center shrink-0">
-            <Building2 className="w-8 h-8 text-blue-600" strokeWidth={1.5} />
-          </div>
-          
-          <div className="flex flex-col mt-0.5 w-full">
-            <div className="flex items-center gap-2">
-              <h1 className="text-[20px] sm:text-[22px] font-bold text-slate-900 leading-tight mb-1">
-                {prospect.company_name}
-              </h1>
-              <PulseIndicator temp={getLeadTemperature(prospect.last_manual_activity_at)} />
+        {/* --- LEFT SECTION (Identity & Info) --- */}
+        <div className="flex flex-col flex-1 min-w-0 lg:pr-4">
+          {/* 2. Title Section */}
+          <div className="flex flex-row items-center sm:items-start text-left gap-3 mb-5 mt-2 lg:mb-3 px-1">
+            <div className="w-[64px] h-[64px] rounded-[16px] bg-blue-50 flex items-center justify-center shrink-0">
+              <Building2 className="w-8 h-8 text-blue-600" strokeWidth={1.5} />
             </div>
-            <p className="text-[13px] sm:text-[14px] text-slate-500 mb-2.5">
-              Prospecto comercial
-            </p>
             
-            {/* Status & Priority Row */}
-            <div className="flex items-center justify-start gap-2 flex-wrap">
-              {/* Status Dropdown */}
-              <div className="relative inline-flex items-center">
-                <select
-                  value={prospect.contact_status || 'pending'}
-                  onChange={handleStatusChange}
-                  disabled={isPending}
-                  className={`appearance-none cursor-pointer outline-none transition-colors border pl-8 pr-7 py-1.5 rounded-full text-[12px] font-bold tracking-wide
-                    ${isPending ? 'opacity-50' : ''}
-                    ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-800 border-blue-200' :
-                      prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
-                      prospect.contact_status === 'opportunity' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' :
-                      prospect.contact_status === 'quote' ? 'bg-purple-50 text-purple-800 border-purple-200' :
-                      prospect.contact_status === 'customer' ? 'bg-green-50 text-green-800 border-green-200' :
-                      prospect.contact_status === 'discarded' ? 'bg-rose-50 text-rose-800 border-rose-200' :
-                      'bg-amber-50 text-amber-800 border-amber-200'
-                    }
-                  `}
-                >
-                  {STATUS_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
-                  <span className={`w-2 h-2 rounded-full 
-                    ${prospect.contact_status === 'in_progress' ? 'bg-blue-500' :
-                      prospect.contact_status === 'interested' ? 'bg-emerald-500' :
-                      prospect.contact_status === 'opportunity' ? 'bg-indigo-500' :
-                      prospect.contact_status === 'quote' ? 'bg-purple-500' :
-                      prospect.contact_status === 'customer' ? 'bg-green-500' :
-                      prospect.contact_status === 'discarded' ? 'bg-rose-500' :
-                      'bg-amber-500'
-                    }
-                  `}></span>
-                </div>
-                <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-current opacity-60">
-                  <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
-                  </svg>
-                </div>
+            <div className="flex flex-col mt-0.5 w-full">
+              <div className="flex items-center gap-2 pr-20 lg:pr-0">
+                <h1 className="text-[20px] sm:text-[22px] font-bold text-slate-900 leading-tight mb-1">
+                  {prospect.company_name}
+                </h1>
+                <PulseIndicator temp={getLeadTemperature(prospect.last_manual_activity_at)} />
               </div>
-
-              {/* Priority */}
-              {prospect.priority === 'Alta' && (
-                <div className="flex items-center gap-1 bg-rose-50 border border-rose-100 text-rose-700 px-3 py-1.5 rounded-full text-[12px] font-bold">
-                  <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={3} />
-                  Alta prioridad
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* 3. Compact Info Row (Location | Sector) */}
-        <div className="flex items-center justify-start gap-3 text-[13px] text-slate-600 mb-6 font-medium px-1">
-          <div className="flex items-center gap-1.5">
-            <MapPin className="w-4 h-4 text-slate-400" />
-            <span className="truncate max-w-[120px]">{prospect.city || 'Sin ciudad'}</span>
-          </div>
-          <span className="text-slate-300">|</span>
-          <div className="flex items-center gap-1.5">
-            <Factory className="w-4 h-4 text-slate-400" />
-            <span className="truncate max-w-[120px]">{prospect.sector || prospect.commercial_category || 'Sin rubro'}</span>
-          </div>
-        </div>
-
-        {/* 4. Primary Action Button */}
-        <button 
-          onClick={() => setShowActivityForm(true)}
-          className="w-full h-[54px] bg-[#1456c2] text-white rounded-2xl flex items-center justify-center gap-2.5 shadow-md hover:bg-blue-800 transition-all active:scale-[0.98] mb-5"
-        >
-          <PlusCircle className="w-6 h-6" strokeWidth={2} />
-          <span className="text-[16px] font-semibold tracking-wide">Registrar actividad</span>
-        </button>
-
-        {/* 5. Compact Quick Actions (4 items, 1 row) */}
-        <div className="flex items-center justify-between gap-3 mb-6 px-1">
-          {/* Llamar */}
-          {cleanPhone ? (
-            <a href={`tel:${cleanPhone}`} className="w-[52px] h-[52px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors active:scale-95">
-              <Phone className="w-6 h-6 text-blue-600" strokeWidth={2.5} />
-            </a>
-          ) : (
-            <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50">
-              <Phone className="w-6 h-6 text-slate-400" strokeWidth={2.5} />
-            </button>
-          )}
-
-          {/* Nota de Voz */}
-          <button onClick={() => setShowVoiceModal(true)} className="w-[52px] h-[52px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-purple-50 hover:border-purple-200 transition-colors active:scale-95">
-            <Mic className="w-6 h-6 text-purple-600" strokeWidth={2.5} />
-          </button>
-
-          {/* WhatsApp */}
-          {cleanPhone ? (
-            <a href={`whatsapp://send?phone=${cleanPhone}`} className="w-[52px] h-[52px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-[#25D366]/10 hover:border-[#25D366]/30 transition-colors active:scale-95">
-              <WhatsAppIcon className="w-7 h-7 text-[#25D366]" />
-            </a>
-          ) : (
-            <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50">
-              <WhatsAppIcon className="w-7 h-7 text-slate-400" />
-            </button>
-          )}
-
-          {/* Ubicación */}
-          <button onClick={openMaps} className="w-[52px] h-[52px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95">
-            <MapPin className="w-6 h-6 text-blue-600" strokeWidth={2.5} />
-          </button>
-        </div>
-
-        {/* 6. Context Rows (Executive Feature) */}
-        <div className="flex flex-col bg-slate-50/50 rounded-2xl border border-slate-100 overflow-hidden divide-y divide-slate-100">
-          
-          {/* Last Activity */}
-          <div className="flex items-center gap-3 p-3.5 hover:bg-slate-50 transition-colors">
-            <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-              <Clock className="w-4 h-4 text-slate-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Última actividad</p>
-              <p className="text-[14px] font-bold text-slate-900 truncate">
-                {latestActivity ? latestActivity.type : 'Sin actividad reciente'}
+              <p className="text-[13px] sm:text-[14px] text-slate-500 mb-2.5">
+                Prospecto comercial
               </p>
-              {latestActivity && (
-                <p className="text-[12px] text-slate-500 mt-0.5">
-                  {formatDateDistance(latestActivity.activity_at)} · {latestActivity.profiles?.full_name || 'Usuario'}
-                </p>
-              )}
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-300" />
-          </div>
+              
+              {/* Status & Priority Row */}
+              <div className="flex items-center justify-start gap-2 flex-wrap">
+                {/* Status Dropdown */}
+                <div className="relative inline-flex items-center">
+                  <select
+                    value={prospect.contact_status || 'pending'}
+                    onChange={handleStatusChange}
+                    disabled={isPending}
+                    className={`appearance-none cursor-pointer outline-none transition-colors border pl-8 pr-7 py-1.5 rounded-full text-[12px] font-bold tracking-wide
+                      ${isPending ? 'opacity-50' : ''}
+                      ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-800 border-blue-200' :
+                        prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+                        prospect.contact_status === 'opportunity' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' :
+                        prospect.contact_status === 'quote' ? 'bg-purple-50 text-purple-800 border-purple-200' :
+                        prospect.contact_status === 'customer' ? 'bg-green-50 text-green-800 border-green-200' :
+                        prospect.contact_status === 'discarded' ? 'bg-rose-50 text-rose-800 border-rose-200' :
+                        'bg-amber-50 text-amber-800 border-amber-200'
+                      }
+                    `}
+                  >
+                    {STATUS_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                    <span className={`w-2 h-2 rounded-full 
+                      ${prospect.contact_status === 'in_progress' ? 'bg-blue-500' :
+                        prospect.contact_status === 'interested' ? 'bg-emerald-500' :
+                        prospect.contact_status === 'opportunity' ? 'bg-indigo-500' :
+                        prospect.contact_status === 'quote' ? 'bg-purple-500' :
+                        prospect.contact_status === 'customer' ? 'bg-green-500' :
+                        prospect.contact_status === 'discarded' ? 'bg-rose-500' :
+                        'bg-amber-500'
+                      }
+                    `}></span>
+                  </div>
+                  <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-current opacity-60">
+                    <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
+                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                    </svg>
+                  </div>
+                </div>
 
-          {/* Next Task */}
-          <div className="flex items-center gap-3 p-3.5 hover:bg-slate-50 transition-colors">
-            <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-              <Calendar className="w-4 h-4 text-slate-600" />
-            </div>
-            <div className="flex-1 min-w-0 flex justify-between items-center">
-              <div>
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Próxima acción</p>
-                <p className="text-[14px] font-bold text-slate-900 truncate">
-                  {nextTask ? nextTask.title : 'Sin tareas pendientes'}
-                </p>
+                {/* Priority */}
+                {prospect.priority === 'Alta' && (
+                  <div className="flex items-center gap-1 bg-rose-50 border border-rose-100 text-rose-700 px-3 py-1.5 rounded-full text-[12px] font-bold">
+                    <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={3} />
+                    Alta prioridad
+                  </div>
+                )}
               </div>
-              {nextTask && (
-                <span className="text-[12px] font-medium text-slate-600 bg-white border border-slate-200 px-2 py-1 rounded-lg shrink-0">
-                  {formatFutureDate(nextTask.due_at)}
-                </span>
-              )}
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-300 ml-1" />
           </div>
 
+          {/* 3. Compact Info Row (Location | Sector) */}
+          <div className="flex items-center justify-start gap-3 text-[13px] text-slate-600 mb-6 lg:mb-0 font-medium px-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+              <span className="truncate max-w-[120px] lg:max-w-none">{prospect.city || 'Sin ciudad'}</span>
+            </div>
+            <span className="text-slate-300 shrink-0">|</span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Factory className="w-4 h-4 text-slate-400 shrink-0" />
+              <span className="truncate max-w-[120px] lg:max-w-none">{prospect.sector || prospect.commercial_category || 'Sin rubro'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* --- RIGHT SECTION (Actions) --- */}
+        <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4 w-full lg:w-auto shrink-0 mt-2 lg:mt-6 lg:pr-12">
+          {/* 4. Primary Action Button */}
+          <button 
+            onClick={() => setShowActivityForm(true)}
+            className="w-full lg:w-auto lg:px-5 h-[54px] lg:h-[48px] bg-[#1456c2] text-white rounded-2xl flex items-center justify-center gap-2.5 shadow-md hover:bg-blue-800 transition-all active:scale-[0.98] mb-5 lg:mb-0"
+          >
+            <PlusCircle className="w-6 h-6 lg:w-5 lg:h-5" strokeWidth={2} />
+            <span className="text-[16px] lg:text-[14px] font-semibold tracking-wide whitespace-nowrap">Registrar actividad</span>
+          </button>
+
+          {/* 5. Compact Quick Actions (4 items, 1 row) */}
+          <div className="flex items-center justify-between lg:justify-end gap-3 lg:gap-2.5 mb-6 lg:mb-0 px-1 lg:px-0">
+            {/* Llamar */}
+            {cleanPhone ? (
+              <a href={`tel:${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors active:scale-95">
+                <Phone className="w-6 h-6 lg:w-5 lg:h-5 text-blue-600" strokeWidth={2.5} />
+              </a>
+            ) : (
+              <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50">
+                <Phone className="w-6 h-6 lg:w-5 lg:h-5 text-slate-400" strokeWidth={2.5} />
+              </button>
+            )}
+
+            {/* Nota de Voz */}
+            <button onClick={() => setShowVoiceModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-purple-50 hover:border-purple-200 transition-colors active:scale-95">
+              <Mic className="w-6 h-6 lg:w-5 lg:h-5 text-purple-600" strokeWidth={2.5} />
+            </button>
+
+            {/* WhatsApp */}
+            {cleanPhone ? (
+              <a href={`whatsapp://send?phone=${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-[#25D366]/10 hover:border-[#25D366]/30 transition-colors active:scale-95">
+                <WhatsAppIcon className="w-7 h-7 lg:w-6 lg:h-6 text-[#25D366]" />
+              </a>
+            ) : (
+              <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50">
+                <WhatsAppIcon className="w-7 h-7 lg:w-6 lg:h-6 text-slate-400" />
+              </button>
+            )}
+
+            {/* Ubicación */}
+            <button onClick={openMaps} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95">
+              <MapPin className="w-6 h-6 lg:w-5 lg:h-5 text-blue-600" strokeWidth={2.5} />
+            </button>
+          </div>
+        </div>
+
+        {/* --- BOTTOM SECTION (Context Rows) --- */}
+        <div className="w-full mt-2 lg:mt-3">
+          {/* 6. Context Rows */}
+          <div className="flex flex-col lg:grid lg:grid-cols-2 bg-slate-50/50 rounded-2xl border border-slate-100 overflow-hidden divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
+            
+            {/* Last Activity */}
+            <div className="flex items-center gap-3 p-3.5 hover:bg-slate-50 transition-colors">
+              <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4 text-slate-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Última actividad</p>
+                <p className="text-[14px] font-bold text-slate-900 truncate">
+                  {latestActivity ? latestActivity.type : 'Sin actividad reciente'}
+                </p>
+                {latestActivity && (
+                  <p className="text-[12px] text-slate-500 mt-0.5">
+                    {formatDateDistance(latestActivity.activity_at)} · {latestActivity.profiles?.full_name || 'Usuario'}
+                  </p>
+                )}
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-300" />
+            </div>
+
+            {/* Next Task */}
+            <div className="flex items-center gap-3 p-3.5 hover:bg-slate-50 transition-colors">
+              <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                <Calendar className="w-4 h-4 text-slate-600" />
+              </div>
+              <div className="flex-1 min-w-0 flex justify-between items-center pr-2">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Próxima acción</p>
+                  <p className="text-[14px] font-bold text-slate-900 truncate pr-2">
+                    {nextTask ? nextTask.title : 'Sin tareas pendientes'}
+                  </p>
+                </div>
+                {nextTask && (
+                  <span className="text-[12px] font-medium text-slate-600 bg-white border border-slate-200 px-2 py-1 rounded-lg shrink-0">
+                    {formatFutureDate(nextTask.due_at)}
+                  </span>
+                )}
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-300" />
+            </div>
+
+          </div>
         </div>
 
       </div>
