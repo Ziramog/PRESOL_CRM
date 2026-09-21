@@ -1,12 +1,23 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, Filter, X, Check, Heart } from 'lucide-react';
+import { Search, Filter, X, Check, Heart, Calendar, ArrowDownAZ, ArrowUpZA, ListTodo, Activity } from 'lucide-react';
 import { useTransition, useState, useRef, useEffect, useCallback } from 'react';
 import { PROSPECT_STATUS } from '@/lib/constants';
 import { saveProspectFilters } from '@/app/actions/preferences';
 
 type Tab = 'class' | 'sector' | 'city' | 'status';
+
+const SORT_OPTIONS = [
+  { value: 'created_at-desc', label: 'Más recientes primero', icon: <Calendar /> },
+  { value: 'created_at-asc', label: 'Más antiguos primero', icon: <Calendar /> },
+  { value: 'contact_status-desc', label: 'Por Estado (Embudo)', icon: <Activity /> },
+  { value: 'is_favorite-desc', label: '❤️ Favoritos primero', icon: <Heart /> },
+  { value: 'open_tasks-desc', label: 'Más seguimientos abiertos', icon: <ListTodo /> },
+  { value: 'last_contact_date-desc', label: 'Mayor interacción (recientes)', icon: <Activity /> },
+  { value: 'company_name-asc', label: 'Nombre (A-Z)', icon: <ArrowDownAZ /> },
+  { value: 'company_name-desc', label: 'Nombre (Z-A)', icon: <ArrowUpZA /> },
+];
 
 export function ProspectFilters({
   availableCities = [],
@@ -23,9 +34,20 @@ export function ProspectFilters({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [showFilters, setShowFilters] = useState(false);
+  const [showSortMenu, setShowSortMenu] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('city');
   const filterRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSortSelect = (val: string) => {
+    const [col, dir] = val.split('-');
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('sort', col);
+    params.set('dir', dir);
+    persistFilters(params);
+    startTransition(() => router.push(`/prospects?${params.toString()}`));
+    setShowSortMenu(false);
+  };
 
   // Read current URL params
   const currentSearch = searchParams.get('search') || '';
@@ -53,11 +75,12 @@ export function ProspectFilters({
     }
   }, [searchParams, router]);
 
-  // Click outside closes filter panel
+  // Click outside closes filter panel and sort menu
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
         setShowFilters(false);
+        setShowSortMenu(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -223,34 +246,54 @@ export function ProspectFilters({
           </span>
         </button>
 
-        {/* Sort Select */}
+        {/* Sort Menu Button */}
         <div className="relative flex-1 sm:flex-none">
-          <select
-            value={`${currentSort}-${currentDir}`}
-            onChange={(e) => {
-              const [col, dir] = e.target.value.split('-');
-              const params = new URLSearchParams(searchParams.toString());
-              params.set('sort', col);
-              params.set('dir', dir);
-              persistFilters(params);
-              startTransition(() => router.push(`/prospects?${params.toString()}`));
-            }}
-            className="appearance-none block w-full pl-3 pr-8 py-2 h-[38px] border border-gray-200 rounded-lg leading-5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-400 sm:text-sm transition-all"
+          <button
+            onClick={() => setShowSortMenu(!showSortMenu)}
+            className="w-full flex items-center justify-between pl-3 pr-2 py-2 h-[38px] border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-400 sm:w-auto sm:min-w-[160px]"
           >
-            <option value="created_at-desc">Más recientes primero</option>
-            <option value="created_at-asc">Más antiguos primero</option>
-            <option value="is_favorite-desc">❤️ Favoritos primero</option>
-            <option value="open_tasks-desc">Más seguimientos abiertos</option>
-            <option value="open_tasks-asc">Menos seguimientos abiertos</option>
-            <option value="last_contact_date-desc">Mayor interacción (recientes)</option>
-            <option value="company_name-asc">Nombre (A-Z)</option>
-            <option value="company_name-desc">Nombre (Z-A)</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-            <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
-              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd" />
-            </svg>
-          </div>
+            <div className="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+                <path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/>
+              </svg>
+              <span className="text-sm font-medium truncate text-left">
+                {SORT_OPTIONS.find(opt => opt.value === `${currentSort}-${currentDir}`)?.label || 'Ordenar...'}
+              </span>
+            </div>
+          </button>
+          
+          {/* Popover Menu */}
+          {showSortMenu && (
+            <>
+              {/* Invisible backdrop for mobile to close popover */}
+              <div 
+                className="fixed inset-0 z-40 sm:hidden" 
+                onClick={() => setShowSortMenu(false)} 
+              />
+              <div className="absolute right-0 sm:left-0 top-full mt-1.5 w-56 bg-white rounded-xl shadow-lg ring-1 ring-black/5 z-50 overflow-hidden py-1">
+                {SORT_OPTIONS.map((option) => {
+                  const isActive = `${currentSort}-${currentDir}` === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => handleSortSelect(option.value)}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors ${
+                        isActive ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className={`w-4 h-4 flex items-center justify-center shrink-0 ${isActive ? 'text-blue-600' : 'text-gray-400'}`}>
+                          {option.icon}
+                        </span>
+                        <span className="truncate">{option.label}</span>
+                      </div>
+                      {isActive && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Filter button */}

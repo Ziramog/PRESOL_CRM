@@ -69,7 +69,7 @@ export default async function ProspectsPage({
   let baseQuery = supabaseAdmin.from('prospects').select('*, contacts(id, phone, is_primary)', { count: 'exact' });
   
   // If we need to sort by a normal column, apply it
-  if (sortCol !== 'open_tasks' && sortCol !== 'is_favorite') {
+  if (sortCol !== 'open_tasks' && sortCol !== 'is_favorite' && sortCol !== 'contact_status') {
     baseQuery = baseQuery.order(sortCol, { ascending: sortDir, nullsFirst: false });
   } else if (sortCol === 'is_favorite') {
     baseQuery = baseQuery.order('is_favorite', { ascending: sortDir, nullsFirst: false });
@@ -98,8 +98,19 @@ export default async function ProspectsPage({
   let totalCount = 0;
   let taskCounts: Record<string, number> = {};
   
-  // OPTIMIZATION: If sorting by open_tasks, we calculate it using only the lightweight tasks table
-  if (sortCol === 'open_tasks') {
+  // Status weight for logical sorting
+  const STATUS_WEIGHTS: Record<string, number> = {
+    pending: 1,
+    in_progress: 2,
+    interested: 3,
+    opportunity: 4,
+    quote: 5,
+    customer: 6,
+    discarded: 7,
+  };
+
+  // OPTIMIZATION: If sorting by open_tasks or contact_status, we sort in memory
+  if (sortCol === 'open_tasks' || sortCol === 'contact_status') {
     // 1. Fetch all pending tasks to compute counts
     const { data: allTasks } = await supabaseAdmin.from('tasks').select('prospect_id').eq('status', 'pending');
     (allTasks ?? []).forEach((t: any) => {
@@ -107,7 +118,7 @@ export default async function ProspectsPage({
     });
 
     // 2. Fetch lightweight prospect IDs matching filters to sort them in memory
-    const lightweightQuery = supabaseAdmin.from('prospects').select('id');
+    const lightweightQuery = supabaseAdmin.from('prospects').select('id, contact_status');
     if (search) lightweightQuery.ilike('company_name', `%${search}%`);
     if (prospectClass) lightweightQuery.eq('class', prospectClass);
     if (selectedCities.length > 0) lightweightQuery.in('city', selectedCities);
@@ -116,17 +127,24 @@ export default async function ProspectsPage({
     if (favoritesOnly) lightweightQuery.eq('is_favorite', true);
     
     const { data: idData } = await lightweightQuery;
-    const matchingIds = (idData ?? []).map(p => p.id);
-    totalCount = matchingIds.length;
+    const matchingData = idData ?? [];
+    totalCount = matchingData.length;
 
-    // 3. Sort IDs in memory by task count
-    matchingIds.sort((a, b) => {
-      const diff = (taskCounts[a] || 0) - (taskCounts[b] || 0);
-      return sortDir ? diff : -diff;
+    // 3. Sort in memory
+    matchingData.sort((a, b) => {
+      if (sortCol === 'open_tasks') {
+        const diff = (taskCounts[a.id] || 0) - (taskCounts[b.id] || 0);
+        return sortDir ? diff : -diff;
+      } else {
+        const aWeight = STATUS_WEIGHTS[a.contact_status || 'pending'] || 0;
+        const bWeight = STATUS_WEIGHTS[b.contact_status || 'pending'] || 0;
+        const diff = aWeight - bWeight;
+        return sortDir ? diff : -diff;
+      }
     });
 
     // 4. Paginate IDs and fetch ONLY full data for the current page
-    const pageIds = matchingIds.slice(startRange, endRange + 1);
+    const pageIds = matchingData.slice(startRange, endRange + 1).map(p => p.id);
     
     if (pageIds.length > 0) {
       const { data: pData } = await supabaseAdmin.from('prospects')
