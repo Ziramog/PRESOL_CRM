@@ -50,7 +50,13 @@ export async function createActivity(formData: FormData) {
   ) : null;
 
   if (newStatus) {
-    await supabase.from('prospects').update({ contact_status: newStatus }).eq('id', prospect_id);
+    await supabase.from('prospects').update({ 
+      contact_status: newStatus,
+      updated_at: new Date().toISOString()
+    }).eq('id', prospect_id);
+  } else {
+    // Just touch the prospect updated_at
+    await supabase.from('prospects').update({ updated_at: new Date().toISOString() }).eq('id', prospect_id);
   }
 
   revalidatePath(`/prospects/${prospect_id}`);
@@ -96,7 +102,13 @@ export async function updateActivity(formData: FormData) {
   ) : null;
 
   if (newStatus) {
-    await supabase.from('prospects').update({ contact_status: newStatus }).eq('id', prospect_id);
+    await supabase.from('prospects').update({ 
+      contact_status: newStatus,
+      updated_at: new Date().toISOString()
+    }).eq('id', prospect_id);
+  } else {
+    // Just touch the prospect updated_at
+    await supabase.from('prospects').update({ updated_at: new Date().toISOString() }).eq('id', prospect_id);
   }
 
   revalidatePath(`/prospects/${prospect_id}`);

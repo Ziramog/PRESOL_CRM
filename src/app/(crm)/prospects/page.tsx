@@ -60,6 +60,12 @@ export default async function ProspectsPage({
     ? SORTABLE_COLUMNS[params.sort]
     : 'created_at';
   const sortDir = params.dir === 'asc';
+
+  const sortCol2 = typeof params.sort2 === 'string' && SORTABLE_COLUMNS[params.sort2]
+    ? SORTABLE_COLUMNS[params.sort2]
+    : null;
+  const sortDir2 = params.dir2 === 'asc';
+
   const page = parseInt(typeof params.page === 'string' ? params.page : '1', 10) || 1;
   const pageSize = 50;
   const startRange = (page - 1) * pageSize;
@@ -74,7 +80,14 @@ export default async function ProspectsPage({
   } else if (sortCol === 'is_favorite') {
     baseQuery = baseQuery.order('is_favorite', { ascending: sortDir, nullsFirst: false });
   }
-  if (sortCol !== 'created_at') {
+
+  if (sortCol2 && sortCol2 !== 'open_tasks' && sortCol2 !== 'is_favorite' && sortCol2 !== 'contact_status') {
+    baseQuery = baseQuery.order(sortCol2, { ascending: sortDir2, nullsFirst: false });
+  } else if (sortCol2 === 'is_favorite') {
+    baseQuery = baseQuery.order('is_favorite', { ascending: sortDir2, nullsFirst: false });
+  }
+
+  if (sortCol !== 'created_at' && sortCol2 !== 'created_at') {
     baseQuery = baseQuery.order('created_at', { ascending: false });
   }
 
@@ -109,8 +122,10 @@ export default async function ProspectsPage({
     discarded: 7,
   };
 
+  const isMemorySort = sortCol === 'open_tasks' || sortCol === 'contact_status' || sortCol2 === 'open_tasks' || sortCol2 === 'contact_status';
+
   // OPTIMIZATION: If sorting by open_tasks or contact_status, we sort in memory
-  if (sortCol === 'open_tasks' || sortCol === 'contact_status') {
+  if (isMemorySort) {
     // 1. Fetch all pending tasks to compute counts
     const { data: allTasks } = await supabaseAdmin.from('tasks').select('prospect_id').eq('status', 'pending');
     (allTasks ?? []).forEach((t: any) => {
@@ -118,7 +133,7 @@ export default async function ProspectsPage({
     });
 
     // 2. Fetch lightweight prospect IDs matching filters to sort them in memory
-    const lightweightQuery = supabaseAdmin.from('prospects').select('id, contact_status');
+    const lightweightQuery = supabaseAdmin.from('prospects').select('id, contact_status, company_name, is_favorite, created_at');
     if (search) lightweightQuery.ilike('company_name', `%${search}%`);
     if (prospectClass) lightweightQuery.eq('class', prospectClass);
     if (selectedCities.length > 0) lightweightQuery.in('city', selectedCities);
@@ -131,16 +146,42 @@ export default async function ProspectsPage({
     totalCount = matchingData.length;
 
     // 3. Sort in memory
+    const getValue = (item: any, col: string | null) => {
+      if (col === 'open_tasks') return taskCounts[item.id] || 0;
+      if (col === 'contact_status') return STATUS_WEIGHTS[item.contact_status || 'pending'] || 0;
+      if (col === 'company_name') return item.company_name?.toLowerCase() || '';
+      if (col === 'is_favorite') return item.is_favorite ? 1 : 0;
+      if (col === 'created_at') return new Date(item.created_at).getTime();
+      return null;
+    };
+
     matchingData.sort((a, b) => {
-      if (sortCol === 'open_tasks') {
-        const diff = (taskCounts[a.id] || 0) - (taskCounts[b.id] || 0);
-        return sortDir ? diff : -diff;
-      } else {
-        const aWeight = STATUS_WEIGHTS[a.contact_status || 'pending'] || 0;
-        const bWeight = STATUS_WEIGHTS[b.contact_status || 'pending'] || 0;
-        const diff = aWeight - bWeight;
-        return sortDir ? diff : -diff;
+      const valA = getValue(a, sortCol);
+      const valB = getValue(b, sortCol);
+      
+      let diff = 0;
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        diff = valA.localeCompare(valB);
+      } else if (typeof valA === 'number' && typeof valB === 'number') {
+        diff = valA - valB;
       }
+      
+      let res = sortDir ? diff : -diff;
+      
+      // Secondary sort if equal
+      if (res === 0 && sortCol2) {
+        const valA2 = getValue(a, sortCol2);
+        const valB2 = getValue(b, sortCol2);
+        let diff2 = 0;
+        if (typeof valA2 === 'string' && typeof valB2 === 'string') {
+          diff2 = valA2.localeCompare(valB2);
+        } else if (typeof valA2 === 'number' && typeof valB2 === 'number') {
+          diff2 = valA2 - valB2;
+        }
+        res = sortDir2 ? diff2 : -diff2;
+      }
+      
+      return res;
     });
 
     // 4. Paginate IDs and fetch ONLY full data for the current page
@@ -218,6 +259,8 @@ export default async function ProspectsPage({
           availableSectors={sectors} 
           currentSort={sortCol}
           currentDir={sortDir ? 'asc' : 'desc'}
+          currentSort2={sortCol2 || ''}
+          currentDir2={sortDir2 ? 'asc' : 'desc'}
         />
       </div>
 

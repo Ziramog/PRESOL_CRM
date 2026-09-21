@@ -228,7 +228,10 @@ export async function toggleFavorite(prospectId: string, currentValue: boolean) 
   try {
     const res = await supabase
       .from('prospects')
-      .update({ is_favorite: nextVal })
+      .update({ 
+        is_favorite: nextVal,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', prospectId);
     columnError = res.error;
   } catch (e) {
@@ -238,7 +241,10 @@ export async function toggleFavorite(prospectId: string, currentValue: boolean) 
   // 3. Always update source_payload as resilient storage
   const { error: payloadError } = await supabase
     .from('prospects')
-    .update({ source_payload: updatedPayload })
+    .update({ 
+      source_payload: updatedPayload,
+      updated_at: new Date().toISOString()
+    })
     .eq('id', prospectId);
 
   if (columnError && payloadError) {

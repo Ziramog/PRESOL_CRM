@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, Filter, X, Check, Heart, Calendar, ArrowDownAZ, ArrowUpZA, ListTodo, Activity } from 'lucide-react';
+import { Search, Filter, X, Check, Heart, Calendar, ArrowDownAZ, ArrowUpZA, ListTodo, Activity, ArrowUpDown } from 'lucide-react';
 import { useTransition, useState, useRef, useEffect, useCallback } from 'react';
 import { PROSPECT_STATUS } from '@/lib/constants';
 import { saveProspectFilters } from '@/app/actions/preferences';
@@ -24,17 +24,26 @@ export function ProspectFilters({
   availableSectors = [],
   currentSort = 'created_at',
   currentDir = 'desc',
+  currentSort2 = '',
+  currentDir2 = 'asc',
 }: {
   availableCities?: string[];
   availableSectors?: string[];
   currentSort?: string;
   currentDir?: string;
+  currentSort2?: string;
+  currentDir2?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [showFilters, setShowFilters] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
+  
+  // Local state for the advanced multi-sort modal
+  const [tempSort, setTempSort] = useState(`${currentSort}-${currentDir}`);
+  const [tempSort2, setTempSort2] = useState(currentSort2 ? `${currentSort2}-${currentDir2}` : '');
+
   const [activeTab, setActiveTab] = useState<Tab>('city');
   const filterRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -262,35 +271,98 @@ export function ProspectFilters({
             </div>
           </button>
           
-          {/* Popover Menu */}
+          {/* Popover Menu / Bottom Sheet */}
           {showSortMenu && (
             <>
-              {/* Invisible backdrop for mobile to close popover */}
+              {/* Backdrop */}
               <div 
-                className="fixed inset-0 z-40 sm:hidden" 
+                className="fixed inset-0 bg-black/40 backdrop-blur-[1px] z-[90]" 
                 onClick={() => setShowSortMenu(false)} 
               />
-              <div className="absolute right-0 sm:left-0 top-full mt-1.5 w-56 bg-white rounded-xl shadow-lg ring-1 ring-black/5 z-50 overflow-hidden py-1">
-                {SORT_OPTIONS.map((option) => {
-                  const isActive = `${currentSort}-${currentDir}` === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      onClick={() => handleSortSelect(option.value)}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors ${
-                        isActive ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className={`w-4 h-4 flex items-center justify-center shrink-0 ${isActive ? 'text-blue-600' : 'text-gray-400'}`}>
-                          {option.icon}
-                        </span>
-                        <span className="truncate">{option.label}</span>
-                      </div>
-                      {isActive && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
-                    </button>
-                  );
-                })}
+              {/* Modal / Bottom Sheet */}
+              <div className="fixed inset-x-0 bottom-0 sm:absolute sm:right-0 sm:left-auto sm:top-full sm:bottom-auto sm:mt-2 w-full sm:w-[340px] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl ring-1 ring-black/5 z-[100] flex flex-col max-h-[85vh] overflow-hidden">
+                <div className="px-4 py-3.5 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white">
+                  <h3 className="text-[15px] font-bold text-gray-900 flex items-center gap-2">
+                    <ArrowUpDown className="w-4 h-4 text-gray-500" />
+                    Ordenar Prospectos
+                  </h3>
+                  <button onClick={() => setShowSortMenu(false)} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <div className="p-4 overflow-y-auto bg-gray-50/50 flex-1 space-y-5">
+                  {/* Regla Principal */}
+                  <div>
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">1. Regla Principal</h4>
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                      {SORT_OPTIONS.map((option, idx) => {
+                        const isActive = tempSort === option.value;
+                        return (
+                          <label key={option.value} className={`flex items-center justify-between p-3 cursor-pointer transition-colors ${idx !== SORT_OPTIONS.length - 1 ? 'border-b border-gray-100' : ''} ${isActive ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}>
+                            <div className="flex items-center gap-3">
+                              <input type="radio" name="sort1" value={option.value} checked={isActive} onChange={() => setTempSort(option.value)} className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300" />
+                              <span className={`w-5 h-5 flex items-center justify-center shrink-0 ${isActive ? 'text-blue-600' : 'text-gray-400'}`}>{option.icon}</span>
+                              <span className={`text-sm ${isActive ? 'text-gray-900 font-medium' : 'text-gray-700'}`}>{option.label}</span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Regla Secundaria */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">2. Desempate (Opcional)</h4>
+                      {tempSort2 && (
+                        <button onClick={() => setTempSort2('')} className="text-xs text-rose-500 hover:text-rose-700 font-medium transition-colors">
+                          Quitar
+                        </button>
+                      )}
+                    </div>
+                    <div className="bg-white border border-gray-200 rounded-xl shadow-sm px-3 py-1">
+                      <select
+                        value={tempSort2}
+                        onChange={(e) => setTempSort2(e.target.value)}
+                        className="w-full bg-transparent border-0 py-2.5 pl-0 pr-8 text-sm text-gray-900 focus:ring-0 cursor-pointer"
+                      >
+                        <option value="">Sin desempate...</option>
+                        {SORT_OPTIONS.filter(o => o.value !== tempSort).map(o => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-3 border-t border-gray-100 bg-white shrink-0">
+                  <button
+                    onClick={() => {
+                      const params = new URLSearchParams(searchParams.toString());
+                      
+                      const [col, dir] = tempSort.split('-');
+                      params.set('sort', col);
+                      params.set('dir', dir);
+                      
+                      if (tempSort2) {
+                        const [col2, dir2] = tempSort2.split('-');
+                        params.set('sort2', col2);
+                        params.set('dir2', dir2);
+                      } else {
+                        params.delete('sort2');
+                        params.delete('dir2');
+                      }
+                      
+                      persistFilters(params);
+                      startTransition(() => router.push(`/prospects?${params.toString()}`));
+                      setShowSortMenu(false);
+                    }}
+                    className="w-full py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold shadow-sm hover:bg-blue-700 active:scale-[0.98] transition-all"
+                  >
+                    Aplicar orden
+                  </button>
+                </div>
               </div>
             </>
           )}
