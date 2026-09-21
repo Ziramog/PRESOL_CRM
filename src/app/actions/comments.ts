@@ -34,6 +34,9 @@ export async function createComment(formData: FormData) {
     return { error: error.message };
   }
 
+  // Touch the prospect to register activity
+  await supabase.from('prospects').update({ updated_at: new Date().toISOString() }).eq('id', prospect_id);
+
   revalidatePath(`/prospects/${prospect_id}`);
   return { success: true };
 }

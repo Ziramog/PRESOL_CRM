@@ -98,7 +98,10 @@ export async function updateProspect(id: string, formData: FormData) {
     return { error: 'El nombre de la empresa es obligatorio' };
   }
 
-  const payload: any = { company_name };
+  const payload: any = { 
+    company_name,
+    updated_at: new Date().toISOString()
+  };
 
   const fields = [
     'class', 'visit_priority', 'sector', 'city', 'address', 'email', 'commercial_category', 
@@ -150,7 +153,10 @@ export async function updateProspectStatus(prospectId: string, status: string) {
   
   const { error } = await supabase
     .from('prospects')
-    .update({ contact_status: status })
+    .update({ 
+      contact_status: status,
+      updated_at: new Date().toISOString()
+    })
     .eq('id', prospectId);
 
   if (error) {

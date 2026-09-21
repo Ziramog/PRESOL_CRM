@@ -46,6 +46,9 @@ export async function createTask(formData: FormData) {
     return { error: error.message };
   }
 
+  // Touch the prospect to register activity
+  await supabase.from('prospects').update({ updated_at: new Date().toISOString() }).eq('id', prospect_id);
+
   revalidatePath(`/prospects/${prospect_id}`);
   revalidatePath('/tasks');
   return { success: true };
@@ -76,6 +79,9 @@ export async function completeTask(taskId: string) {
     console.error('Error completing task:', error);
     return { error: error.message };
   }
+
+  // Touch the prospect to register activity
+  await supabase.from('prospects').update({ updated_at: new Date().toISOString() }).eq('id', task.prospect_id);
 
   revalidatePath(`/prospects/${task.prospect_id}`);
   revalidatePath('/tasks');
