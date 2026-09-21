@@ -133,7 +133,7 @@ export default async function ProspectsPage({
     });
 
     // 2. Fetch lightweight prospect IDs matching filters to sort them in memory
-    const lightweightQuery = supabaseAdmin.from('prospects').select('id, contact_status, company_name, is_favorite, created_at');
+    const lightweightQuery = supabaseAdmin.from('prospects').select('id, contact_status, company_name, is_favorite, created_at, updated_at, city, class, commercial_category, external_id');
     if (search) lightweightQuery.ilike('company_name', `%${search}%`);
     if (prospectClass) lightweightQuery.eq('class', prospectClass);
     if (selectedCities.length > 0) lightweightQuery.in('city', selectedCities);
@@ -150,8 +150,13 @@ export default async function ProspectsPage({
       if (col === 'open_tasks') return taskCounts[item.id] || 0;
       if (col === 'contact_status') return STATUS_WEIGHTS[item.contact_status || 'pending'] || 0;
       if (col === 'company_name') return item.company_name?.toLowerCase() || '';
+      if (col === 'city') return item.city?.toLowerCase() || '';
+      if (col === 'class') return item.class?.toLowerCase() || '';
+      if (col === 'commercial_category') return item.commercial_category?.toLowerCase() || '';
+      if (col === 'external_id') return item.external_id?.toLowerCase() || '';
       if (col === 'is_favorite') return item.is_favorite ? 1 : 0;
       if (col === 'created_at') return new Date(item.created_at).getTime();
+      if (col === 'updated_at') return new Date(item.updated_at || item.created_at).getTime();
       return null;
     };
 

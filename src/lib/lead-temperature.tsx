@@ -3,12 +3,34 @@ export type LeadTemp = 'green' | 'yellow' | 'red' | null;
 export function getLeadTemperature(updatedAt: string | null | undefined): { color: LeadTemp; label: string; animate: boolean } {
   if (!updatedAt) return { color: null, label: '', animate: false };
   
-  const diffMs = Date.now() - new Date(updatedAt).getTime();
-  const diffHours = diffMs / (1000 * 60 * 60);
+  const updatedDate = new Date(updatedAt);
+  const now = new Date();
   
-  if (diffHours <= 24) return { color: 'green', label: 'Actividad en las últimas 24hs', animate: true };
-  if (diffHours <= 48) return { color: 'yellow', label: 'Actividad hace más de 24hs', animate: false };
-  if (diffHours <= 72) return { color: 'red', label: 'Actividad hace más de 48hs', animate: false };
+  // Calculate raw difference in milliseconds
+  let diffMs = now.getTime() - updatedDate.getTime();
+  
+  // Subtract weekend milliseconds
+  let weekendMs = 0;
+  let current = new Date(updatedDate);
+  while (current < now) {
+    if (current.getDay() === 0 || current.getDay() === 6) { // Sunday or Saturday
+      const nextDay = new Date(current);
+      nextDay.setHours(24, 0, 0, 0);
+      const endOfDay = nextDay < now ? nextDay : now;
+      weekendMs += endOfDay.getTime() - current.getTime();
+      current = nextDay;
+    } else {
+      const nextDay = new Date(current);
+      nextDay.setHours(24, 0, 0, 0);
+      current = nextDay;
+    }
+  }
+  
+  const diffHours = (diffMs - weekendMs) / (1000 * 60 * 60);
+  
+  if (diffHours <= 24) return { color: 'green', label: 'Actividad reciente (últimas 24hs hábiles)', animate: true };
+  if (diffHours <= 48) return { color: 'yellow', label: 'Enfriándose (hace más de 24hs hábiles)', animate: false };
+  if (diffHours <= 72) return { color: 'red', label: 'Frío (hace más de 48hs hábiles)', animate: false };
   
   return { color: null, label: '', animate: false };
 }
