@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { PROSPECT_STATUS } from '@/lib/constants';
 import { ArrowUpDown, ArrowUp, ArrowDown, MessageSquare } from 'lucide-react';
 import { FavoriteButton } from './FavoriteButton';
+import { getLeadTemperature, PulseIndicator } from '@/lib/lead-temperature';
 
 type SortDir = 'asc' | 'desc';
 
@@ -110,7 +111,7 @@ export function ProspectTable({
             </tr>
           ) : (
             prospects.map((prospect) => {
-              const isUpdatedToday = prospect.updated_at && new Date(prospect.updated_at).toDateString() === new Date().toDateString();
+              const leadTemp = getLeadTemperature(prospect.updated_at);
 
               return (
               <tr
@@ -140,12 +141,7 @@ export function ProspectTable({
                     >
                       {prospect.company_name}
                     </Link>
-                    {isUpdatedToday && (
-                      <span className="relative flex h-2.5 w-2.5 shrink-0" title="Actividad hoy">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                      </span>
-                    )}
+                    <PulseIndicator temp={leadTemp} />
                     {prospect.has_direction_note && (
                       <span
                         title="Tiene nota de dirección"

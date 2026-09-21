@@ -9,6 +9,7 @@ import { OpportunityForm } from './opportunity-form';
 import { ProspectForm } from '@/components/crm/prospect-form';
 import { VoiceRecorderModal } from './v2/VoiceRecorderModal';
 import { updateProspectStatus, deleteProspect, toggleFavorite } from '@/app/actions/prospects';
+import { getLeadTemperature, PulseIndicator } from '@/lib/lead-temperature';
 
 import { PROSPECT_STATUS } from '@/lib/constants';
 
@@ -188,12 +189,7 @@ export function ProspectHeader({
               <h1 className="text-[20px] sm:text-[22px] font-bold text-slate-900 leading-tight mb-1">
                 {prospect.company_name}
               </h1>
-              {isUpdatedToday && (
-                <span className="relative flex h-3 w-3 shrink-0" title="Actividad hoy">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                </span>
-              )}
+              <PulseIndicator temp={getLeadTemperature(prospect.updated_at)} />
             </div>
             <p className="text-[13px] sm:text-[14px] text-slate-500 mb-2.5">
               Prospecto comercial

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { MapPin, Phone, MessageCircle, ChevronRight, Building2, Factory, Leaf, Store, Star, Tag, Clock, Mic, HardHat, Hexagon, Truck, Briefcase, Wrench, Wheat, Box } from 'lucide-react';
 import { PROSPECT_STATUS } from '@/lib/constants';
 import { FavoriteButton } from '@/components/crm/FavoriteButton';
+import { getLeadTemperature, PulseIndicator } from '@/lib/lead-temperature';
 
 function getIconProps(category: string, name: string) {
   const cat = (category || '').toLowerCase();
@@ -57,7 +58,7 @@ export function ProspectCard({ prospect }: { prospect: any }) {
   const cleanPhone = activePhone ? activePhone.replace(/\D/g, '') : '';
   const { Icon, bg, text, border } = getIconProps(prospect.commercial_category, prospect.company_name);
   
-  const isUpdatedToday = prospect.updated_at && new Date(prospect.updated_at).toDateString() === new Date().toDateString();
+  const leadTemp = getLeadTemperature(prospect.updated_at);
 
   return (
     <div className="bg-white rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-200 overflow-hidden transition-all hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] relative mb-3">
@@ -77,12 +78,7 @@ export function ProspectCard({ prospect }: { prospect: any }) {
                 <h3 className="font-extrabold text-gray-900 text-[15px] leading-tight line-clamp-1">
                   {prospect.company_name}
                 </h3>
-                {isUpdatedToday && (
-                  <span className="relative flex h-2.5 w-2.5 shrink-0" title="Actividad hoy">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                  </span>
-                )}
+                <PulseIndicator temp={leadTemp} />
               </div>
               {/* ROW 2: City and Phone */}
               <div className="flex items-center gap-1.5 mt-1 text-slate-600 text-[12px] font-medium">
