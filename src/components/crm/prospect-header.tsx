@@ -142,51 +142,17 @@ export function ProspectHeader({
         </button>
       </div>
 
-      <div className="relative flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 mb-4 bg-white rounded-[24px] p-5 shadow-sm border border-slate-100">
+      <div className="relative flex flex-col lg:flex-row lg:items-stretch lg:justify-between mb-4 bg-white rounded-[24px] shadow-sm border border-slate-100 overflow-hidden">
         
-        {/* MOBILE ONLY: Top Right Actions (Heart & Menu) */}
-        <div className="flex lg:hidden absolute top-4 right-4 items-center gap-1.5 z-10">
-          <button 
-            onClick={handleToggleFavorite}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors active:scale-90 ${optimisticFav ? 'bg-rose-50 text-rose-500' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
-          >
-            <Heart className={`w-5 h-5 ${optimisticFav ? 'fill-rose-500' : ''}`} strokeWidth={optimisticFav ? 0 : 2} />
-          </button>
-          
-          <div className="relative">
-            <button 
-              onClick={() => setShowMenu(!showMenu)}
-              className="w-9 h-9 flex items-center justify-center rounded-full text-slate-600 bg-slate-50 hover:bg-slate-100 transition-colors active:scale-90"
-            >
-              <MoreHorizontal className="w-5 h-5" />
-            </button>
-            
-            {showMenu && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
-                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-100 z-50 py-1.5 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                  <button onClick={() => { setShowMenu(false); setShowEditModal(true); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[14px] font-medium text-slate-700 hover:bg-slate-50 transition-colors text-left">
-                    <Edit className="w-4 h-4 text-slate-400" /> Editar prospecto
-                  </button>
-                  <div className="w-full h-px bg-slate-100 my-1"></div>
-                  <button onClick={() => { setShowMenu(false); setShowDeleteModal(true); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[14px] font-medium text-rose-600 hover:bg-rose-50 transition-colors text-left">
-                    <Trash2 className="w-4 h-4 text-rose-500" /> Eliminar prospecto
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
         {/* --- LEFT SECTION (Identity, Location, Buttons) --- */}
-        <div className="flex flex-col min-w-0 pr-12 lg:pr-0 lg:flex-1">
+        <div className="flex flex-col min-w-0 flex-1 p-5 lg:p-6 lg:pr-8">
           <div className="flex flex-row items-center sm:items-start text-left gap-3 mb-2 px-1">
             <div className="w-[64px] h-[64px] rounded-[16px] bg-blue-50 flex items-center justify-center shrink-0">
               <Building2 className="w-8 h-8 text-blue-600" strokeWidth={1.5} />
             </div>
             
             <div className="flex flex-col mt-0.5 w-full">
-              <div className="flex items-center gap-2 pr-20 lg:pr-0">
+              <div className="flex items-center gap-2">
                 <h1 className="text-[20px] sm:text-[22px] font-bold text-slate-900 leading-tight mb-1">
                   {prospect.company_name}
                 </h1>
@@ -196,7 +162,7 @@ export function ProspectHeader({
                 Prospecto comercial
               </p>
 
-              {/* Location & Sector (Desktop & Mobile) */}
+              {/* Location & Sector */}
               <div className="flex items-center justify-start gap-3 text-[13px] text-slate-600 font-medium lg:mb-5">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
@@ -211,59 +177,8 @@ export function ProspectHeader({
             </div>
           </div>
 
-          {/* MOBILE ONLY: Status & Priority (Under name) */}
-          <div className="flex lg:hidden items-center justify-start gap-2 mb-6 px-1 mt-3">
-            {/* Status Dropdown */}
-            <div className="relative inline-flex items-center">
-              <select
-                value={prospect.contact_status || 'pending'}
-                onChange={handleStatusChange}
-                disabled={isPending}
-                className={`appearance-none cursor-pointer outline-none transition-colors border pl-8 pr-7 py-1.5 rounded-full text-[12px] font-bold tracking-wide
-                  ${isPending ? 'opacity-50' : ''}
-                  ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-800 border-blue-200' :
-                    prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
-                    prospect.contact_status === 'opportunity' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' :
-                    prospect.contact_status === 'quote' ? 'bg-purple-50 text-purple-800 border-purple-200' :
-                    prospect.contact_status === 'customer' ? 'bg-green-50 text-green-800 border-green-200' :
-                    prospect.contact_status === 'discarded' ? 'bg-rose-50 text-rose-800 border-rose-200' :
-                    'bg-amber-50 text-amber-800 border-amber-200'
-                  }
-                `}
-              >
-                {STATUS_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
-                <span className={`w-2 h-2 rounded-full 
-                  ${prospect.contact_status === 'in_progress' ? 'bg-blue-500' :
-                    prospect.contact_status === 'interested' ? 'bg-emerald-500' :
-                    prospect.contact_status === 'opportunity' ? 'bg-indigo-500' :
-                    prospect.contact_status === 'quote' ? 'bg-purple-500' :
-                    prospect.contact_status === 'customer' ? 'bg-green-500' :
-                    prospect.contact_status === 'discarded' ? 'bg-rose-500' :
-                    'bg-amber-500'
-                  }
-                `}></span>
-              </div>
-              <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-current opacity-60">
-                <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
-                  <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
-                </svg>
-              </div>
-            </div>
-
-            {/* Priority */}
-            {prospect.priority === 'Alta' && (
-              <div className="flex items-center gap-1 bg-rose-50 border border-rose-100 text-rose-700 px-3 py-1.5 rounded-full text-[12px] font-bold">
-                <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={3} /> Alta prioridad
-              </div>
-            )}
-          </div>
-
-          {/* Action Buttons (Moved under identity for desktop) */}
-          <div className="flex flex-col lg:flex-row lg:items-center gap-3 w-full px-1 lg:px-0">
+          {/* Action Buttons */}
+          <div className="flex flex-col lg:flex-row lg:items-center gap-3 w-full px-1 lg:px-0 mt-5 lg:mt-0">
             {/* Primary Action Button */}
             <button 
               onClick={() => setShowActivityForm(true)}
@@ -311,7 +226,7 @@ export function ProspectHeader({
         </div>
 
         {/* --- CENTER SECTION (Contact Selector - Integrated) --- */}
-        <div className="hidden lg:flex flex-col min-w-[280px] lg:w-[320px] border-l border-slate-200 pl-6 lg:pl-8 py-1">
+        <div className="flex flex-col w-full lg:w-[320px] lg:min-w-[280px] border-t border-slate-100 lg:border-t-0 lg:border-l lg:border-slate-200 p-5 lg:px-6 lg:py-6 bg-slate-50/30 lg:bg-transparent">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5 text-slate-400">
               <User className="w-4 h-4 text-blue-500" />
@@ -360,7 +275,7 @@ export function ProspectHeader({
         </div>
 
         {/* --- RIGHT SECTION (Global Actions - Integrated) --- */}
-        <div className="hidden lg:flex flex-col justify-between shrink-0 border-l border-slate-200 pl-6 lg:pl-8 py-1">
+        <div className="flex flex-col justify-between shrink-0 w-full lg:w-auto border-t border-slate-100 lg:border-t-0 lg:border-l lg:border-slate-200 p-5 lg:px-6 lg:py-6">
           
           {/* Status & Priority */}
           <div className="flex flex-col gap-2">

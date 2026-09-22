@@ -152,11 +152,6 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
             <NextActionCard tasks={overview.next_task ? [overview.next_task] : []} prospectId={id} />
           </div>
 
-          {/* Mobile Only: Primary Contact */}
-          <div className="block lg:hidden">
-            <PrimaryContactCard contacts={displayContacts} prospect={prospect} secondaryCount={overview.secondary_contacts_count} />
-          </div>
-
           {/* Followups (Tareas) -> Col span 3 */}
           <div className="order-last lg:order-none lg:col-span-3 h-full">
             <OpenFollowupsCard tasks={overview.open_tasks} prospectId={id} />
