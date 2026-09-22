@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapPin, Phone, MessageCircle, PlusCircle, Trash2, AlertTriangle, X, Edit, Building2, Factory, Mic, ChevronLeft, MoreHorizontal, ChevronRight, Heart, Calendar, Clock, User, ArrowUpRight } from 'lucide-react';
+import { MapPin, Phone, MessageCircle, PlusCircle, Trash2, AlertTriangle, X, Edit, Building2, Factory, Mic, ChevronLeft, MoreHorizontal, ChevronRight, Heart, Calendar, Clock, User, ArrowUpRight, Mail, ChevronDown } from 'lucide-react';
 import { ActivityForm } from './activity-form';
 import { TaskForm } from './task-form';
 import { OpportunityForm } from './opportunity-form';
@@ -40,13 +40,15 @@ function formatFutureDate(dateString: string) {
 }
 
 export function ProspectHeader({ 
-  prospect, 
+  prospect,
+  contacts = [],
   availableCities = [], 
   availableSectors = [],
   latestActivity,
   nextTask
 }: { 
-  prospect: any, 
+  prospect: any,
+  contacts?: any[],
   availableCities?: string[], 
   availableSectors?: string[],
   latestActivity?: any,
@@ -77,6 +79,9 @@ export function ProspectHeader({
   const [isPending, startTransition] = useTransition();
 
   const [optimisticFav, setOptimisticFav] = useState(prospect.is_favorite ?? false);
+
+  const initialPrimary = contacts.find((c: any) => c.is_primary) || contacts[0];
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(initialPrimary?.id || null);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -117,9 +122,12 @@ export function ProspectHeader({
     }
   };
 
-  const primaryContact = prospect.contacts?.find((c: any) => c.is_primary) || prospect.contacts?.[0];
-  const activePhone = prospect.primary_phone || primaryContact?.phone;
+  // The active contact is the one selected in the dropdown (desktop) or primary (mobile)
+  const selectedContact = contacts.find(c => c.id === selectedContactId) || initialPrimary;
+  
+  const activePhone = selectedContact?.phone || prospect.primary_phone;
   const cleanPhone = activePhone?.replace(/[^\d+]/g, '');
+  const activeEmail = selectedContact?.email || prospect.email;
 
   return (
     <>
@@ -134,9 +142,9 @@ export function ProspectHeader({
         </button>
       </div>
 
-      <div className="relative flex flex-col lg:grid lg:grid-cols-[1fr_360px] lg:gap-6 mb-4 bg-white rounded-[24px] p-5 shadow-sm border border-slate-100">
+      <div className="relative flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 mb-4 bg-white rounded-[24px] p-5 shadow-sm border border-slate-100">
         
-        {/* Top Right Actions (Heart & Menu) */}
+        {/* Top Right Actions (Heart & Menu) - Absolute for mobile, but on desktop we can keep them absolute or move them. Keeping absolute is fine for now, they sit in the top right corner. */}
         <div className="absolute top-4 right-4 flex items-center gap-1.5 z-10">
           <button 
             onClick={handleToggleFavorite}
@@ -178,9 +186,8 @@ export function ProspectHeader({
           </div>
         </div>
 
-        {/* --- LEFT SECTION (Identity, Info & Actions) --- */}
-        <div className="flex flex-col min-w-0 pr-12 lg:pr-0">
-          {/* 2. Title Section */}
+        {/* --- LEFT SECTION (Identity) --- */}
+        <div className="flex flex-col min-w-0 pr-12 lg:pr-0 lg:flex-1">
           <div className="flex flex-row items-center sm:items-start text-left gap-3 mb-5 mt-2 lg:mb-4 px-1">
             <div className="w-[64px] h-[64px] rounded-[16px] bg-blue-50 flex items-center justify-center shrink-0">
               <Building2 className="w-8 h-8 text-blue-600" strokeWidth={1.5} />
@@ -197,9 +204,7 @@ export function ProspectHeader({
                 Prospecto comercial
               </p>
               
-              {/* Status & Priority Row */}
               <div className="flex items-center justify-start gap-2 flex-wrap">
-                {/* Status Dropdown */}
                 <div className="relative inline-flex items-center">
                   <select
                     value={prospect.contact_status || 'pending'}
@@ -240,7 +245,6 @@ export function ProspectHeader({
                   </div>
                 </div>
 
-                {/* Priority */}
                 {prospect.priority === 'Alta' && (
                   <div className="flex items-center gap-1 bg-rose-50 border border-rose-100 text-rose-700 px-3 py-1.5 rounded-full text-[12px] font-bold">
                     <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={3} />
@@ -251,8 +255,7 @@ export function ProspectHeader({
             </div>
           </div>
 
-          {/* 3. Compact Info Row (Location | Sector) */}
-          <div className="flex items-center justify-start gap-3 text-[13px] text-slate-600 mb-6 lg:mb-5 font-medium px-1">
+          <div className="flex items-center justify-start gap-3 text-[13px] text-slate-600 font-medium px-1 mb-6 lg:mb-0">
             <div className="flex items-center gap-1.5 min-w-0">
               <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
               <span className="truncate max-w-[120px] lg:max-w-none">{prospect.city || 'Sin ciudad'}</span>
@@ -263,102 +266,101 @@ export function ProspectHeader({
               <span className="truncate max-w-[120px] lg:max-w-none">{prospect.sector || prospect.commercial_category || 'Sin rubro'}</span>
             </div>
           </div>
+        </div>
 
-          {/* 4. Action Buttons (Moved under identity for desktop) */}
-          <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4 w-full px-1 lg:px-0">
-            {/* Primary Action Button */}
-            <button 
-              onClick={() => setShowActivityForm(true)}
-              className="w-full lg:w-auto lg:px-5 h-[54px] lg:h-[48px] bg-[#1456c2] text-white rounded-2xl flex items-center justify-center gap-2.5 shadow-md hover:bg-blue-800 transition-all active:scale-[0.98] mb-3 lg:mb-0 shrink-0"
-            >
-              <PlusCircle className="w-6 h-6 lg:w-5 lg:h-5" strokeWidth={2} />
-              <span className="text-[16px] lg:text-[14px] font-semibold tracking-wide whitespace-nowrap">Registrar actividad</span>
+        {/* --- CENTER SECTION (Contact Selector - Desktop Only) --- */}
+        <div className="hidden lg:flex flex-col bg-slate-50/50 rounded-2xl border border-slate-100 p-4 min-w-[320px] max-w-[360px] mr-16">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-1.5 text-slate-500">
+              <User className="w-4 h-4" />
+              <span className="text-[12px] font-semibold uppercase tracking-wider">Contacto principal</span>
+            </div>
+            {contacts.length > 1 && (
+              <div className="relative">
+                <select 
+                  className="appearance-none bg-white border border-slate-200 text-slate-700 text-[13px] font-medium py-1 pl-3 pr-8 rounded-lg cursor-pointer outline-none focus:border-blue-400 shadow-sm"
+                  value={selectedContactId || ''}
+                  onChange={(e) => setSelectedContactId(e.target.value)}
+                >
+                  {contacts.map(c => (
+                    <option key={c.id} value={c.id}>{c.full_name}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-[14px] shrink-0">
+              {selectedContact?.full_name ? selectedContact.full_name.substring(0, 2).toUpperCase() : '??'}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[14px] font-bold text-slate-900 truncate">{selectedContact?.full_name || 'Sin contacto'}</span>
+              <span className="text-[12px] text-slate-500 truncate mb-2">{selectedContact?.role || 'Sin cargo'}</span>
+              
+              <div className="flex flex-col gap-1.5">
+                {activePhone && (
+                  <div className="flex items-center gap-1.5 text-[12px] text-slate-600">
+                    <Phone className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="truncate">{activePhone}</span>
+                  </div>
+                )}
+                {activeEmail && (
+                  <div className="flex items-center gap-1.5 text-[12px] text-slate-600">
+                    <Mail className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="truncate">{activeEmail}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* --- RIGHT SECTION (Action Buttons) --- */}
+        <div className="flex flex-col lg:items-end gap-3 lg:gap-4 w-full lg:w-auto px-1 lg:px-0 lg:mt-0">
+          <button 
+            onClick={() => setShowActivityForm(true)}
+            className="w-full lg:w-auto lg:px-6 h-[54px] lg:h-[42px] bg-[#1456c2] text-white rounded-2xl lg:rounded-xl flex items-center justify-center gap-2 shadow-sm hover:bg-blue-800 transition-all active:scale-[0.98] shrink-0"
+          >
+            <PlusCircle className="w-6 h-6 lg:w-4 lg:h-4" strokeWidth={2.5} />
+            <span className="text-[16px] lg:text-[14px] font-semibold tracking-wide whitespace-nowrap">Registrar actividad</span>
+          </button>
+
+          <div className="flex items-center justify-between lg:justify-end gap-3 lg:gap-2 w-full lg:w-auto">
+            {/* Llamar */}
+            {cleanPhone ? (
+              <a href={`tel:${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[42px] lg:h-[42px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors active:scale-95 shrink-0">
+                <Phone className="w-6 h-6 lg:w-4 lg:h-4 text-blue-600" strokeWidth={2.5} />
+              </a>
+            ) : (
+              <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[42px] lg:h-[42px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50 shrink-0">
+                <Phone className="w-6 h-6 lg:w-4 lg:h-4 text-slate-400" strokeWidth={2.5} />
+              </button>
+            )}
+
+            {/* Nota de Voz */}
+            <button onClick={() => setShowVoiceModal(true)} className="w-[52px] h-[52px] lg:w-[42px] lg:h-[42px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-purple-50 hover:border-purple-200 transition-colors active:scale-95 shrink-0">
+              <Mic className="w-6 h-6 lg:w-4 lg:h-4 text-purple-600" strokeWidth={2.5} />
             </button>
 
-            {/* Compact Quick Actions (4 items) */}
-            <div className="flex items-center justify-between lg:justify-start gap-3 lg:gap-2.5 w-full lg:w-auto">
-              {/* Llamar */}
-              {cleanPhone ? (
-                <a href={`tel:${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors active:scale-95 shrink-0">
-                  <Phone className="w-6 h-6 lg:w-5 lg:h-5 text-blue-600" strokeWidth={2.5} />
-                </a>
-              ) : (
-                <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50 shrink-0">
-                  <Phone className="w-6 h-6 lg:w-5 lg:h-5 text-slate-400" strokeWidth={2.5} />
-                </button>
-              )}
-
-              {/* Nota de Voz */}
-              <button onClick={() => setShowVoiceModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-purple-50 hover:border-purple-200 transition-colors active:scale-95 shrink-0">
-                <Mic className="w-6 h-6 lg:w-5 lg:h-5 text-purple-600" strokeWidth={2.5} />
+            {/* WhatsApp */}
+            {cleanPhone ? (
+              <a href={`whatsapp://send?phone=${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[42px] lg:h-[42px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-[#25D366]/10 hover:border-[#25D366]/30 transition-colors active:scale-95 shrink-0">
+                <WhatsAppIcon className="w-7 h-7 lg:w-5 lg:h-5 text-[#25D366]" />
+              </a>
+            ) : (
+              <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[42px] lg:h-[42px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50 shrink-0">
+                <WhatsAppIcon className="w-7 h-7 lg:w-5 lg:h-5 text-slate-400" />
               </button>
+            )}
 
-              {/* WhatsApp */}
-              {cleanPhone ? (
-                <a href={`whatsapp://send?phone=${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-[#25D366]/10 hover:border-[#25D366]/30 transition-colors active:scale-95 shrink-0">
-                  <WhatsAppIcon className="w-7 h-7 lg:w-6 lg:h-6 text-[#25D366]" />
-                </a>
-              ) : (
-                <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50 shrink-0">
-                  <WhatsAppIcon className="w-7 h-7 lg:w-6 lg:h-6 text-slate-400" />
-                </button>
-              )}
-
-              {/* Ubicación */}
-              <button onClick={openMaps} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 shrink-0">
-                <MapPin className="w-6 h-6 lg:w-5 lg:h-5 text-blue-600" strokeWidth={2.5} />
-              </button>
-            </div>
+            {/* Ubicación */}
+            <button onClick={openMaps} className="w-[52px] h-[52px] lg:w-[42px] lg:h-[42px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 shrink-0">
+              <MapPin className="w-6 h-6 lg:w-4 lg:h-4 text-blue-600" strokeWidth={2.5} />
+            </button>
           </div>
         </div>
-
-        {/* --- RIGHT SECTION (Events Context Rows) --- */}
-        <div className="flex flex-col h-full lg:justify-center mt-6 lg:mt-0">
-          <div className="flex flex-col bg-slate-50/50 rounded-2xl border border-slate-100 overflow-hidden divide-y divide-slate-100 shadow-inner">
-            
-            {/* Last Activity */}
-            <div className="flex items-center gap-3 p-3.5 hover:bg-slate-50 transition-colors">
-              <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                <Clock className="w-4 h-4 text-slate-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Última actividad</p>
-                <p className="text-[14px] font-bold text-slate-900 truncate">
-                  {latestActivity ? latestActivity.type : 'Sin actividad reciente'}
-                </p>
-                {latestActivity && (
-                  <p className="text-[12px] text-slate-500 mt-0.5">
-                    {formatDateDistance(latestActivity.activity_at)} · {latestActivity.profiles?.full_name || 'Usuario'}
-                  </p>
-                )}
-              </div>
-              <ChevronRight className="w-4 h-4 text-slate-300" />
-            </div>
-
-            {/* Next Task */}
-            <div className="flex items-center gap-3 p-3.5 hover:bg-slate-50 transition-colors">
-              <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                <Calendar className="w-4 h-4 text-slate-600" />
-              </div>
-              <div className="flex-1 min-w-0 flex justify-between items-center pr-2">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Próxima acción</p>
-                  <p className="text-[14px] font-bold text-slate-900 truncate pr-2">
-                    {nextTask ? nextTask.title : 'Sin tareas pendientes'}
-                  </p>
-                </div>
-                {nextTask && (
-                  <span className="text-[12px] font-medium text-slate-600 bg-white border border-slate-200 px-2 py-1 rounded-lg shrink-0">
-                    {formatFutureDate(nextTask.due_at)}
-                  </span>
-                )}
-              </div>
-              <ChevronRight className="w-4 h-4 text-slate-300" />
-            </div>
-
-          </div>
-        </div>
-
       </div>
       
       {showEditModal && (

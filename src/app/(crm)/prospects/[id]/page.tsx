@@ -16,6 +16,7 @@ import { CompanyInfoCard } from '@/components/crm/v2/CompanyInfoCard';
 import { InternalNotesAccordion } from '@/components/crm/v2/InternalNotesAccordion';
 import { LinkedOpportunitiesAccordion } from '@/components/crm/v2/LinkedOpportunitiesAccordion';
 import { RealtimeListener } from '@/components/crm/realtime-listener';
+import { DataQualityCard } from '@/components/crm/v2/DataQualityCard';
 
 export default async function ProspectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -123,6 +124,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
         {/* Back link is now inside ProspectHeader */}
         <ProspectHeader 
           prospect={prospect} 
+          contacts={displayContacts}
           availableCities={[]} 
           availableSectors={[]} 
           latestActivity={overview.latest_activity}
@@ -141,23 +143,46 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
       {/* Main Grid Layout */}
       <div className="flex flex-col gap-5 mt-5">
         
-        {/* ROW 1: 3 columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
-          <NextActionCard tasks={overview.next_task ? [overview.next_task] : []} prospectId={id} />
-          <PrimaryContactCard contacts={displayContacts} prospect={prospect} secondaryCount={overview.secondary_contacts_count} />
-          <CommercialStatusCard prospect={prospect} latestActivity={overview.latest_activity} />
+        {/* ROW 1 (Desktop): OpenFollowups (60) + ActivityTimeline (40) */}
+        {/* ROW 1 (Mobile): NextAction, PrimaryContact, CommercialStatus */}
+        <div className="flex flex-col lg:grid lg:grid-cols-5 gap-5 items-stretch">
+          
+          {/* Mobile Only: Next Action */}
+          <div className="block lg:hidden">
+            <NextActionCard tasks={overview.next_task ? [overview.next_task] : []} prospectId={id} />
+          </div>
+
+          {/* Mobile Only: Primary Contact */}
+          <div className="block lg:hidden">
+            <PrimaryContactCard contacts={displayContacts} prospect={prospect} secondaryCount={overview.secondary_contacts_count} />
+          </div>
+
+          {/* Followups (Tareas) -> Col span 3 */}
+          <div className="order-last lg:order-none lg:col-span-3 h-full">
+            <OpenFollowupsCard tasks={overview.open_tasks} prospectId={id} />
+          </div>
+          
+          {/* Timeline (Actividad reciente) -> Col span 2 */}
+          <div className="order-last lg:order-none lg:col-span-2 h-full">
+            <ActivityTimeline activities={overview.recent_activities} />
+          </div>
+
         </div>
         
-        {/* ROW 2: Full width */}
+        {/* ROW 2: Commercial Summary */}
         <div>
           <CommercialSummaryCard prospect={prospect} />
         </div>
 
-        {/* ROW 3: 3 columns */}
+        {/* ROW 3: Data & Quality */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
-          <ActivityTimeline activities={overview.recent_activities} />
-          <OpenFollowupsCard tasks={overview.open_tasks} prospectId={id} />
           <CompanyInfoCard prospect={prospect} dataQuality={overview.data_quality} />
+          
+          {/* Data Quality */}
+          <DataQualityCard prospect={prospect} dataQuality={overview.data_quality} />
+          
+          {/* CommercialStatus (moved from row 1 to row 3) */}
+          <CommercialStatusCard prospect={prospect} latestActivity={overview.latest_activity} />
         </div>
         
         {/* ROW 4: 2 columns (50/50 split) */}
