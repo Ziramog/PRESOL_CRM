@@ -24,24 +24,28 @@ export default async function QuotesListPage({
     `)
     .order('quote_date', { ascending: false });
 
-  if (search) {
-    // We search by quote_number. If we wanted to search by prospect company_name, we'd need an inner join or ilike on prospects
-    query = query.ilike('quote_number', `%${search}%`);
-  }
-
+  // Search is handled purely in memory since we need to search both quote_number and the joined prospect company_name
+  // If we applied it to the DB query directly, we wouldn't get matches on the relation easily without PostgREST inner joins.
+  
   if (status) {
     query = query.eq('status', status);
   }
 
   const { data: quotes, error } = await query;
 
-  // Filter in memory for client company name if search exists
+  if (error) {
+    console.error('Error fetching quotes:', error);
+  }
+
+  // Filter in memory for client company name and quote_number safely
   const filteredQuotes = search 
-    ? quotes?.filter((q: any) => 
-        q.quote_number.toLowerCase().includes(search.toLowerCase()) || 
-        q.client?.company_name.toLowerCase().includes(search.toLowerCase())
-      )
-    : quotes;
+    ? (quotes ?? []).filter((q: any) => {
+        const qNum = String(q.quote_number || '').toLowerCase();
+        const cName = String(q.client?.company_name || '').toLowerCase();
+        const s = search.toLowerCase();
+        return qNum.includes(s) || cName.includes(s);
+      })
+    : (quotes ?? []);
 
   return (
     <div className="p-4 md:p-6 pb-24 md:pb-6 space-y-6">

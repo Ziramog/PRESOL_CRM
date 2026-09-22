@@ -134,16 +134,20 @@ export default async function ProspectsPage({
       taskCounts[t.prospect_id] = (taskCounts[t.prospect_id] || 0) + 1;
     });
 
-    // 2. Fetch lightweight prospect IDs matching filters to sort them in memory
-    const lightweightQuery = supabaseAdmin.from('prospects').select('id, contact_status, company_name, source_payload, created_at, updated_at, city, class, commercial_category, external_id');
-    if (search) lightweightQuery.ilike('company_name', `%${search}%`);
-    if (prospectClass) lightweightQuery.eq('class', prospectClass);
-    if (selectedCities.length > 0) lightweightQuery.in('city', selectedCities);
-    if (sector) lightweightQuery.eq('sector', sector);
-    if (status) lightweightQuery.eq('contact_status', status);
-    if (favoritesOnly) lightweightQuery.contains('source_payload', { is_favorite: true });
+    let lightweightQuery = supabaseAdmin.from('prospects').select('id, contact_status, company_name, source_payload, created_at, updated_at, city, class, commercial_category, external_id');
+    if (search) lightweightQuery = lightweightQuery.ilike('company_name', `%${search}%`);
+    if (prospectClass) lightweightQuery = lightweightQuery.eq('class', prospectClass);
+    if (selectedCities.length > 0) lightweightQuery = lightweightQuery.in('city', selectedCities);
+    if (sector) lightweightQuery = lightweightQuery.eq('sector', sector);
+    if (status) lightweightQuery = lightweightQuery.eq('contact_status', status);
+    if (favoritesOnly) lightweightQuery = lightweightQuery.contains('source_payload', { is_favorite: true });
     
-    const { data: idData } = await lightweightQuery;
+    const { data: idData, error: idError } = await lightweightQuery;
+    
+    if (idError) {
+      console.error('Error fetching lightweight prospects:', idError);
+    }
+    
     const matchingData = idData ?? [];
     totalCount = matchingData.length;
 
@@ -206,6 +210,11 @@ export default async function ProspectsPage({
     // STANDARD SORTING: Apply pagination directly to the database query
     baseQuery = baseQuery.range(startRange, endRange);
     const res = await baseQuery;
+    
+    if (res.error) {
+      console.error('Error fetching prospects (baseQuery):', res.error);
+    }
+    
     prospects = res.data ?? [];
     totalCount = res.count ?? 0;
 
