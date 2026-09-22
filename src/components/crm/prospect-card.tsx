@@ -41,7 +41,7 @@ function getIconProps(category: string, name: string) {
     { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-100' },
     { bg: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-100' }
   ];
-  const color = colors[(name.length || 0) % colors.length];
+  const color = colors[((name?.length || 0)) % colors.length];
   
   return { Icon: Building2, ...color };
 }
