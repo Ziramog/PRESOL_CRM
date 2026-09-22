@@ -144,8 +144,8 @@ export function ProspectHeader({
 
       <div className="relative flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 mb-4 bg-white rounded-[24px] p-5 shadow-sm border border-slate-100">
         
-        {/* Top Right Actions (Heart & Menu) - Absolute for mobile, but on desktop we can keep them absolute or move them. Keeping absolute is fine for now, they sit in the top right corner. */}
-        <div className="absolute top-4 right-4 flex items-center gap-1.5 z-10">
+        {/* MOBILE ONLY: Top Right Actions (Heart & Menu) */}
+        <div className="flex lg:hidden absolute top-4 right-4 items-center gap-1.5 z-10">
           <button 
             onClick={handleToggleFavorite}
             className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors active:scale-90 ${optimisticFav ? 'bg-rose-50 text-rose-500' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
@@ -165,20 +165,12 @@ export function ProspectHeader({
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
                 <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-100 z-50 py-1.5 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                  <button 
-                    onClick={() => { setShowMenu(false); setShowEditModal(true); }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-[14px] font-medium text-slate-700 hover:bg-slate-50 transition-colors text-left"
-                  >
-                    <Edit className="w-4 h-4 text-slate-400" />
-                    Editar prospecto
+                  <button onClick={() => { setShowMenu(false); setShowEditModal(true); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[14px] font-medium text-slate-700 hover:bg-slate-50 transition-colors text-left">
+                    <Edit className="w-4 h-4 text-slate-400" /> Editar prospecto
                   </button>
                   <div className="w-full h-px bg-slate-100 my-1"></div>
-                  <button 
-                    onClick={() => { setShowMenu(false); setShowDeleteModal(true); }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-[14px] font-medium text-rose-600 hover:bg-rose-50 transition-colors text-left"
-                  >
-                    <Trash2 className="w-4 h-4 text-rose-500" />
-                    Eliminar prospecto
+                  <button onClick={() => { setShowMenu(false); setShowDeleteModal(true); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[14px] font-medium text-rose-600 hover:bg-rose-50 transition-colors text-left">
+                    <Trash2 className="w-4 h-4 text-rose-500" /> Eliminar prospecto
                   </button>
                 </div>
               </>
@@ -186,9 +178,9 @@ export function ProspectHeader({
           </div>
         </div>
 
-        {/* --- LEFT SECTION (Identity) --- */}
+        {/* --- LEFT SECTION (Identity, Location, Buttons) --- */}
         <div className="flex flex-col min-w-0 pr-12 lg:pr-0 lg:flex-1">
-          <div className="flex flex-row items-center sm:items-start text-left gap-3 mb-5 mt-2 lg:mb-4 px-1">
+          <div className="flex flex-row items-center sm:items-start text-left gap-3 mb-2 px-1">
             <div className="w-[64px] h-[64px] rounded-[16px] bg-blue-50 flex items-center justify-center shrink-0">
               <Building2 className="w-8 h-8 text-blue-600" strokeWidth={1.5} />
             </div>
@@ -200,76 +192,126 @@ export function ProspectHeader({
                 </h1>
                 <PulseIndicator temp={getLeadTemperature(prospect.last_manual_activity_at)} />
               </div>
-              <p className="text-[13px] sm:text-[14px] text-slate-500 mb-2.5">
+              <p className="text-[13px] sm:text-[14px] text-slate-500 mb-2">
                 Prospecto comercial
               </p>
-              
-              <div className="flex items-center justify-start gap-2 flex-wrap">
-                <div className="relative inline-flex items-center">
-                  <select
-                    value={prospect.contact_status || 'pending'}
-                    onChange={handleStatusChange}
-                    disabled={isPending}
-                    className={`appearance-none cursor-pointer outline-none transition-colors border pl-8 pr-7 py-1.5 rounded-full text-[12px] font-bold tracking-wide
-                      ${isPending ? 'opacity-50' : ''}
-                      ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-800 border-blue-200' :
-                        prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
-                        prospect.contact_status === 'opportunity' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' :
-                        prospect.contact_status === 'quote' ? 'bg-purple-50 text-purple-800 border-purple-200' :
-                        prospect.contact_status === 'customer' ? 'bg-green-50 text-green-800 border-green-200' :
-                        prospect.contact_status === 'discarded' ? 'bg-rose-50 text-rose-800 border-rose-200' :
-                        'bg-amber-50 text-amber-800 border-amber-200'
-                      }
-                    `}
-                  >
-                    {STATUS_OPTIONS.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
-                    <span className={`w-2 h-2 rounded-full 
-                      ${prospect.contact_status === 'in_progress' ? 'bg-blue-500' :
-                        prospect.contact_status === 'interested' ? 'bg-emerald-500' :
-                        prospect.contact_status === 'opportunity' ? 'bg-indigo-500' :
-                        prospect.contact_status === 'quote' ? 'bg-purple-500' :
-                        prospect.contact_status === 'customer' ? 'bg-green-500' :
-                        prospect.contact_status === 'discarded' ? 'bg-rose-500' :
-                        'bg-amber-500'
-                      }
-                    `}></span>
-                  </div>
-                  <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-current opacity-60">
-                    <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
-                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
-                    </svg>
-                  </div>
-                </div>
 
-                {prospect.priority === 'Alta' && (
-                  <div className="flex items-center gap-1 bg-rose-50 border border-rose-100 text-rose-700 px-3 py-1.5 rounded-full text-[12px] font-bold">
-                    <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={3} />
-                    Alta prioridad
-                  </div>
-                )}
+              {/* Location & Sector (Desktop & Mobile) */}
+              <div className="flex items-center justify-start gap-3 text-[13px] text-slate-600 font-medium lg:mb-5">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span className="truncate max-w-[120px] lg:max-w-none">{prospect.city || 'Sin ciudad'}</span>
+                </div>
+                <span className="text-slate-300 shrink-0">|</span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Factory className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span className="truncate max-w-[120px] lg:max-w-none">{prospect.sector || prospect.commercial_category || 'Sin rubro'}</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-start gap-3 text-[13px] text-slate-600 font-medium px-1 mb-6 lg:mb-0">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-              <span className="truncate max-w-[120px] lg:max-w-none">{prospect.city || 'Sin ciudad'}</span>
+          {/* MOBILE ONLY: Status & Priority (Under name) */}
+          <div className="flex lg:hidden items-center justify-start gap-2 mb-6 px-1 mt-3">
+            {/* Status Dropdown */}
+            <div className="relative inline-flex items-center">
+              <select
+                value={prospect.contact_status || 'pending'}
+                onChange={handleStatusChange}
+                disabled={isPending}
+                className={`appearance-none cursor-pointer outline-none transition-colors border pl-8 pr-7 py-1.5 rounded-full text-[12px] font-bold tracking-wide
+                  ${isPending ? 'opacity-50' : ''}
+                  ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-800 border-blue-200' :
+                    prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+                    prospect.contact_status === 'opportunity' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' :
+                    prospect.contact_status === 'quote' ? 'bg-purple-50 text-purple-800 border-purple-200' :
+                    prospect.contact_status === 'customer' ? 'bg-green-50 text-green-800 border-green-200' :
+                    prospect.contact_status === 'discarded' ? 'bg-rose-50 text-rose-800 border-rose-200' :
+                    'bg-amber-50 text-amber-800 border-amber-200'
+                  }
+                `}
+              >
+                {STATUS_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                <span className={`w-2 h-2 rounded-full 
+                  ${prospect.contact_status === 'in_progress' ? 'bg-blue-500' :
+                    prospect.contact_status === 'interested' ? 'bg-emerald-500' :
+                    prospect.contact_status === 'opportunity' ? 'bg-indigo-500' :
+                    prospect.contact_status === 'quote' ? 'bg-purple-500' :
+                    prospect.contact_status === 'customer' ? 'bg-green-500' :
+                    prospect.contact_status === 'discarded' ? 'bg-rose-500' :
+                    'bg-amber-500'
+                  }
+                `}></span>
+              </div>
+              <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-current opacity-60">
+                <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
+                  <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                </svg>
+              </div>
             </div>
-            <span className="text-slate-300 shrink-0">|</span>
-            <div className="flex items-center gap-1.5 min-w-0">
-              <Factory className="w-4 h-4 text-slate-400 shrink-0" />
-              <span className="truncate max-w-[120px] lg:max-w-none">{prospect.sector || prospect.commercial_category || 'Sin rubro'}</span>
+
+            {/* Priority */}
+            {prospect.priority === 'Alta' && (
+              <div className="flex items-center gap-1 bg-rose-50 border border-rose-100 text-rose-700 px-3 py-1.5 rounded-full text-[12px] font-bold">
+                <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={3} /> Alta prioridad
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons (Moved under identity for desktop) */}
+          <div className="flex flex-col lg:flex-row lg:items-center gap-3 w-full px-1 lg:px-0">
+            {/* Primary Action Button */}
+            <button 
+              onClick={() => setShowActivityForm(true)}
+              className="w-full lg:w-auto lg:px-5 h-[54px] lg:h-[48px] bg-[#1456c2] text-white rounded-2xl lg:rounded-xl flex items-center justify-center gap-2.5 shadow-md hover:bg-blue-800 transition-all active:scale-[0.98] shrink-0"
+            >
+              <PlusCircle className="w-6 h-6 lg:w-4 lg:h-4" strokeWidth={2.5} />
+              <span className="text-[16px] lg:text-[14px] font-semibold tracking-wide whitespace-nowrap">Registrar actividad</span>
+            </button>
+
+            {/* Compact Quick Actions (4 items) */}
+            <div className="flex items-center justify-between lg:justify-start gap-3 lg:gap-2.5 w-full lg:w-auto mt-2 lg:mt-0">
+              {/* Llamar */}
+              {cleanPhone ? (
+                <a href={`tel:${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors active:scale-95 shrink-0">
+                  <Phone className="w-6 h-6 lg:w-5 lg:h-5 text-blue-600" strokeWidth={2.5} />
+                </a>
+              ) : (
+                <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50 shrink-0">
+                  <Phone className="w-6 h-6 lg:w-5 lg:h-5 text-slate-400" strokeWidth={2.5} />
+                </button>
+              )}
+
+              {/* Nota de Voz */}
+              <button onClick={() => setShowVoiceModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-purple-50 hover:border-purple-200 transition-colors active:scale-95 shrink-0">
+                <Mic className="w-6 h-6 lg:w-5 lg:h-5 text-purple-600" strokeWidth={2.5} />
+              </button>
+
+              {/* WhatsApp */}
+              {cleanPhone ? (
+                <a href={`whatsapp://send?phone=${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-[#25D366]/10 hover:border-[#25D366]/30 transition-colors active:scale-95 shrink-0">
+                  <WhatsAppIcon className="w-7 h-7 lg:w-6 lg:h-6 text-[#25D366]" />
+                </a>
+              ) : (
+                <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50 shrink-0">
+                  <WhatsAppIcon className="w-7 h-7 lg:w-6 lg:h-6 text-slate-400" />
+                </button>
+              )}
+
+              {/* Ubicación */}
+              <button onClick={openMaps} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 shrink-0">
+                <MapPin className="w-6 h-6 lg:w-5 lg:h-5 text-blue-600" strokeWidth={2.5} />
+              </button>
             </div>
           </div>
         </div>
 
         {/* --- CENTER SECTION (Contact Selector - Desktop Only) --- */}
-        <div className="hidden lg:flex flex-col bg-slate-50/50 rounded-2xl border border-slate-100 p-4 min-w-[320px] max-w-[360px] mr-16">
+        <div className="hidden lg:flex flex-col bg-slate-50/50 rounded-2xl border border-slate-100 p-4 min-w-[300px] lg:w-[320px] lg:ml-auto">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5 text-slate-500">
               <User className="w-4 h-4" />
@@ -317,48 +359,91 @@ export function ProspectHeader({
           </div>
         </div>
 
-        {/* --- RIGHT SECTION (Action Buttons) --- */}
-        <div className="flex flex-col lg:items-end gap-3 lg:gap-4 w-full lg:w-auto px-1 lg:px-0 lg:mt-0">
-          <button 
-            onClick={() => setShowActivityForm(true)}
-            className="w-full lg:w-auto lg:px-6 h-[54px] lg:h-[42px] bg-[#1456c2] text-white rounded-2xl lg:rounded-xl flex items-center justify-center gap-2 shadow-sm hover:bg-blue-800 transition-all active:scale-[0.98] shrink-0"
-          >
-            <PlusCircle className="w-6 h-6 lg:w-4 lg:h-4" strokeWidth={2.5} />
-            <span className="text-[16px] lg:text-[14px] font-semibold tracking-wide whitespace-nowrap">Registrar actividad</span>
-          </button>
+        {/* --- RIGHT SECTION (Global Actions - Desktop Only) --- */}
+        <div className="hidden lg:flex flex-col items-end gap-3 shrink-0 ml-4">
+          <div className="flex items-center gap-2">
+            
+            {/* Status Dropdown */}
+            <div className="relative inline-flex items-center">
+              <select
+                value={prospect.contact_status || 'pending'}
+                onChange={handleStatusChange}
+                disabled={isPending}
+                className={`appearance-none cursor-pointer outline-none transition-colors border pl-8 pr-7 py-1.5 rounded-full text-[12px] font-bold tracking-wide shadow-sm
+                  ${isPending ? 'opacity-50' : ''}
+                  ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-800 border-blue-200' :
+                    prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+                    prospect.contact_status === 'opportunity' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' :
+                    prospect.contact_status === 'quote' ? 'bg-purple-50 text-purple-800 border-purple-200' :
+                    prospect.contact_status === 'customer' ? 'bg-green-50 text-green-800 border-green-200' :
+                    prospect.contact_status === 'discarded' ? 'bg-rose-50 text-rose-800 border-rose-200' :
+                    'bg-amber-50 text-amber-800 border-amber-200'
+                  }
+                `}
+              >
+                {STATUS_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                <span className={`w-2 h-2 rounded-full 
+                  ${prospect.contact_status === 'in_progress' ? 'bg-blue-500' :
+                    prospect.contact_status === 'interested' ? 'bg-emerald-500' :
+                    prospect.contact_status === 'opportunity' ? 'bg-indigo-500' :
+                    prospect.contact_status === 'quote' ? 'bg-purple-500' :
+                    prospect.contact_status === 'customer' ? 'bg-green-500' :
+                    prospect.contact_status === 'discarded' ? 'bg-rose-500' :
+                    'bg-amber-500'
+                  }
+                `}></span>
+              </div>
+              <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-current opacity-60">
+                <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
+                  <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                </svg>
+              </div>
+            </div>
 
-          <div className="flex items-center justify-between lg:justify-end gap-3 lg:gap-2 w-full lg:w-auto">
-            {/* Llamar */}
-            {cleanPhone ? (
-              <a href={`tel:${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[42px] lg:h-[42px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors active:scale-95 shrink-0">
-                <Phone className="w-6 h-6 lg:w-4 lg:h-4 text-blue-600" strokeWidth={2.5} />
-              </a>
-            ) : (
-              <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[42px] lg:h-[42px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50 shrink-0">
-                <Phone className="w-6 h-6 lg:w-4 lg:h-4 text-slate-400" strokeWidth={2.5} />
-              </button>
+            {/* Priority Tag */}
+            {prospect.priority === 'Alta' && (
+              <div className="flex items-center gap-1 bg-rose-50 border border-rose-100 text-rose-700 px-3 py-1.5 rounded-full text-[12px] font-bold shadow-sm">
+                <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={3} />
+                Alta prioridad
+              </div>
             )}
+            
+            <div className="w-px h-6 bg-slate-200 mx-1"></div>
 
-            {/* Nota de Voz */}
-            <button onClick={() => setShowVoiceModal(true)} className="w-[52px] h-[52px] lg:w-[42px] lg:h-[42px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-purple-50 hover:border-purple-200 transition-colors active:scale-95 shrink-0">
-              <Mic className="w-6 h-6 lg:w-4 lg:h-4 text-purple-600" strokeWidth={2.5} />
+            <button 
+              onClick={handleToggleFavorite}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors active:scale-90 ${optimisticFav ? 'bg-rose-50 text-rose-500' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+            >
+              <Heart className={`w-5 h-5 ${optimisticFav ? 'fill-rose-500' : ''}`} strokeWidth={optimisticFav ? 0 : 2} />
             </button>
-
-            {/* WhatsApp */}
-            {cleanPhone ? (
-              <a href={`whatsapp://send?phone=${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[42px] lg:h-[42px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-[#25D366]/10 hover:border-[#25D366]/30 transition-colors active:scale-95 shrink-0">
-                <WhatsAppIcon className="w-7 h-7 lg:w-5 lg:h-5 text-[#25D366]" />
-              </a>
-            ) : (
-              <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[42px] lg:h-[42px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50 shrink-0">
-                <WhatsAppIcon className="w-7 h-7 lg:w-5 lg:h-5 text-slate-400" />
+            
+            <div className="relative">
+              <button 
+                onClick={() => setShowMenu(!showMenu)}
+                className="w-9 h-9 flex items-center justify-center rounded-full text-slate-600 bg-slate-50 hover:bg-slate-100 transition-colors active:scale-90"
+              >
+                <MoreHorizontal className="w-5 h-5" />
               </button>
-            )}
-
-            {/* Ubicación */}
-            <button onClick={openMaps} className="w-[52px] h-[52px] lg:w-[42px] lg:h-[42px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 shrink-0">
-              <MapPin className="w-6 h-6 lg:w-4 lg:h-4 text-blue-600" strokeWidth={2.5} />
-            </button>
+              
+              {showMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-100 z-50 py-1.5 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    <button onClick={() => { setShowMenu(false); setShowEditModal(true); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[14px] font-medium text-slate-700 hover:bg-slate-50 transition-colors text-left">
+                      <Edit className="w-4 h-4 text-slate-400" /> Editar prospecto
+                    </button>
+                    <div className="w-full h-px bg-slate-100 my-1"></div>
+                    <button onClick={() => { setShowMenu(false); setShowDeleteModal(true); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[14px] font-medium text-rose-600 hover:bg-rose-50 transition-colors text-left">
+                      <Trash2 className="w-4 h-4 text-rose-500" /> Eliminar prospecto
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
