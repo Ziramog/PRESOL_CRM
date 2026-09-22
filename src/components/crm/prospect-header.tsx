@@ -310,59 +310,11 @@ export function ProspectHeader({
           </div>
         </div>
 
-        {/* --- CENTER SECTION (Contact Selector - Desktop Only) --- */}
-        <div className="hidden lg:flex flex-col bg-slate-50/50 rounded-2xl border border-slate-100 p-4 min-w-[300px] lg:w-[320px] lg:ml-auto">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1.5 text-slate-500">
-              <User className="w-4 h-4" />
-              <span className="text-[12px] font-semibold uppercase tracking-wider">Contacto principal</span>
-            </div>
-            {contacts.length > 1 && (
-              <div className="relative">
-                <select 
-                  className="appearance-none bg-white border border-slate-200 text-slate-700 text-[13px] font-medium py-1 pl-3 pr-8 rounded-lg cursor-pointer outline-none focus:border-blue-400 shadow-sm"
-                  value={selectedContactId || ''}
-                  onChange={(e) => setSelectedContactId(e.target.value)}
-                >
-                  {contacts.map(c => (
-                    <option key={c.id} value={c.id}>{c.full_name}</option>
-                  ))}
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
-            )}
-          </div>
+        {/* --- RIGHT COLUMN (Global Actions + Contact Box - Desktop Only) --- */}
+        <div className="hidden lg:flex flex-col items-end gap-4 shrink-0 lg:ml-auto">
           
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-[14px] shrink-0">
-              {selectedContact?.full_name ? selectedContact.full_name.substring(0, 2).toUpperCase() : '??'}
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-[14px] font-bold text-slate-900 truncate">{selectedContact?.full_name || 'Sin contacto'}</span>
-              <span className="text-[12px] text-slate-500 truncate mb-2">{selectedContact?.role || 'Sin cargo'}</span>
-              
-              <div className="flex flex-col gap-1.5">
-                {activePhone && (
-                  <div className="flex items-center gap-1.5 text-[12px] text-slate-600">
-                    <Phone className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="truncate">{activePhone}</span>
-                  </div>
-                )}
-                {activeEmail && (
-                  <div className="flex items-center gap-1.5 text-[12px] text-slate-600">
-                    <Mail className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="truncate">{activeEmail}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* --- RIGHT SECTION (Global Actions - Desktop Only) --- */}
-        <div className="hidden lg:flex flex-col items-end gap-3 shrink-0 ml-4">
+          {/* Top: Global Actions */}
           <div className="flex items-center gap-2">
-            
             {/* Status Dropdown */}
             <div className="relative inline-flex items-center">
               <select
@@ -445,6 +397,56 @@ export function ProspectHeader({
               )}
             </div>
           </div>
+
+          {/* Bottom: Contact Selector */}
+          <div className="flex flex-col bg-slate-50/50 rounded-2xl border border-slate-100 p-4 w-full min-w-[300px] lg:w-[320px]">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1.5 text-slate-500">
+                <User className="w-4 h-4" />
+                <span className="text-[12px] font-semibold uppercase tracking-wider">Contacto principal</span>
+              </div>
+              {contacts.length > 1 && (
+                <div className="relative">
+                  <select 
+                    className="appearance-none bg-white border border-slate-200 text-slate-700 text-[13px] font-medium py-1 pl-3 pr-8 rounded-lg cursor-pointer outline-none focus:border-blue-400 shadow-sm"
+                    value={selectedContactId || ''}
+                    onChange={(e) => setSelectedContactId(e.target.value)}
+                  >
+                    {contacts.map(c => (
+                      <option key={c.id} value={c.id}>{c.full_name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              )}
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-[14px] shrink-0">
+                {selectedContact?.full_name ? selectedContact.full_name.substring(0, 2).toUpperCase() : '??'}
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[14px] font-bold text-slate-900 truncate">{selectedContact?.full_name || 'Sin contacto'}</span>
+                <span className="text-[12px] text-slate-500 truncate mb-2">{selectedContact?.role || 'Sin cargo'}</span>
+                
+                <div className="flex flex-col gap-1.5">
+                  {activePhone && (
+                    <div className="flex items-center gap-1.5 text-[12px] text-slate-600">
+                      <Phone className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="truncate">{activePhone}</span>
+                    </div>
+                  )}
+                  {activeEmail && (
+                    <div className="flex items-center gap-1.5 text-[12px] text-slate-600">
+                      <Mail className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="truncate">{activeEmail}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
       
