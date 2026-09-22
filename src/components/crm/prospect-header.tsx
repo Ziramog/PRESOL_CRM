@@ -310,20 +310,17 @@ export function ProspectHeader({
           </div>
         </div>
 
-        {/* --- CENTER SECTION (Contact Selector - Desktop Only) --- */}
-        <div className="hidden lg:flex flex-col bg-white rounded-2xl border-2 border-slate-100 p-5 min-w-[320px] lg:w-[380px] shadow-sm ml-auto mr-8 relative overflow-hidden transition-all hover:border-blue-100">
-          {/* Subtle decoration */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-full -mr-16 -mt-16 blur-2xl pointer-events-none"></div>
-
-          <div className="flex items-center justify-between mb-4 relative z-10">
-            <div className="flex items-center gap-1.5 text-slate-500">
+        {/* --- CENTER SECTION (Contact Selector - Integrated) --- */}
+        <div className="hidden lg:flex flex-col min-w-[280px] lg:w-[320px] border-l border-slate-200 pl-6 lg:pl-8 py-1">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-1.5 text-slate-400">
               <User className="w-4 h-4 text-blue-500" />
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-700">Contacto Principal</span>
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500">Contacto Principal</span>
             </div>
             {contacts.length > 1 && (
               <div className="relative">
                 <select 
-                  className="appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-[13px] font-bold py-1.5 pl-3 pr-8 rounded-lg cursor-pointer outline-none focus:border-blue-400 shadow-sm transition-colors hover:bg-white"
+                  className="appearance-none bg-transparent text-slate-700 text-[13px] font-bold py-1 pl-2 pr-6 cursor-pointer outline-none hover:text-blue-600 transition-colors"
                   value={selectedContactId || ''}
                   onChange={(e) => setSelectedContactId(e.target.value)}
                 >
@@ -331,28 +328,28 @@ export function ProspectHeader({
                     <option key={c.id} value={c.id}>{c.full_name}</option>
                   ))}
                 </select>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             )}
           </div>
           
-          <div className="flex items-start gap-4 relative z-10">
-            <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[16px] shrink-0 shadow-sm ring-4 ring-blue-50">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[16px] shrink-0 border border-blue-100">
               {selectedContact?.full_name ? selectedContact.full_name.substring(0, 2).toUpperCase() : '??'}
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-[16px] font-extrabold text-slate-900 truncate">{selectedContact?.full_name || 'Sin contacto'}</span>
               <span className="text-[13px] font-semibold text-blue-600 truncate mb-3">{selectedContact?.role || 'Sin cargo'}</span>
               
-              <div className="flex flex-col gap-2.5">
+              <div className="flex flex-col gap-1.5">
                 {activePhone && (
-                  <div className="flex items-center gap-2.5 text-[13px] text-slate-700 font-bold">
+                  <div className="flex items-center gap-2 text-[13px] text-slate-700 font-bold">
                     <Phone className="w-4 h-4 text-emerald-500" strokeWidth={2.5} />
                     <span className="truncate">{activePhone}</span>
                   </div>
                 )}
                 {activeEmail && (
-                  <div className="flex items-center gap-2.5 text-[13px] text-slate-700 font-bold">
+                  <div className="flex items-center gap-2 text-[13px] text-slate-700 font-bold">
                     <Mail className="w-4 h-4 text-blue-500" strokeWidth={2.5} />
                     <span className="truncate">{activeEmail}</span>
                   </div>
@@ -362,17 +359,17 @@ export function ProspectHeader({
           </div>
         </div>
 
-        {/* --- RIGHT SECTION (Icon Panel - Desktop Only) --- */}
-        <div className="hidden lg:flex flex-col items-end shrink-0">
+        {/* --- RIGHT SECTION (Global Actions - Integrated) --- */}
+        <div className="hidden lg:flex flex-col justify-between shrink-0 border-l border-slate-200 pl-6 lg:pl-8 py-1">
           
           {/* Status & Priority */}
-          <div className="flex flex-col items-end gap-2 mb-3">
-            <div className="relative inline-flex items-center">
+          <div className="flex flex-col gap-2">
+            <div className="relative inline-flex items-center w-full min-w-[200px]">
               <select
                 value={prospect.contact_status || 'pending'}
                 onChange={handleStatusChange}
                 disabled={isPending}
-                className={`appearance-none cursor-pointer outline-none transition-colors border pl-8 pr-7 py-1.5 rounded-full text-[12px] font-bold tracking-wide shadow-sm
+                className={`appearance-none cursor-pointer outline-none transition-colors border pl-10 pr-8 py-2.5 rounded-xl text-[13px] font-bold tracking-wide w-full shadow-sm
                   ${isPending ? 'opacity-50' : ''}
                   ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-800 border-blue-200' :
                     prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
@@ -388,8 +385,8 @@ export function ProspectHeader({
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
-              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
-                <span className={`w-2 h-2 rounded-full 
+              <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
+                <span className={`w-2.5 h-2.5 rounded-[4px] 
                   ${prospect.contact_status === 'in_progress' ? 'bg-blue-500' :
                     prospect.contact_status === 'interested' ? 'bg-emerald-500' :
                     prospect.contact_status === 'opportunity' ? 'bg-indigo-500' :
@@ -400,45 +397,43 @@ export function ProspectHeader({
                   }
                 `}></span>
               </div>
-              <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-current opacity-60">
-                <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
-                  <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
-                </svg>
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-current opacity-60">
+                <ChevronDown className="w-4 h-4" />
               </div>
             </div>
 
             {prospect.priority === 'Alta' && (
-              <div className="flex items-center gap-1 bg-rose-50 border border-rose-100 text-rose-700 px-3 py-1.5 rounded-full text-[12px] font-bold shadow-sm">
-                <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={3} />
+              <div className="flex items-center gap-1.5 bg-rose-50 border border-rose-100 text-rose-700 px-3 py-1.5 rounded-lg text-[12px] font-bold shadow-sm">
+                <ArrowUpRight className="w-4 h-4" strokeWidth={3} />
                 Alta prioridad
               </div>
             )}
           </div>
 
-          {/* Action Icon Panel (Vertical) */}
-          <div className="flex flex-col gap-1.5 bg-slate-50/80 p-1.5 rounded-2xl border border-slate-100 shadow-sm">
+          {/* Action Icon Panel (Large Horizontal) */}
+          <div className="flex items-center gap-3 mt-4">
             <button 
               onClick={handleToggleFavorite}
               title={optimisticFav ? "Quitar de favoritos" : "Agregar a favoritos"}
-              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:bg-white hover:shadow-sm ${optimisticFav ? 'text-rose-500 bg-rose-50/50' : 'text-slate-400 hover:text-rose-400'}`}
+              className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all border ${optimisticFav ? 'border-rose-200 bg-rose-50 text-rose-500' : 'border-slate-200 bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-rose-400 hover:border-rose-100'}`}
             >
-              <Heart className={`w-5 h-5 ${optimisticFav ? 'fill-rose-500' : ''}`} strokeWidth={optimisticFav ? 0 : 2.5} />
+              <Heart className={`w-6 h-6 ${optimisticFav ? 'fill-rose-500' : ''}`} strokeWidth={optimisticFav ? 0 : 2} />
             </button>
             
             <button 
               onClick={() => setShowEditModal(true)}
               title="Editar prospecto"
-              className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:bg-white hover:shadow-sm text-slate-500 hover:text-blue-600"
+              className="w-12 h-12 rounded-xl flex items-center justify-center transition-all border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-blue-600 hover:border-blue-100"
             >
-              <Edit className="w-5 h-5" strokeWidth={2.5} />
+              <Edit className="w-6 h-6" strokeWidth={2} />
             </button>
 
             <button 
               onClick={() => setShowDeleteModal(true)}
               title="Eliminar prospecto"
-              className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:bg-white hover:shadow-sm text-slate-400 hover:text-rose-600 hover:bg-rose-50/30 mt-1"
+              className="w-12 h-12 rounded-xl flex items-center justify-center transition-all border border-slate-200 bg-slate-50 text-slate-400 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600"
             >
-              <Trash2 className="w-4 h-4" strokeWidth={2.5} />
+              <Trash2 className="w-6 h-6" strokeWidth={2} />
             </button>
           </div>
 
