@@ -6,8 +6,6 @@ import { ChevronLeft } from 'lucide-react';
 import { ProspectHeader } from '@/components/crm/prospect-header';
 import { BusinessCardScanner } from '@/components/crm/v2/BusinessCardScanner';
 import { SmartCheckIn } from '@/components/crm/SmartCheckIn';
-import { NextActionCard } from '@/components/crm/v2/NextActionCard';
-import { PrimaryContactCard } from '@/components/crm/v2/PrimaryContactCard';
 import { CommercialStatusCard } from '@/components/crm/v2/CommercialStatusCard';
 import { CommercialSummaryCard } from '@/components/crm/v2/CommercialSummaryCard';
 import { ActivityTimeline } from '@/components/crm/v2/ActivityTimeline';
@@ -143,22 +141,16 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
       {/* Main Grid Layout */}
       <div className="flex flex-col gap-5 mt-5">
         
-        {/* ROW 1 (Desktop): OpenFollowups (60) + ActivityTimeline (40) */}
-        {/* ROW 1 (Mobile): NextAction, PrimaryContact, CommercialStatus */}
+        {/* ROW 1: OpenFollowups (60) + ActivityTimeline (40) */}
         <div className="flex flex-col lg:grid lg:grid-cols-5 gap-5 items-stretch">
           
-          {/* Mobile Only: Next Action */}
-          <div className="block lg:hidden">
-            <NextActionCard tasks={overview.next_task ? [overview.next_task] : []} prospectId={id} />
-          </div>
-
           {/* Followups (Tareas) -> Col span 3 */}
-          <div className="order-last lg:order-none lg:col-span-3 h-full">
+          <div className="lg:col-span-3 h-full">
             <OpenFollowupsCard tasks={overview.open_tasks} prospectId={id} />
           </div>
           
           {/* Timeline (Actividad reciente) -> Col span 2 */}
-          <div className="order-last lg:order-none lg:col-span-2 h-full">
+          <div className="lg:col-span-2 h-full">
             <ActivityTimeline activities={overview.recent_activities} />
           </div>
 
