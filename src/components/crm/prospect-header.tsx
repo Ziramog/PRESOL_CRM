@@ -146,6 +146,83 @@ export function ProspectHeader({
         
         {/* --- LEFT SECTION (Identity, Location, Buttons) --- */}
         <div className="flex flex-col min-w-0 flex-1 p-5 lg:p-6 lg:pr-8">
+          
+          {/* MOBILE ONLY: Top Action Bar (Status + Corner Icons) */}
+          <div className="flex lg:hidden items-center justify-between mb-4 w-full">
+            {/* Small Status */}
+            <div className="relative inline-flex items-center">
+              <select
+                value={prospect.contact_status || 'pending'}
+                onChange={handleStatusChange}
+                disabled={isPending}
+                className={`appearance-none cursor-pointer outline-none transition-colors border pl-7 pr-6 py-1 rounded-lg text-[11px] font-bold tracking-wide shadow-sm
+                  ${isPending ? 'opacity-50' : ''}
+                  ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-800 border-blue-200' :
+                    prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+                    prospect.contact_status === 'opportunity' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' :
+                    prospect.contact_status === 'quote' ? 'bg-purple-50 text-purple-800 border-purple-200' :
+                    prospect.contact_status === 'customer' ? 'bg-green-50 text-green-800 border-green-200' :
+                    prospect.contact_status === 'discarded' ? 'bg-rose-50 text-rose-800 border-rose-200' :
+                    'bg-amber-50 text-amber-800 border-amber-200'
+                  }
+                `}
+              >
+                {STATUS_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center">
+                <span className={`w-2 h-2 rounded-sm 
+                  ${prospect.contact_status === 'in_progress' ? 'bg-blue-500' :
+                    prospect.contact_status === 'interested' ? 'bg-emerald-500' :
+                    prospect.contact_status === 'opportunity' ? 'bg-indigo-500' :
+                    prospect.contact_status === 'quote' ? 'bg-purple-500' :
+                    prospect.contact_status === 'customer' ? 'bg-green-500' :
+                    prospect.contact_status === 'discarded' ? 'bg-rose-500' :
+                    'bg-amber-500'
+                  }
+                `}></span>
+              </div>
+              <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-current opacity-60">
+                <ChevronDown className="w-3 h-3" />
+              </div>
+            </div>
+
+            {/* Corner Icons (Heart + Menu) */}
+            <div className="flex items-center gap-1.5">
+              <button 
+                onClick={handleToggleFavorite}
+                className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-colors active:scale-90 shadow-sm ${optimisticFav ? 'bg-rose-50 border-rose-200 text-rose-500' : 'bg-slate-50 border-slate-200 text-slate-400'}`}
+              >
+                <Heart className={`w-4 h-4 ${optimisticFav ? 'fill-rose-500' : ''}`} strokeWidth={optimisticFav ? 0 : 2} />
+              </button>
+              
+              <div className="relative">
+                <button 
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 bg-slate-50 transition-colors active:scale-90 shadow-sm"
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </button>
+                
+                {showMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
+                    <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-100 z-50 py-1.5 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                      <button onClick={() => { setShowMenu(false); setShowEditModal(true); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[14px] font-medium text-slate-700 hover:bg-slate-50 transition-colors text-left">
+                        <Edit className="w-4 h-4 text-slate-400" /> Editar prospecto
+                      </button>
+                      <div className="w-full h-px bg-slate-100 my-1"></div>
+                      <button onClick={() => { setShowMenu(false); setShowDeleteModal(true); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[14px] font-medium text-rose-600 hover:bg-rose-50 transition-colors text-left">
+                        <Trash2 className="w-4 h-4 text-rose-500" /> Eliminar prospecto
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div className="flex flex-row items-center sm:items-start text-left gap-3 mb-2 px-1">
             <div className="w-[64px] h-[64px] rounded-[16px] bg-blue-50 flex items-center justify-center shrink-0">
               <Building2 className="w-8 h-8 text-blue-600" strokeWidth={1.5} />
@@ -274,8 +351,8 @@ export function ProspectHeader({
           </div>
         </div>
 
-        {/* --- RIGHT SECTION (Global Actions - Integrated) --- */}
-        <div className="flex flex-col justify-between shrink-0 w-full lg:w-auto border-t border-slate-100 lg:border-t-0 lg:border-l lg:border-slate-200 p-5 lg:px-6 lg:py-6">
+        {/* --- RIGHT SECTION (Global Actions - Integrated - Desktop Only) --- */}
+        <div className="hidden lg:flex flex-col justify-between shrink-0 w-full lg:w-auto border-t border-slate-100 lg:border-t-0 lg:border-l lg:border-slate-200 p-5 lg:px-6 lg:py-6">
           
           {/* Status & Priority */}
           <div className="flex flex-col gap-2">
