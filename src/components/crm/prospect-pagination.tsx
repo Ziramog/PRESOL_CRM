@@ -9,11 +9,11 @@ export function ProspectPagination({ totalCount, pageSize, currentPage }: { tota
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const [isPending, startTransition] = React.useTransition();
+
   const totalPages = Math.ceil(totalCount / pageSize);
 
   if (totalPages <= 1) return null;
-
-  const [isPending, startTransition] = React.useTransition();
 
   const handlePage = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
