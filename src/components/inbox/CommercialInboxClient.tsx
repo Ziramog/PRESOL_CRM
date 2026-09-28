@@ -1,7 +1,7 @@
 'use client';
 
 // PRESOL CRM — Commercial Inbox Client v2
-// Bandeja operativa: feed unificado full-width con chips de filtro compactos
+// Bandeja operativa: cockpit central donde residen todas las actividades y se opera sobre ellas
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -10,13 +10,10 @@ import { InboxFilterChips } from './InboxFilterChips';
 import { ThreadCard } from './ThreadCard';
 import {
   Search,
-  Plus,
-  Mic,
   Inbox,
   RefreshCw,
+  CheckCircle2,
 } from 'lucide-react';
-import { ActivityForm } from '@/components/crm/activity-form';
-import { VoiceRecorderModal } from '@/components/crm/v2/VoiceRecorderModal';
 
 interface CommercialInboxClientProps {
   initialPayload: CommercialInboxPayload;
@@ -27,8 +24,6 @@ export function CommercialInboxClient({ initialPayload }: CommercialInboxClientP
   const [activeQueue, setActiveQueue] = useState<SmartQueueId>('today');
   const [channelFilter, setChannelFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [showActivityModal, setShowActivityModal] = useState<boolean>(false);
-  const [showVoiceModal, setShowVoiceModal] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   const { counts, threads } = initialPayload;
@@ -37,7 +32,7 @@ export function CommercialInboxClient({ initialPayload }: CommercialInboxClientP
   const filteredThreads = threads.filter((t) => {
     // Cola
     if (activeQueue === 'today') {
-      // Ya vienen filtrados del server, pero doble-check
+      // Ya filtrado desde el servidor
     } else if (activeQueue === 'requires_action' && t.status !== 'action_required') {
       return false;
     } else if (activeQueue === 'waiting_customer' && t.status !== 'waiting_customer') {
@@ -80,7 +75,7 @@ export function CommercialInboxClient({ initialPayload }: CommercialInboxClientP
 
   return (
     <div className="space-y-4">
-      {/* ─── Header compacto ──────────────────────────────────────── */}
+      {/* ─── Header de Bandeja ─────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
@@ -91,49 +86,31 @@ export function CommercialInboxClient({ initialPayload }: CommercialInboxClientP
               Bandeja comercial
             </h1>
             <p className="text-[11px] text-slate-500 font-medium hidden sm:block">
-              Lo que necesita tu atención hoy
+              Centro operativo: gestioná respuestas, seguimientos y acciones en curso
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={handleRefresh}
-            className={`p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer ${
-              isRefreshing ? 'animate-spin' : ''
-            }`}
-            title="Refrescar"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowVoiceModal(true)}
-            className="p-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl transition-colors shadow-2xs cursor-pointer"
-            title="Nota de voz"
-          >
-            <Mic className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowActivityModal(true)}
-            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 transition-colors shadow-xs active:scale-98 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Actividad</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleRefresh}
+          className={`p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer ${
+            isRefreshing ? 'animate-spin' : ''
+          }`}
+          title="Refrescar bandeja"
+        >
+          <RefreshCw className="w-4 h-4" />
+        </button>
       </div>
 
-      {/* ─── Chips de navegación ──────────────────────────────────── */}
+      {/* ─── Chips de navegación / colas ──────────────────────────── */}
       <InboxFilterChips
         counts={counts}
         activeQueue={activeQueue}
         onSelectQueue={(q) => setActiveQueue(q)}
       />
 
-      {/* ─── Filtros secundarios ─────────────────────────────────── */}
+      {/* ─── Filtros secundarios: Canal + Búsqueda ─────────────────── */}
       <div className="flex items-center gap-2">
         <select
           value={channelFilter}
@@ -153,13 +130,13 @@ export function CommercialInboxClient({ initialPayload }: CommercialInboxClientP
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar..."
+            placeholder="Buscar por empresa, contacto..."
             className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
 
-      {/* ─── Feed principal: cards accionables full-width ─────────── */}
+      {/* ─── Feed principal: cards operativas full-width ───────────── */}
       <div className="space-y-3">
         {filteredThreads.length > 0 ? (
           filteredThreads.map((thread) => (
@@ -171,56 +148,28 @@ export function CommercialInboxClient({ initialPayload }: CommercialInboxClientP
           ))
         ) : (
           <div className="p-10 bg-white border border-dashed border-slate-300 rounded-2xl text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
-              <Inbox className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-800">
                 {activeQueue === 'today'
-                  ? 'No hay actividad registrada hoy'
+                  ? 'No hay actividades registradas en el día de hoy'
                   : activeQueue === 'requires_action'
-                  ? 'No hay interacciones que requieran acción'
+                  ? '¡Al día! No hay interacciones que requieran acción'
                   : activeQueue === 'waiting_customer'
                   ? 'No hay conversaciones esperando respuesta'
                   : activeQueue === 'no_response_24h'
-                  ? 'No hay mensajes sin respuesta por más de 24h'
-                  : 'No hay interacciones pendientes'}
+                  ? 'No hay mensajes sin respuesta por más de 24 horas'
+                  : '¡Bandeja al día! No hay conversaciones pendientes'}
               </h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
-                Registrá una nueva actividad para comenzar a gestionar tus conversaciones comerciales.
+                Todas las gestiones comerciales de tus prospectos están atendidas.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowActivityModal(true)}
-              className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl transition-colors inline-flex items-center gap-1.5 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              Registrar actividad
-            </button>
           </div>
         )}
       </div>
-
-      {/* ─── Modales ─────────────────────────────────────────────── */}
-      {showActivityModal && (
-        <ActivityForm
-          onClose={() => {
-            setShowActivityModal(false);
-            handleRefresh();
-          }}
-        />
-      )}
-
-      {showVoiceModal && (
-        <VoiceRecorderModal
-          prospectId=""
-          onClose={() => {
-            setShowVoiceModal(false);
-            handleRefresh();
-          }}
-        />
-      )}
     </div>
   );
 }

@@ -15,7 +15,6 @@ import { InternalNotesAccordion } from '@/components/crm/v2/InternalNotesAccordi
 import { LinkedOpportunitiesAccordion } from '@/components/crm/v2/LinkedOpportunitiesAccordion';
 import { RealtimeListener } from '@/components/crm/realtime-listener';
 import { DataQualityCard } from '@/components/crm/v2/DataQualityCard';
-import { OpenInteractionsCard } from '@/components/crm/v2/OpenInteractionsCard';
 
 export default async function ProspectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -171,13 +170,21 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
       </div>
 
       {openThreads && openThreads.length > 0 && (
-        <div className="mt-4">
-          <OpenInteractionsCard
-            prospectId={id}
-            prospectName={prospect.company_name}
-            threads={openThreads}
-            phone={prospect.primary_phone}
-          />
+        <div className="mt-3">
+          <Link
+            href={`/inbox?search=${encodeURIComponent(prospect.company_name)}`}
+            className="inline-flex items-center gap-2 px-3.5 py-2 bg-blue-50/80 hover:bg-blue-100 text-blue-700 border border-blue-200/80 rounded-xl text-xs font-bold transition-all shadow-2xs group"
+          >
+            <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+            <span>
+              {openThreads.length === 1
+                ? '1 conversación en curso en Bandeja Comercial'
+                : `${openThreads.length} conversaciones en curso en Bandeja Comercial`}
+            </span>
+            <span className="text-blue-500 group-hover:translate-x-0.5 transition-transform text-[11px] font-extrabold">
+              Ir a operar →
+            </span>
+          </Link>
         </div>
       )}
 
