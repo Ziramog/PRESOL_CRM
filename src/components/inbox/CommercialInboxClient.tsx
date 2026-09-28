@@ -32,7 +32,15 @@ export function CommercialInboxClient({ initialPayload }: CommercialInboxClientP
   const filteredThreads = threads.filter((t) => {
     // Cola
     if (activeQueue === 'today') {
-      // Ya filtrado desde el servidor
+      if (!t.last_event_at) return false;
+      const d = new Date(t.last_event_at);
+      const now = new Date();
+      const isToday = d.getFullYear() === now.getFullYear() &&
+                      d.getMonth() === now.getMonth() &&
+                      d.getDate() === now.getDate();
+      if (!isToday) return false;
+    } else if (activeQueue === 'all') {
+      if (t.status === 'resolved' || t.status === 'closed') return false;
     } else if (activeQueue === 'requires_action' && t.status !== 'action_required') {
       return false;
     } else if (activeQueue === 'waiting_customer' && t.status !== 'waiting_customer') {
@@ -107,7 +115,13 @@ export function CommercialInboxClient({ initialPayload }: CommercialInboxClientP
       <InboxFilterChips
         counts={counts}
         activeQueue={activeQueue}
-        onSelectQueue={(q) => setActiveQueue(q)}
+        onSelectQueue={(q) => {
+          if (q === 'tasks_today') {
+            router.push('/tasks');
+          } else {
+            setActiveQueue(q);
+          }
+        }}
       />
 
       {/* ─── Filtros secundarios: Canal + Búsqueda ─────────────────── */}

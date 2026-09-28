@@ -53,7 +53,7 @@ export async function getCommercialInboxData(
           contact_status,
           primary_phone,
           ask_for,
-          is_favorite
+          source_payload
         ),
         contact:contacts (
           id,
@@ -117,7 +117,7 @@ export async function getCommercialInboxData(
           contact_status,
           primary_phone,
           ask_for,
-          is_favorite,
+          source_payload,
           contacts (
             id,
             full_name,
@@ -215,7 +215,7 @@ export async function getCommercialInboxData(
           contact_status: rawProspect.contact_status,
           primary_phone: rawProspect.primary_phone,
           ask_for: rawProspect.ask_for,
-          is_favorite: rawProspect.is_favorite,
+          is_favorite: Boolean(rawProspect.source_payload?.is_favorite),
         } : undefined,
         contact: (primaryContact as any) || null,
         owner: (act.owner as any) || null,
@@ -316,13 +316,15 @@ export async function getCommercialInboxData(
         );
         break;
       default:
-        // 'all' muestra solo threads activos (no resolved/closed)
-        filteredThreads = allThreads.filter(t => t.status !== 'resolved' && t.status !== 'closed');
+        filteredThreads = allThreads.filter(
+          (t) => (t.status !== 'resolved' && t.status !== 'closed') || (t.last_event_at && t.last_event_at >= todayStart && t.last_event_at <= todayEnd)
+        );
         break;
     }
   } else {
-    // "all" = solo threads activos
-    filteredThreads = allThreads.filter(t => t.status !== 'resolved' && t.status !== 'closed');
+    filteredThreads = allThreads.filter(
+      (t) => (t.status !== 'resolved' && t.status !== 'closed') || (t.last_event_at && t.last_event_at >= todayStart && t.last_event_at <= todayEnd)
+    );
   }
 
   // Filtrar por término de búsqueda
