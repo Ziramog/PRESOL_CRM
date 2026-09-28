@@ -6,7 +6,13 @@
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { recordInteraction } from '@/lib/interactions/service';
-import { normalizeChannel, channelToLegacyType, isEffectiveContact } from '@/lib/activities/config';
+import {
+  normalizeChannel,
+  channelToLegacyType,
+  resultToLegacyOutcome,
+  nextActionToLegacyTaskType,
+  isEffectiveContact
+} from '@/lib/activities/config';
 import { calculateNewStatus } from '@/lib/prospects/status-engine';
 
 export async function saveVoiceInteraction(prospectId: string, data: any) {
@@ -28,7 +34,7 @@ export async function saveVoiceInteraction(prospectId: string, data: any) {
     );
 
     const legacyType = channelToLegacyType(channel);
-    const legacyOutcome = result || (channel === 'internal_note' ? 'other' : null);
+    const legacyOutcome = resultToLegacyOutcome(result);
 
     // 1. Crear actividad histórica en public.activities
     const activityData: any = {
@@ -90,7 +96,7 @@ export async function saveVoiceInteraction(prospectId: string, data: any) {
         interaction_thread_id: activeThreadId || null,
         title: nextDesc.length > 80 ? nextDesc.substring(0, 80) : nextDesc,
         description: summary || null,
-        type: data.next_action || 'follow_up',
+        type: nextActionToLegacyTaskType(data.next_action || 'follow_up'),
         status: 'pending',
         priority: 'normal',
         assigned_to: user.id,

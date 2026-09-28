@@ -7,6 +7,8 @@ import {
   isEffectiveContact,
   normalizeChannel,
   channelToLegacyType,
+  resultToLegacyOutcome,
+  nextActionToLegacyTaskType,
   NEXT_ACTION_TYPE_LABELS,
   NextActionType,
 } from '@/lib/activities/config';
@@ -62,7 +64,7 @@ export async function createActivity(formData: FormData) {
   const effectiveContactBool = isEffectiveContact(channel, interaction_state, result);
   const legacyType = channelToLegacyType(channel);
   const legacySummary = interaction_state || '';
-  const legacyOutcome = result || (channel === 'internal_note' ? 'other' : null);
+  const legacyOutcome = resultToLegacyOutcome(result);
 
   const activityData: any = {
     prospect_id,
@@ -84,18 +86,33 @@ export async function createActivity(formData: FormData) {
     activityData.activity_at = new Date(activity_at_str).toISOString();
   }
 
-  // Inserción con tolerancia a esquema (por si la migración de nuevas columnas aún no se ejecutó en la DB remota)
+  // Inserción con tolerancia a esquema y constraints
   let insertedActivity: any = null;
   const insertAttempt = await supabase.from('activities').insert(activityData).select('id').single();
 
   if (insertAttempt.error) {
+    const isOutcomeConstraint = insertAttempt.error.message?.includes('activities_outcome_check');
     const isColumnError = insertAttempt.error.message?.includes('column') &&
       (insertAttempt.error.message.includes('channel') ||
        insertAttempt.error.message.includes('interaction_state') ||
        insertAttempt.error.message.includes('result') ||
        insertAttempt.error.message.includes('effective_contact'));
 
-    if (isColumnError) {
+    if (isOutcomeConstraint) {
+      activityData.outcome = 'other';
+      const retryOutcome = await supabase.from('activities').insert(activityData).select('id').single();
+      if (!retryOutcome.error) {
+        insertedActivity = retryOutcome.data;
+      } else {
+        activityData.outcome = null;
+        const retryNull = await supabase.from('activities').insert(activityData).select('id').single();
+        if (!retryNull.error) {
+          insertedActivity = retryNull.data;
+        } else {
+          return { error: retryNull.error.message };
+        }
+      }
+    } else if (isColumnError) {
       const fallbackData = {
         prospect_id,
         type: legacyType,
@@ -170,7 +187,7 @@ export async function createActivity(formData: FormData) {
       trip_id: trip_id || null,
       title,
       description: nextActionDescription || null,
-      type: nextActionType,
+      type: nextActionToLegacyTaskType(nextActionType),
       status: 'pending',
       priority: 'normal',
       assigned_to: nextActionAssignedTo,
@@ -230,7 +247,7 @@ export async function updateActivity(formData: FormData) {
   const effectiveContactBool = isEffectiveContact(channel, interaction_state, result);
   const legacyType = channelToLegacyType(channel);
   const legacySummary = interaction_state || '';
-  const legacyOutcome = result || (channel === 'internal_note' ? 'other' : null);
+  const legacyOutcome = resultToLegacyOutcome(result);
 
   const updateData: any = {
     channel,
@@ -250,13 +267,17 @@ export async function updateActivity(formData: FormData) {
   let updateAttempt = await supabase.from('activities').update(updateData).eq('id', id);
 
   if (updateAttempt.error) {
+    const isOutcomeConstraint = updateAttempt.error.message?.includes('activities_outcome_check');
     const isColumnError = updateAttempt.error.message?.includes('column') &&
       (updateAttempt.error.message.includes('channel') ||
        updateAttempt.error.message.includes('interaction_state') ||
        updateAttempt.error.message.includes('result') ||
        updateAttempt.error.message.includes('effective_contact'));
 
-    if (isColumnError) {
+    if (isOutcomeConstraint) {
+      updateData.outcome = 'other';
+      updateAttempt = await supabase.from('activities').update(updateData).eq('id', id);
+    } else if (isColumnError) {
       const fallbackData = {
         type: legacyType,
         outcome: legacyOutcome,

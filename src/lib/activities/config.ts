@@ -452,6 +452,77 @@ export function channelToLegacyType(channel: ActivityChannel): string {
 }
 
 /**
+ * Mapea cualquier resultado V3 a un valor seguro permitido por el check constraint legacy 'activities_outcome_check'
+ */
+export function resultToLegacyOutcome(result: string | null | undefined): string {
+  if (!result) return 'other';
+
+  const validLegacyOutcomes = new Set([
+    'contacted',
+    'no_answer',
+    'decision_maker_unavailable',
+    'interested',
+    'quote_requested',
+    'follow_up_required',
+    'not_interested',
+    'wrong_contact',
+    'data_updated',
+    'opportunity_detected',
+    'not_available',
+    'contact_made',
+    'requested_info',
+    'invalid_data',
+    'other',
+  ]);
+
+  if (validLegacyOutcomes.has(result)) {
+    return result;
+  }
+
+  const directMap: Record<string, string> = {
+    requested_quote: 'quote_requested',
+    quote_sent: 'other',
+    info_sent: 'other',
+    brochure_sent: 'other',
+    presentation_sent: 'other',
+    follow_up: 'follow_up_required',
+    awaiting_response: 'other',
+    read_no_reply: 'no_answer',
+    referred_contact: 'contact_made',
+    provided_contact_details: 'contact_made',
+    suggested_retry: 'follow_up_required',
+    wants_call: 'contact_made',
+    schedule_meeting: 'follow_up_required',
+    schedule_visit: 'follow_up_required',
+    closed: 'not_available',
+    nobody_available: 'not_available',
+    access_denied: 'not_available',
+    retry_later: 'no_answer',
+    no_news: 'other',
+    busy: 'no_answer',
+    line_busy: 'no_answer',
+    invalid_number: 'wrong_contact',
+    wrong_number: 'wrong_contact',
+  };
+
+  return directMap[result] || 'other';
+}
+
+/**
+ * Mapea NextActionType a un tipo permitido por el check constraint legacy 'tasks_type_check'
+ */
+export function nextActionToLegacyTaskType(action: string | null | undefined): string {
+  if (!action) return 'follow_up';
+  if (action === 'send_info') return 'send_brochure';
+  if (action === 'send_quote') return 'send_quote';
+  if (action === 'whatsapp' || action === 'email') return 'follow_up';
+  if (['call', 'visit', 'send_brochure', 'send_quote', 'follow_up', 'verify_data', 'meeting', 'other'].includes(action)) {
+    return action;
+  }
+  return 'follow_up';
+}
+
+/**
  * Verifica si una interacción fue un contacto efectivo según la matriz centralizada
  */
 export function isEffectiveContact(
