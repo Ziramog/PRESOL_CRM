@@ -7,14 +7,40 @@ export async function createContact(formData: FormData) {
   const supabase = createAdminClient();
   
   const prospect_id = formData.get('prospect_id') as string;
-  const full_name = formData.get('full_name') as string;
-  const role_title = formData.get('role_title') as string;
-  const phone = formData.get('phone') as string;
-  const email = formData.get('email') as string;
-  const is_primary = formData.get('is_primary') === 'true';
+  const full_name = (formData.get('full_name') as string)?.trim();
+  const role_title = (formData.get('role_title') as string)?.trim();
+  const phone = (formData.get('phone') as string)?.trim();
+  const email = (formData.get('email') as string)?.trim();
+  let is_primary = formData.get('is_primary') === 'true';
 
   if (!prospect_id || !full_name) {
     return { error: 'El nombre es obligatorio' };
+  }
+
+  // Check if there are existing contacts for this prospect
+  const { data: existingContacts } = await supabase
+    .from('contacts')
+    .select('id')
+    .eq('prospect_id', prospect_id);
+
+  // If this is the only contact, default it to primary
+  if (!existingContacts || existingContacts.length === 0) {
+    is_primary = true;
+  }
+
+  // If set as primary, unset other contacts as primary
+  if (is_primary) {
+    await supabase
+      .from('contacts')
+      .update({ is_primary: false })
+      .eq('prospect_id', prospect_id);
+
+    if (phone) {
+      await supabase
+        .from('prospects')
+        .update({ primary_phone: phone })
+        .eq('id', prospect_id);
+    }
   }
 
   const { data, error } = await supabase
@@ -42,14 +68,29 @@ export async function createContact(formData: FormData) {
 export async function updateContact(id: string, formData: FormData) {
   const supabase = createAdminClient();
   const prospect_id = formData.get('prospect_id') as string;
-  const full_name = formData.get('full_name') as string;
-  const role_title = formData.get('role_title') as string;
-  const phone = formData.get('phone') as string;
-  const email = formData.get('email') as string;
+  const full_name = (formData.get('full_name') as string)?.trim();
+  const role_title = (formData.get('role_title') as string)?.trim();
+  const phone = (formData.get('phone') as string)?.trim();
+  const email = (formData.get('email') as string)?.trim();
   const is_primary = formData.get('is_primary') === 'true';
 
   if (!id || !full_name) {
     return { error: 'ID y nombre son obligatorios' };
+  }
+
+  if (is_primary && prospect_id) {
+    await supabase
+      .from('contacts')
+      .update({ is_primary: false })
+      .eq('prospect_id', prospect_id)
+      .neq('id', id);
+
+    if (phone) {
+      await supabase
+        .from('prospects')
+        .update({ primary_phone: phone })
+        .eq('id', prospect_id);
+    }
   }
 
   const { data, error } = await supabase
@@ -79,6 +120,13 @@ export async function updateContact(id: string, formData: FormData) {
 export async function deleteContact(id: string, prospect_id: string) {
   const supabase = createAdminClient();
 
+  // Check if deleted contact was primary
+  const { data: contactToDelete } = await supabase
+    .from('contacts')
+    .select('is_primary')
+    .eq('id', id)
+    .single();
+
   const { error } = await supabase
     .from('contacts')
     .delete()
@@ -89,6 +137,32 @@ export async function deleteContact(id: string, prospect_id: string) {
     return { error: 'Error al eliminar el contacto' };
   }
 
-  revalidatePath(`/prospects/${prospect_id}`);
+  // If deleted contact was primary, promote another contact if available
+  if (contactToDelete?.is_primary && prospect_id) {
+    const { data: remaining } = await supabase
+      .from('contacts')
+      .select('id, phone')
+      .eq('prospect_id', prospect_id)
+      .order('created_at', { ascending: true })
+      .limit(1);
+
+    if (remaining && remaining.length > 0) {
+      await supabase
+        .from('contacts')
+        .update({ is_primary: true })
+        .eq('id', remaining[0].id);
+
+      if (remaining[0].phone) {
+        await supabase
+          .from('prospects')
+          .update({ primary_phone: remaining[0].phone })
+          .eq('id', prospect_id);
+      }
+    }
+  }
+
+  if (prospect_id) {
+    revalidatePath(`/prospects/${prospect_id}`);
+  }
   return { success: true };
 }

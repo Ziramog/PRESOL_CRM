@@ -86,6 +86,22 @@ export async function createProspect(formData: FormData) {
     return { error: 'Error al crear el prospecto' };
   }
 
+  // If ask_for or primary_phone was provided, create structured primary contact
+  if (data?.id && (payload.primary_phone || payload.ask_for)) {
+    try {
+      await supabase.from('contacts').insert([{
+        prospect_id: data.id,
+        full_name: payload.ask_for || payload.company_name,
+        role_title: 'Contacto Principal',
+        phone: payload.primary_phone || null,
+        email: payload.email || null,
+        is_primary: true
+      }]);
+    } catch (contactErr) {
+      console.error('Error creating initial contact for prospect:', contactErr);
+    }
+  }
+
   revalidatePath('/prospects');
   return { prospect: data };
 }

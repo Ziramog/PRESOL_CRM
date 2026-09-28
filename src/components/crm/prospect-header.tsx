@@ -2,11 +2,12 @@
 
 import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapPin, Phone, MessageCircle, PlusCircle, Trash2, AlertTriangle, X, Edit, Building2, Factory, Mic, ChevronLeft, MoreHorizontal, ChevronRight, Heart, Calendar, Clock, User, ArrowUpRight, Mail, ChevronDown } from 'lucide-react';
+import { MapPin, Phone, MessageCircle, PlusCircle, Trash2, AlertTriangle, X, Edit, Building2, Factory, Mic, ChevronLeft, MoreHorizontal, ChevronRight, Heart, Calendar, Clock, User, ArrowUpRight, Mail, ChevronDown, UserPlus } from 'lucide-react';
 import { ActivityForm } from './activity-form';
 import { TaskForm } from './task-form';
 import { OpportunityForm } from './opportunity-form';
 import { ProspectForm } from '@/components/crm/prospect-form';
+import { ContactForm } from './contact-form';
 import { VoiceRecorderModal } from './v2/VoiceRecorderModal';
 import { updateProspectStatus, deleteProspect, toggleFavorite } from '@/app/actions/prospects';
 import { getLeadTemperature, PulseIndicator } from '@/lib/lead-temperature';
@@ -73,6 +74,8 @@ export function ProspectHeader({
   const [showOpportunityForm, setShowOpportunityForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [editingContact, setEditingContact] = useState<any | null>(null);
   
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -82,6 +85,13 @@ export function ProspectHeader({
 
   const initialPrimary = contacts.find((c: any) => c.is_primary) || contacts[0];
   const [selectedContactId, setSelectedContactId] = useState<string | null>(initialPrimary?.id || null);
+
+  useEffect(() => {
+    if (contacts.length > 0 && (!selectedContactId || !contacts.some(c => c.id === selectedContactId))) {
+      const primary = contacts.find((c: any) => c.is_primary) || contacts[0];
+      setSelectedContactId(primary?.id || null);
+    }
+  }, [contacts, selectedContactId]);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -209,6 +219,10 @@ export function ProspectHeader({
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
                     <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-100 z-50 py-1.5 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                      <button onClick={() => { setShowMenu(false); setEditingContact(null); setShowContactModal(true); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[14px] font-medium text-slate-700 hover:bg-slate-50 transition-colors text-left">
+                        <UserPlus className="w-4 h-4 text-blue-600" /> Añadir contacto
+                      </button>
+                      <div className="w-full h-px bg-slate-100 my-1"></div>
                       <button onClick={() => { setShowMenu(false); setShowEditModal(true); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[14px] font-medium text-slate-700 hover:bg-slate-50 transition-colors text-left">
                         <Edit className="w-4 h-4 text-slate-400" /> Editar prospecto
                       </button>
@@ -269,12 +283,19 @@ export function ProspectHeader({
             <div className="flex items-center justify-between lg:justify-start gap-3 lg:gap-2.5 w-full lg:w-auto mt-2 lg:mt-0">
               {/* Llamar */}
               {cleanPhone ? (
-                <a href={`tel:${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors active:scale-95 shrink-0">
+                <a href={`tel:${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors active:scale-95 shrink-0" title={`Llamar a ${selectedContact?.full_name || prospect.company_name}`}>
                   <Phone className="w-6 h-6 lg:w-5 lg:h-5 text-blue-600" strokeWidth={2.5} />
                 </a>
               ) : (
-                <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50 shrink-0">
-                  <Phone className="w-6 h-6 lg:w-5 lg:h-5 text-slate-400" strokeWidth={2.5} />
+                <button 
+                  onClick={() => {
+                    setEditingContact(selectedContact || null);
+                    setShowContactModal(true);
+                  }} 
+                  title="Añadir teléfono / contacto"
+                  className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl lg:rounded-xl border border-dashed border-slate-300 bg-slate-50 shadow-sm flex items-center justify-center hover:bg-blue-50 hover:border-blue-300 transition-colors active:scale-95 group shrink-0"
+                >
+                  <Phone className="w-6 h-6 lg:w-5 lg:h-5 text-slate-400 group-hover:text-blue-600 transition-colors" strokeWidth={2.5} />
                 </button>
               )}
 
@@ -285,12 +306,19 @@ export function ProspectHeader({
 
               {/* WhatsApp */}
               {cleanPhone ? (
-                <a href={`whatsapp://send?phone=${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-[#25D366]/10 hover:border-[#25D366]/30 transition-colors active:scale-95 shrink-0">
+                <a href={`whatsapp://send?phone=${cleanPhone}`} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-[#25D366]/10 hover:border-[#25D366]/30 transition-colors active:scale-95 shrink-0" title={`Enviar WhatsApp a ${selectedContact?.full_name || prospect.company_name}`}>
                   <WhatsAppIcon className="w-7 h-7 lg:w-6 lg:h-6 text-[#25D366]" />
                 </a>
               ) : (
-                <button onClick={() => setShowEditModal(true)} className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl lg:rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 opacity-50 shrink-0">
-                  <WhatsAppIcon className="w-7 h-7 lg:w-6 lg:h-6 text-slate-400" />
+                <button 
+                  onClick={() => {
+                    setEditingContact(selectedContact || null);
+                    setShowContactModal(true);
+                  }} 
+                  title="Añadir teléfono / contacto"
+                  className="w-[52px] h-[52px] lg:w-[48px] lg:h-[48px] rounded-2xl lg:rounded-xl border border-dashed border-slate-300 bg-slate-50 shadow-sm flex items-center justify-center hover:bg-[#25D366]/10 hover:border-[#25D366]/40 transition-colors active:scale-95 group shrink-0"
+                >
+                  <WhatsAppIcon className="w-7 h-7 lg:w-6 lg:h-6 text-slate-400 group-hover:text-[#25D366] transition-colors" />
                 </button>
               )}
 
@@ -304,51 +332,182 @@ export function ProspectHeader({
 
         {/* --- CENTER SECTION (Contact Selector - Integrated) --- */}
         <div className="flex flex-col w-full lg:w-[320px] lg:min-w-[280px] border-t border-slate-100 lg:border-t-0 lg:border-l lg:border-slate-200 p-5 lg:px-6 lg:py-6 bg-slate-50/30 lg:bg-transparent">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1.5 text-slate-400">
-              <User className="w-4 h-4 text-blue-500" />
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500">Contacto Principal</span>
+          <div className="flex items-center justify-between mb-3 gap-2">
+            <div className="flex items-center gap-1.5 text-slate-400 min-w-0">
+              <User className="w-4 h-4 text-blue-500 shrink-0" />
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 truncate">
+                {contacts.length > 1 ? `Contactos (${contacts.length})` : 'Contacto Principal'}
+              </span>
             </div>
-            {contacts.length > 1 && (
-              <div className="relative">
-                <select 
-                  className="appearance-none bg-transparent text-slate-700 text-[13px] font-bold py-1 pl-2 pr-6 cursor-pointer outline-none hover:text-blue-600 transition-colors"
-                  value={selectedContactId || ''}
-                  onChange={(e) => setSelectedContactId(e.target.value)}
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              {contacts.length > 1 && (
+                <div className="relative">
+                  <select 
+                    className="appearance-none bg-slate-100 hover:bg-slate-200 text-slate-700 text-[12px] font-bold py-1 pl-2 pr-6 rounded-lg cursor-pointer outline-none hover:text-blue-600 transition-colors max-w-[125px] truncate"
+                    value={selectedContactId || ''}
+                    onChange={(e) => setSelectedContactId(e.target.value)}
+                  >
+                    {contacts.map(c => (
+                      <option key={c.id} value={c.id}>{c.full_name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              )}
+
+              {selectedContact && (
+                <button
+                  type="button"
+                  onClick={() => { setEditingContact(selectedContact); setShowContactModal(true); }}
+                  className="w-7 h-7 rounded-lg border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors shadow-xs active:scale-95 cursor-pointer"
+                  title="Editar contacto"
                 >
-                  {contacts.map(c => (
-                    <option key={c.id} value={c.id}>{c.full_name}</option>
-                  ))}
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
-            )}
+                  <Edit className="w-3.5 h-3.5" />
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => { setEditingContact(null); setShowContactModal(true); }}
+                className="w-7 h-7 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-colors shadow-xs active:scale-95 cursor-pointer"
+                title="Añadir contacto"
+              >
+                <PlusCircle className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[16px] shrink-0 border border-blue-100">
-              {selectedContact?.full_name ? selectedContact.full_name.substring(0, 2).toUpperCase() : '??'}
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-[16px] font-extrabold text-slate-900 truncate">{selectedContact?.full_name || 'Sin contacto'}</span>
-              <span className="text-[13px] font-semibold text-blue-600 truncate mb-3">{selectedContact?.role || 'Sin cargo'}</span>
-              
-              <div className="flex flex-col gap-1.5">
-                {activePhone && (
-                  <div className="flex items-center gap-2 text-[13px] text-slate-700 font-bold">
-                    <Phone className="w-4 h-4 text-emerald-500" strokeWidth={2.5} />
-                    <span className="truncate">{activePhone}</span>
-                  </div>
-                )}
-                {activeEmail && (
-                  <div className="flex items-center gap-2 text-[13px] text-slate-700 font-bold">
-                    <Mail className="w-4 h-4 text-blue-500" strokeWidth={2.5} />
-                    <span className="truncate">{activeEmail}</span>
-                  </div>
-                )}
+          {selectedContact ? (
+            <div className="flex items-start gap-4">
+              <button
+                type="button"
+                onClick={() => { setEditingContact(selectedContact); setShowContactModal(true); }}
+                title="Editar contacto"
+                className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 flex items-center justify-center font-bold text-[16px] shrink-0 border border-blue-100 transition-colors cursor-pointer group"
+              >
+                <span>{selectedContact?.full_name ? selectedContact.full_name.substring(0, 2).toUpperCase() : '??'}</span>
+              </button>
+              <div className="flex flex-col min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[16px] font-extrabold text-slate-900 truncate">
+                    {selectedContact?.full_name || 'Sin contacto'}
+                  </span>
+                  {selectedContact.is_primary && contacts.length > 1 && (
+                    <span className="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded shrink-0">
+                      Principal
+                    </span>
+                  )}
+                </div>
+                <span className="text-[13px] font-semibold text-blue-600 truncate mb-2">
+                  {selectedContact?.role_title || selectedContact?.role || 'Sin cargo'}
+                </span>
+                
+                <div className="flex flex-col gap-1.5">
+                  {activePhone ? (
+                    <div className="flex items-center justify-between gap-2 text-[13px] text-slate-700 font-bold">
+                      <div className="flex items-center gap-2 truncate">
+                        <Phone className="w-4 h-4 text-emerald-500 shrink-0" strokeWidth={2.5} />
+                        <a href={`tel:${cleanPhone || activePhone}`} className="truncate hover:text-blue-600 hover:underline">
+                          {activePhone}
+                        </a>
+                      </div>
+                      <a 
+                        href={`whatsapp://send?phone=${cleanPhone || activePhone.replace(/\D/g, '')}`} 
+                        className="p-1 rounded-md text-[#25D366] hover:bg-[#25D366]/10 transition-colors shrink-0"
+                        title="Enviar WhatsApp"
+                      >
+                        <WhatsAppIcon className="w-4 h-4" />
+                      </a>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setEditingContact(selectedContact); setShowContactModal(true); }}
+                      className="flex items-center gap-1.5 text-[12px] text-amber-600 hover:text-amber-700 font-medium cursor-pointer"
+                    >
+                      <Phone className="w-3.5 h-3.5 text-amber-500" />
+                      <span>+ Añadir teléfono</span>
+                    </button>
+                  )}
+                  {activeEmail && (
+                    <div className="flex items-center gap-2 text-[13px] text-slate-700 font-bold truncate">
+                      <Mail className="w-4 h-4 text-blue-500 shrink-0" strokeWidth={2.5} />
+                      <a href={`mailto:${activeEmail}`} className="truncate hover:text-blue-600 hover:underline">
+                        {activeEmail}
+                      </a>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {prospect.primary_phone || prospect.ask_for ? (
+                <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3 flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+                      Dato de referencia
+                    </span>
+                    <span className="text-[10px] text-amber-600 font-medium">De ficha</span>
+                  </div>
+                  {prospect.ask_for && (
+                    <p className="text-[13px] text-slate-800 font-bold">
+                      <span className="text-slate-500 font-normal text-xs">Contacto: </span>
+                      {prospect.ask_for}
+                    </p>
+                  )}
+                  {prospect.primary_phone && (
+                    <div className="flex items-center justify-between text-[13px] text-slate-800 font-bold">
+                      <div className="flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                        <a href={`tel:${prospect.primary_phone.replace(/[^\d+]/g, '')}`} className="hover:underline">
+                          {prospect.primary_phone}
+                        </a>
+                      </div>
+                      <a 
+                        href={`whatsapp://send?phone=${prospect.primary_phone.replace(/[^\d+]/g, '')}`} 
+                        className="p-1 rounded text-[#25D366]"
+                      >
+                        <WhatsAppIcon className="w-4 h-4" />
+                      </a>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingContact({
+                        full_name: prospect.ask_for || prospect.company_name || '',
+                        phone: prospect.primary_phone || '',
+                        email: prospect.email || '',
+                        is_primary: true
+                      });
+                      setShowContactModal(true);
+                    }}
+                    className="mt-1 w-full py-2 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-[12px] font-bold flex items-center justify-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    Formalizar como contacto
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                  <User className="w-6 h-6 text-slate-300 mb-1.5" />
+                  <p className="text-[13px] font-medium text-slate-500 mb-2.5">
+                    No hay contactos registrados
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setEditingContact(null); setShowContactModal(true); }}
+                    className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[12px] font-bold flex items-center justify-center gap-1.5 transition-colors shadow-sm active:scale-98 cursor-pointer"
+                  >
+                    <PlusCircle className="w-4 h-4" />
+                    Añadir contacto telefónico
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* --- RIGHT SECTION (Global Actions - Integrated - Desktop Only) --- */}
@@ -466,6 +625,17 @@ export function ProspectHeader({
         <OpportunityForm 
           prospectId={prospect.id} 
           onClose={() => setShowOpportunityForm(false)} 
+        />
+      )}
+
+      {showContactModal && (
+        <ContactForm 
+          prospectId={prospect.id} 
+          contact={editingContact} 
+          onClose={() => {
+            setShowContactModal(false);
+            setEditingContact(null);
+          }} 
         />
       )}
 

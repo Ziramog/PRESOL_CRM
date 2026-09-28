@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { createContact, updateContact, deleteContact } from '@/app/actions/contacts';
 import { X, BookUser, UserCircle, Briefcase, Phone, Mail, Camera, Trash2 } from 'lucide-react';
 import { MobileContactImportModal } from '@/components/crm/v2/MobileContactImportModal';
@@ -14,6 +15,8 @@ export function ContactForm({
   contact?: any, 
   onClose: () => void 
 }) {
+  const router = useRouter();
+  const isEdit = Boolean(contact && contact.id);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -116,7 +119,7 @@ export function ContactForm({
     setError(null);
     
     const formData = new FormData(e.currentTarget);
-    const result = contact 
+    const result = isEdit 
       ? await updateContact(contact.id, formData)
       : await createContact(formData);
     
@@ -124,18 +127,20 @@ export function ContactForm({
       setError(result.error);
       setIsPending(false);
     } else {
+      router.refresh();
       onClose();
     }
   };
 
   const handleDelete = async () => {
-    if (!contact || !confirm('¿Estás seguro de que deseas eliminar este contacto?')) return;
+    if (!contact?.id || !confirm('¿Estás seguro de que deseas eliminar este contacto?')) return;
     setIsPending(true);
     const result = await deleteContact(contact.id, prospectId);
     if (result.error) {
       setError(result.error);
       setIsPending(false);
     } else {
+      router.refresh();
       onClose();
     }
   };
@@ -151,12 +156,12 @@ export function ContactForm({
               <UserCircle className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900 leading-tight">{contact ? 'Editar Contacto' : 'Nuevo Contacto'}</h3>
+              <h3 className="text-lg font-bold text-slate-900 leading-tight">{isEdit ? 'Editar Contacto' : 'Nuevo Contacto'}</h3>
               <p className="text-[13px] text-slate-500 font-medium">Datos del perfil</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {contact && (
+            {isEdit && (
               <button 
                 type="button"
                 onClick={handleDelete}
@@ -283,7 +288,7 @@ export function ContactForm({
                   name="is_primary" 
                   id="is_primary"
                   value="true"
-                  defaultChecked={contact?.is_primary}
+                  defaultChecked={contact ? Boolean(contact.is_primary) : true}
                   className="rounded border-blue-300 text-blue-600 focus:ring-blue-500 w-5 h-5 bg-white cursor-pointer"
                 />
               </div>
@@ -307,7 +312,7 @@ export function ContactForm({
             type="submit" 
             form="contact-form"
             disabled={isPending}
-            className="w-full h-[50px] text-[15px] font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-md flex items-center justify-center"
+            className="w-full h-[50px] text-[15px] font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-md flex items-center justify-center cursor-pointer"
           >
             {isPending ? (
               <span className="flex items-center gap-2">
@@ -315,7 +320,7 @@ export function ContactForm({
                 Guardando...
               </span>
             ) : (
-              contact ? 'Guardar Cambios' : 'Añadir Contacto'
+              isEdit ? 'Guardar Cambios' : 'Añadir Contacto'
             )}
           </button>
         </div>
