@@ -3,8 +3,26 @@
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Phone, Mail, MessageSquare, MapPin, FileText, Activity, Clock, Building, User, StickyNote, Plus, Edit2 } from 'lucide-react';
-import { ACTIVITY_RESULTS, CONTACT_LEVELS } from '@/lib/constants';
+import {
+  Phone,
+  Mail,
+  MessageSquare,
+  FileText,
+  Clock,
+  Building,
+  User,
+  StickyNote,
+  Plus,
+  Edit2,
+  Video,
+} from 'lucide-react';
+import {
+  CONTACT_LEVELS,
+  getResultLabel,
+  getChannelLabel,
+  isExplicitInterest,
+  normalizeChannel,
+} from '@/lib/constants';
 import { ActivityForm } from '@/components/crm/activity-form';
 
 interface ActivityTimelineProps {
@@ -12,35 +30,50 @@ interface ActivityTimelineProps {
   prospectId?: string;
 }
 
-const TYPE_STYLES: Record<string, { icon: any, color: string, bg: string }> = {
+const TYPE_STYLES: Record<string, { icon: any; color: string; bg: string }> = {
   visit: { icon: Building, color: 'text-blue-600', bg: 'bg-blue-50' },
   call: { icon: Phone, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   email: { icon: Mail, color: 'text-purple-600', bg: 'bg-purple-50' },
   whatsapp: { icon: MessageSquare, color: 'text-green-600', bg: 'bg-green-50' },
-  meeting: { icon: User, color: 'text-orange-600', bg: 'bg-orange-50' },
-  note: { icon: StickyNote, color: 'text-amber-600', bg: 'bg-amber-50' },
+  virtual_meeting: { icon: Video, color: 'text-amber-600', bg: 'bg-amber-50' },
+  meeting: { icon: Video, color: 'text-amber-600', bg: 'bg-amber-50' },
+  internal_note: { icon: StickyNote, color: 'text-slate-600', bg: 'bg-slate-100' },
+  note: { icon: StickyNote, color: 'text-slate-600', bg: 'bg-slate-100' },
   quote: { icon: FileText, color: 'text-indigo-600', bg: 'bg-indigo-50' },
   other: { icon: Clock, color: 'text-slate-600', bg: 'bg-slate-50' },
 };
 
 function getBadgeColors(outcome: string) {
   if (!outcome) return 'bg-gray-100 text-gray-700';
-  const good = ['interested', 'requested_quote', 'contact_made', 'decision_maker_contact', 'opportunity', 'quote', 'customer'];
-  const neutral = ['requested_info', 'follow_up', 'in_progress', 'reception_only'];
-  
-  if (good.includes(outcome)) return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20';
-  if (neutral.includes(outcome)) return 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/20';
+  const good = [
+    'interested',
+    'requested_quote',
+    'contact_made',
+    'decision_maker_contact',
+    'opportunity',
+    'quote',
+    'customer',
+    'wants_call',
+    'schedule_meeting',
+    'schedule_visit',
+    'proposal_required',
+  ];
+  const neutral = ['requested_info', 'follow_up', 'in_progress', 'reception_only', 'referred_contact', 'provided_contact_details'];
+
+  if (good.includes(outcome) || isExplicitInterest(outcome)) {
+    return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20';
+  }
+  if (neutral.includes(outcome)) {
+    return 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/20';
+  }
   return 'bg-gray-100 text-gray-600 ring-1 ring-gray-500/20';
 }
 
 function getRichOutcomeLabel(a: any) {
-  const base = ACTIVITY_RESULTS[a.outcome as keyof typeof ACTIVITY_RESULTS] || a.outcome;
-  if (!a.summary) return base;
-  
-  if (a.summary === 'decision_maker') return `Resp: ${base}`;
-  if (a.summary === 'reception') return `Recep: ${base}`;
-  if (a.summary === 'no_contact') return base;
-  return base;
+  const ch = a.channel || a.type;
+  const res = a.result || a.outcome;
+  const st = a.interaction_state || a.summary;
+  return getResultLabel(res, ch, st);
 }
 
 export function ActivityTimeline({ activities, prospectId }: ActivityTimelineProps) {
@@ -48,14 +81,17 @@ export function ActivityTimeline({ activities, prospectId }: ActivityTimelinePro
   const [editingActivity, setEditingActivity] = useState<any | null>(null);
   const [showNewModal, setShowNewModal] = useState(false);
   const [showAll, setShowAll] = useState(false);
-  
-  const filteredActivities = activities?.filter(a => {
+
+  const filteredActivities = activities?.filter((a) => {
+    const ch = normalizeChannel(a.channel || a.type);
     if (filterType === 'Todas') return true;
-    if (filterType === 'Visitas' && a.type === 'visit') return true;
-    if (filterType === 'Llamadas' && a.type === 'call') return true;
-    if (filterType === 'WhatsApp' && a.type === 'whatsapp') return true;
-    if (filterType === 'Email' && a.type === 'email') return true;
-    if (filterType === 'Cotizaciones' && a.type === 'quote') return true;
+    if (filterType === 'Visitas' && ch === 'visit') return true;
+    if (filterType === 'Llamadas' && ch === 'call') return true;
+    if (filterType === 'WhatsApp' && ch === 'whatsapp') return true;
+    if (filterType === 'Email' && ch === 'email') return true;
+    if (filterType === 'Reuniones' && ch === 'virtual_meeting') return true;
+    if (filterType === 'Notas' && ch === 'internal_note') return true;
+    if (filterType === 'Cotizaciones' && (ch === ('quote' as any) || a.type === 'quote')) return true;
     return false;
   }) || [];
 
@@ -70,7 +106,7 @@ export function ActivityTimeline({ activities, prospectId }: ActivityTimelinePro
         </div>
         <div className="flex items-center gap-2">
           {prospectId && (
-            <button 
+            <button
               type="button"
               onClick={() => setShowNewModal(true)}
               className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md text-[11px] font-bold transition-colors cursor-pointer"
@@ -80,7 +116,7 @@ export function ActivityTimeline({ activities, prospectId }: ActivityTimelinePro
               <span className="hidden sm:inline">Nueva</span>
             </button>
           )}
-          <select 
+          <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
             className="text-[11px] bg-gray-50 border border-gray-100 rounded text-gray-600 py-1 px-1.5 outline-none cursor-pointer hover:bg-gray-100 transition-colors"
@@ -90,35 +126,38 @@ export function ActivityTimeline({ activities, prospectId }: ActivityTimelinePro
             <option value="Llamadas">Llamadas</option>
             <option value="WhatsApp">WhatsApp</option>
             <option value="Email">Email</option>
+            <option value="Reuniones">Reuniones</option>
+            <option value="Notas">Notas</option>
             <option value="Cotizaciones">Cotizaciones</option>
           </select>
         </div>
       </div>
-      
+
       <div className="relative flex-1 custom-scrollbar">
-          {displayActivities.length === 0 ? (
-            <div className="text-center py-6 flex flex-col items-center">
-              <p className="text-[12px] text-gray-500 mb-2.5">Todavía no hay interacciones registradas.</p>
-              {prospectId && (
-                <button 
-                  type="button"
-                  onClick={() => setShowNewModal(true)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[12px] font-bold transition-colors cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Registrar primera gestión
-                </button>
-              )}
-            </div>
-          ) : (
+        {displayActivities.length === 0 ? (
+          <div className="text-center py-6 flex flex-col items-center">
+            <p className="text-[12px] text-gray-500 mb-2.5">Todavía no hay interacciones registradas.</p>
+            {prospectId && (
+              <button
+                type="button"
+                onClick={() => setShowNewModal(true)}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[12px] font-bold transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" /> Registrar primera gestión
+              </button>
+            )}
+          </div>
+        ) : (
           <>
             <div className="absolute left-[33px] sm:left-[38px] top-2 bottom-2 w-px bg-slate-100 z-0"></div>
             <div className="relative z-10 flex flex-col gap-5 pt-2">
               {displayActivities.map((activity, index) => {
-                const { icon: Icon, color, bg } = TYPE_STYLES[activity.type] || TYPE_STYLES.other;
+                const ch = activity.channel || activity.type;
+                const { icon: Icon, color, bg } = TYPE_STYLES[ch] || TYPE_STYLES[activity.type] || TYPE_STYLES.other;
                 const activityDate = activity.activity_at ? parseISO(activity.activity_at) : null;
-                const outcomeLabel = activity.outcome ? getRichOutcomeLabel(activity) : null;
-                const badgeClass = getBadgeColors(activity.outcome);
-                
+                const outcomeLabel = (activity.result || activity.outcome) ? getRichOutcomeLabel(activity) : null;
+                const badgeClass = getBadgeColors(activity.result || activity.outcome);
+
                 return (
                   <div key={activity.id || index} className="flex items-start gap-2 sm:gap-3 w-full group">
                     <div className="relative flex items-center justify-center w-2 h-2 shrink-0 mt-1.5">
@@ -132,17 +171,17 @@ export function ActivityTimeline({ activities, prospectId }: ActivityTimelinePro
                         {activityDate ? format(activityDate, 'd MMM', { locale: es }) : ''}
                       </span>
                     </div>
-                    
+
                     <div className="flex-1 flex flex-col gap-2 min-w-0 bg-transparent rounded-lg transition-colors pb-2">
                       <div className="flex items-center gap-2.5 sm:gap-3 w-full">
                         <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 ${bg}`}>
                           <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${color}`} strokeWidth={2.5} />
                         </div>
-                        
+
                         <div className="flex-1 min-w-0 flex flex-col justify-center">
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-[12px] sm:text-[13px] font-bold text-slate-900 truncate">
-                              {getActivityTitle(activity.type)}
+                              {getChannelLabel(ch)}
                             </span>
                             <div className="flex items-center gap-1.5 shrink-0">
                               {outcomeLabel && (
@@ -165,14 +204,14 @@ export function ActivityTimeline({ activities, prospectId }: ActivityTimelinePro
                           </span>
                         </div>
                       </div>
-                      
-                      {(activity.notes || activity.summary) && (
-                        <div 
+
+                      {(activity.notes || activity.interaction_state || activity.summary) && (
+                        <div
                           onClick={() => setEditingActivity(activity)}
                           className="ml-11 sm:ml-12 text-[11px] sm:text-[12px] text-slate-600 bg-slate-50 hover:bg-slate-100/80 border border-slate-100 rounded-lg p-2.5 sm:p-3 break-words whitespace-pre-wrap cursor-pointer transition-colors group/note relative"
                           title="Haga clic para editar"
                         >
-                          {activity.notes || (CONTACT_LEVELS[activity.summary as keyof typeof CONTACT_LEVELS] || activity.summary)}
+                          {activity.notes || (CONTACT_LEVELS[activity.summary as keyof typeof CONTACT_LEVELS] || activity.interaction_state || activity.summary)}
                           <div className="absolute right-2 top-2 opacity-0 group-hover/note:opacity-100 text-slate-400">
                             <Edit2 className="w-3 h-3" />
                           </div>
@@ -186,10 +225,10 @@ export function ActivityTimeline({ activities, prospectId }: ActivityTimelinePro
           </>
         )}
       </div>
-      
+
       {filteredActivities && filteredActivities.length > 5 && (
         <div className="pt-3 mt-4 border-t border-gray-100 text-center">
-          <button 
+          <button
             type="button"
             onClick={() => setShowAll(!showAll)}
             className="text-[11px] font-medium text-blue-600 hover:underline cursor-pointer"
@@ -216,15 +255,3 @@ export function ActivityTimeline({ activities, prospectId }: ActivityTimelinePro
     </div>
   );
 }
-
-function getActivityTitle(type: string) {
-  switch (type) {
-    case 'call': return 'Llamada';
-    case 'email': return 'Email';
-    case 'whatsapp': return 'WhatsApp';
-    case 'visit': return 'Visita';
-    case 'quote': return 'Cotización';
-    default: return 'Actividad';
-  }
-}
-

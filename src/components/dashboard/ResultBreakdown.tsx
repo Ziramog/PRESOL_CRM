@@ -3,18 +3,19 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { X } from 'lucide-react';
-import { ACTIVITY_RESULTS } from '@/lib/constants';
+import { getResultLabel } from '@/lib/constants';
 
 export function ResultBreakdown({ results }: { results: any[] }) {
   const [modal, setModal] = useState<{ label: string; items: any[] } | null>(null);
 
-  // Aggregate raw activities by outcome
+  // Aggregate raw activities by outcome/result
   const aggregated: Record<string, { count: number; activities: any[] }> = {};
   (results ?? []).forEach((r) => {
-    if (!r.outcome) return;
-    if (!aggregated[r.outcome]) aggregated[r.outcome] = { count: 0, activities: [] };
-    aggregated[r.outcome].count++;
-    aggregated[r.outcome].activities.push(r);
+    const outcome = r.result || r.outcome;
+    if (!outcome) return;
+    if (!aggregated[outcome]) aggregated[outcome] = { count: 0, activities: [] };
+    aggregated[outcome].count++;
+    aggregated[outcome].activities.push(r);
   });
 
   const sorted = Object.entries(aggregated)
@@ -24,7 +25,7 @@ export function ResultBreakdown({ results }: { results: any[] }) {
   const total = sorted.reduce((s, r) => s + r.count, 0);
 
   const openModal = (outcome: string, activities: any[]) => {
-    const label = ACTIVITY_RESULTS[outcome as keyof typeof ACTIVITY_RESULTS] || outcome;
+    const label = getResultLabel(outcome);
     // deduplicate by prospect_id
     const seen = new Map<string, any>();
     activities.forEach((a) => {
@@ -49,13 +50,13 @@ export function ResultBreakdown({ results }: { results: any[] }) {
         ) : (
           <div className="px-5 py-4 space-y-3">
             {sorted.map(({ outcome, count, activities }) => {
-              const label = ACTIVITY_RESULTS[outcome as keyof typeof ACTIVITY_RESULTS] || outcome;
+              const label = getResultLabel(outcome);
               const pct = total > 0 ? Math.round((count / total) * 100) : 0;
               return (
                 <button
                   key={outcome}
                   onClick={() => openModal(outcome, activities)}
-                  className="w-full text-left group"
+                  className="w-full text-left group cursor-pointer"
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">{label}</span>
@@ -88,7 +89,7 @@ export function ResultBreakdown({ results }: { results: any[] }) {
               </div>
               <button
                 onClick={() => setModal(null)}
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>

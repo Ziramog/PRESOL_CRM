@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subMonths, startOfYear, endOfYear } from 'date-fns';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { isEffectiveContact, isExplicitInterest } from '@/lib/activities/config';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
@@ -82,25 +83,27 @@ export async function getDashboardData(params: DashboardParams) {
       const uniqueInterested = new Set();
 
       acts.forEach((a: any) => {
-        if (a.type === 'note') return; // Skip internal notes for funnel
+        const ch = a.channel || a.type;
+        if (ch === 'note' || ch === 'internal_note') return; // Skip internal notes for funnel
         
         uniqueManaged.add(a.prospect_id);
         
-        if (a.type === 'visit' || a.type === 'meeting') {
+        if (ch === 'visit' || ch === 'virtual_meeting' || ch === 'meeting') {
           uniqueVisits.add(a.prospect_id);
-        } else if (a.type === 'call' || a.type === 'whatsapp' || a.type === 'email') {
+        } else if (ch === 'call' || ch === 'whatsapp' || ch === 'email') {
           uniqueCalls.add(a.prospect_id);
         }
 
         const legacyEffective = ['reception_only', 'decision_maker_contact', 'contact_made', 'interested', 'requested_info', 'requested_quote', 'follow_up', 'not_interested'];
-        const isNewEffective = a.summary === 'reception' || a.summary === 'decision_maker';
+        const isNewEffective = a.summary === 'reception' || a.summary === 'decision_maker' || a.effective_contact === true || isEffectiveContact(ch, a.interaction_state || a.summary, a.result || a.outcome);
         
-        if (isNewEffective || legacyEffective.includes(a.outcome)) {
+        if (isNewEffective || legacyEffective.includes(a.outcome) || legacyEffective.includes(a.result)) {
           uniqueEffective.add(a.prospect_id);
         }
 
-        const interestedOutcomes = ['interested', 'requested_info', 'requested_quote', 'follow_up'];
-        if (interestedOutcomes.includes(a.outcome)) {
+        const res = a.result || a.outcome;
+        const legacyInterested = ['interested', 'requested_info', 'requested_quote', 'follow_up'];
+        if (isExplicitInterest(res) || legacyInterested.includes(res)) {
           uniqueInterested.add(a.prospect_id);
         }
       });

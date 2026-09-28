@@ -3,54 +3,44 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { ACTIVITY_RESULTS } from '@/lib/constants';
+import { getResultLabel, getChannelLabel, normalizeChannel } from '@/lib/constants';
 import { formatInTimeZone } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
-import { Phone, Building, MessageCircle, Mail, FileText, StickyNote, User, Clock, Edit2 } from 'lucide-react';
+import { Phone, Building, MessageCircle, Mail, FileText, StickyNote, User, Clock, Edit2, Video } from 'lucide-react';
 import { ActivityForm } from '@/components/crm/activity-form';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
-const TYPE_LABELS: Record<string, string> = {
-  visit: 'Visita presencial',
-  call: 'Llamada telefónica',
-  meeting: 'Reunión virtual',
-  whatsapp: 'WhatsApp enviado',
-  email: 'Email enviado',
-  note: 'Nota agregada',
-  quote: 'Cotización enviada',
-  other: 'Actividad registrada',
-};
-
-const TYPE_STYLES: Record<string, { icon: any, color: string, bg: string }> = {
-  visit:    { icon: Building,       color: 'text-blue-600',   bg: 'bg-blue-50'   },
-  call:     { icon: Phone,          color: 'text-emerald-600',bg: 'bg-emerald-50'},
-  email:    { icon: Mail,           color: 'text-purple-600', bg: 'bg-purple-50' },
-  whatsapp: { icon: MessageCircle,  color: 'text-green-600',  bg: 'bg-green-50'  },
-  meeting:  { icon: User,           color: 'text-orange-600', bg: 'bg-orange-50' },
-  note:     { icon: StickyNote,     color: 'text-amber-600',  bg: 'bg-amber-50'  },
-  quote:    { icon: FileText,       color: 'text-indigo-600', bg: 'bg-indigo-50' },
-  other:    { icon: Clock,          color: 'text-slate-600',  bg: 'bg-slate-50'  },
+const TYPE_STYLES: Record<string, { icon: any; color: string; bg: string }> = {
+  visit: { icon: Building, color: 'text-blue-600', bg: 'bg-blue-50' },
+  call: { icon: Phone, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  email: { icon: Mail, color: 'text-purple-600', bg: 'bg-purple-50' },
+  whatsapp: { icon: MessageCircle, color: 'text-green-600', bg: 'bg-green-50' },
+  virtual_meeting: { icon: Video, color: 'text-amber-600', bg: 'bg-amber-50' },
+  meeting: { icon: Video, color: 'text-amber-600', bg: 'bg-amber-50' },
+  internal_note: { icon: StickyNote, color: 'text-slate-600', bg: 'bg-slate-100' },
+  note: { icon: StickyNote, color: 'text-slate-600', bg: 'bg-slate-100' },
+  quote: { icon: FileText, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  other: { icon: Clock, color: 'text-slate-600', bg: 'bg-slate-50' },
 };
 
 function getBadgeColors(outcome: string) {
   if (!outcome) return 'bg-gray-100 text-gray-700';
-  const good    = ['interested', 'requested_quote', 'contact_made', 'decision_maker_contact', 'opportunity', 'quote', 'customer'];
-  const neutral = ['requested_info', 'follow_up', 'in_progress', 'reception_only'];
-  if (good.includes(outcome))    return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20';
+  const good = ['interested', 'requested_quote', 'contact_made', 'decision_maker_contact', 'opportunity', 'quote', 'customer', 'wants_call', 'schedule_meeting', 'schedule_visit', 'proposal_required'];
+  const neutral = ['requested_info', 'follow_up', 'in_progress', 'reception_only', 'referred_contact', 'provided_contact_details'];
+  if (good.includes(outcome)) return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20';
   if (neutral.includes(outcome)) return 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/20';
   return 'bg-gray-100 text-gray-600 ring-1 ring-gray-500/20';
 }
 
 function getRichOutcomeLabel(a: any) {
-  const base = ACTIVITY_RESULTS[a.outcome as keyof typeof ACTIVITY_RESULTS] || a.outcome;
-  if (!a.summary) return base;
-  if (a.summary === 'decision_maker') return `Resp: ${base}`;
-  if (a.summary === 'reception')      return `Recep: ${base}`;
-  return base;
+  const ch = a.channel || a.type;
+  const res = a.result || a.outcome;
+  const st = a.interaction_state || a.summary;
+  return getResultLabel(res, ch, st);
 }
 
-export function RecentActivity({ activities, showDate = false }: { activities: any[], showDate?: boolean }) {
+export function RecentActivity({ activities, showDate = false }: { activities: any[]; showDate?: boolean }) {
   const searchParams = useSearchParams();
   const [editingActivity, setEditingActivity] = useState<any | null>(null);
 
@@ -70,13 +60,14 @@ export function RecentActivity({ activities, showDate = false }: { activities: a
 
   const buildReport = () => {
     let txt = `*Reporte de Actividad Diaria*\n\n`;
-    activities.forEach(a => {
+    activities.forEach((a) => {
       const prospect = Array.isArray(a.prospects) ? a.prospects[0] : a.prospects;
+      const ch = a.channel || a.type;
       const outcomeLabel = getRichOutcomeLabel(a);
-      const typeLabel = TYPE_LABELS[a.type] ?? a.type;
+      const typeLabel = getChannelLabel(ch);
       const timeStr = formatInTimeZone(new Date(a.activity_at), TZ, 'HH:mm', { locale: es });
       txt += `🕒 ${timeStr} | *${prospect?.company_name || 'Sin empresa'}*\n`;
-      txt += `   👉 ${typeLabel} - ${outcomeLabel}\n`;
+      txt += `   👉 ${typeLabel}${outcomeLabel ? ` - ${outcomeLabel}` : ''}\n`;
       if (a.notes) txt += `   💬 _"${a.notes.trim()}"_\n`;
       txt += `\n`;
     });
@@ -106,18 +97,18 @@ export function RecentActivity({ activities, showDate = false }: { activities: a
         <div className="absolute left-[74px] sm:left-[82px] top-6 bottom-4 w-px bg-slate-200 z-0" />
         <div className="relative z-10 flex flex-col gap-4">
           {activities.map((a) => {
-            const prospect    = Array.isArray(a.prospects) ? a.prospects[0] : a.prospects;
-            const outcomeLabel = getRichOutcomeLabel(a);
-            const typeLabel   = TYPE_LABELS[a.type] ?? a.type;
-            const { icon: Icon, color, bg } = TYPE_STYLES[a.type] || TYPE_STYLES.other;
+            const prospect = Array.isArray(a.prospects) ? a.prospects[0] : a.prospects;
+            const ch = a.channel || a.type;
+            const outcomeLabel = (a.result || a.outcome) ? getRichOutcomeLabel(a) : null;
+            const typeLabel = getChannelLabel(ch);
+            const { icon: Icon, color, bg } = TYPE_STYLES[ch] || TYPE_STYLES[a.type] || TYPE_STYLES.other;
             const activityDate = new Date(a.activity_at);
             const timeStr = formatInTimeZone(activityDate, TZ, 'HH:mm', { locale: es });
             const dateStr = formatInTimeZone(activityDate, TZ, 'd MMM', { locale: es });
-            const badgeClass = getBadgeColors(a.outcome);
+            const badgeClass = getBadgeColors(a.result || a.outcome);
 
             return (
               <div key={a.id} className="flex items-start gap-3 w-full group">
-                
                 {/* Time and Date */}
                 <div className="w-[46px] shrink-0 flex flex-col mt-1 text-right">
                   <span className="text-[12px] text-slate-600 font-semibold tabular-nums leading-tight">{timeStr}</span>
@@ -142,11 +133,11 @@ export function RecentActivity({ activities, showDate = false }: { activities: a
 
                     <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2">
                       <div className="flex flex-col min-w-0">
-                        {/* Company name — primary (no truncate, wraps naturally) */}
+                        {/* Company name */}
                         <span className="text-[14px] font-extrabold text-slate-900 group-hover:text-blue-600 transition-colors leading-tight break-words">
                           {prospect?.company_name || 'Sin empresa'}
                         </span>
-                        {/* Activity type — secondary */}
+                        {/* Activity type */}
                         <span className="text-[12px] text-slate-500 font-medium leading-tight mt-1">
                           {typeLabel}
                         </span>
@@ -164,7 +155,7 @@ export function RecentActivity({ activities, showDate = false }: { activities: a
                             e.stopPropagation();
                             setEditingActivity(a);
                           }}
-                          className="p-1 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-md transition-colors opacity-80 sm:opacity-0 group-hover:opacity-100 cursor-pointer"
+                          className="p-1 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-md transition-colors opacity-80 sm:opacity-0 group-hover:opacity-100"
                           title="Editar actividad"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -173,21 +164,9 @@ export function RecentActivity({ activities, showDate = false }: { activities: a
                     </div>
                   </div>
 
-                  {/* Notes bubble */}
                   {a.notes && (
-                    <div 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setEditingActivity(a);
-                      }}
-                      className="ml-[48px] text-[12px] sm:text-[13px] text-slate-700 bg-slate-50 hover:bg-slate-100/80 border border-slate-100 rounded-xl p-3 break-words whitespace-pre-wrap leading-relaxed cursor-pointer transition-colors group/note relative"
-                      title="Clic para editar notas"
-                    >
-                      {a.notes}
-                      <div className="absolute right-2 top-2 opacity-0 group-hover/note:opacity-100 text-slate-400">
-                        <Edit2 className="w-3 h-3" />
-                      </div>
+                    <div className="ml-12 text-[12px] text-slate-600 bg-slate-50 border border-slate-100 rounded-lg p-2.5 break-words line-clamp-2">
+                      "{a.notes}"
                     </div>
                   )}
                 </Link>
@@ -199,12 +178,7 @@ export function RecentActivity({ activities, showDate = false }: { activities: a
 
       {editingActivity && (
         <ActivityForm
-          prospectId={
-            editingActivity.prospect_id ||
-            (Array.isArray(editingActivity.prospects)
-              ? editingActivity.prospects[0]?.id
-              : editingActivity.prospects?.id)
-          }
+          prospectId={editingActivity.prospect_id}
           onClose={() => setEditingActivity(null)}
           activityToEdit={editingActivity}
         />

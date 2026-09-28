@@ -2,17 +2,47 @@
 
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { fromZonedTime } from 'date-fns-tz';
+import {
+  isEffectiveContact,
+  normalizeChannel,
+  channelToLegacyType,
+  NEXT_ACTION_TYPE_LABELS,
+  NextActionType,
+} from '@/lib/activities/config';
+import { calculateNewStatus } from '@/lib/prospects/status-engine';
+
+const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
+
+export async function getTeamMembers() {
+  const supabase = await createAdminClient();
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, role')
+    .order('full_name', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching profiles:', error);
+    return [];
+  }
+  return data || [];
+}
 
 export async function createActivity(formData: FormData) {
   const supabase = await createAdminClient();
   const authClient = await createClient();
-  
+
   const prospect_id = formData.get('prospect_id') as string;
-  const type = formData.get('type') as string;
-  const outcome = formData.get('outcome') as string;
-  const summary = formData.get('summary') as string;
-  const notes = formData.get('notes') as string;
+  const rawChannel = formData.get('channel') as string || formData.get('type') as string || 'visit';
+  const channel = normalizeChannel(rawChannel);
+  const note_type = formData.get('note_type') as string;
+  const interaction_state = channel === 'internal_note' ? (note_type || 'observation') : (formData.get('interaction_state') as string || null);
+  const result = channel === 'internal_note' ? null : (formData.get('result') as string || formData.get('outcome') as string || null);
+  const notes = (formData.get('notes') as string || '').trim();
   const activity_at_str = formData.get('activity_at') as string;
+
+  const trip_id = formData.get('trip_id') as string || null;
+  const trip_stop_id = formData.get('trip_stop_id') as string || null;
 
   const { data: { user } } = await authClient.auth.getUser();
   const created_by = user?.id;
@@ -21,45 +51,129 @@ export async function createActivity(formData: FormData) {
     return { error: 'No user authenticated' };
   }
 
+  // Validación de notas obligatorias si se seleccionó "other"
+  if (result === 'other' || interaction_state === 'other' || note_type === 'other') {
+    if (!notes) {
+      return { error: 'Las notas son obligatorias cuando se selecciona la opción "Otro".' };
+    }
+  }
+
+  const effectiveContactBool = isEffectiveContact(channel, interaction_state, result);
+  const legacyType = channelToLegacyType(channel);
+  const legacySummary = interaction_state || '';
+  const legacyOutcome = result || (channel === 'internal_note' ? 'other' : null);
+
   const activityData: any = {
     prospect_id,
-    type,
-    outcome: outcome || null,
-    summary: summary || null,
+    channel,
+    interaction_state,
+    result,
+    effective_contact: effectiveContactBool,
+    type: legacyType,
+    summary: legacySummary,
+    outcome: legacyOutcome,
     notes: notes || null,
-    created_by
+    created_by,
   };
+
+  if (trip_id) activityData.trip_id = trip_id;
+  if (trip_stop_id) activityData.trip_stop_id = trip_stop_id;
 
   if (activity_at_str) {
     activityData.activity_at = new Date(activity_at_str).toISOString();
   }
 
-  const { error } = await supabase.from('activities').insert(activityData);
+  // Inserción con tolerancia a esquema (por si la migración de nuevas columnas aún no se ejecutó en la DB remota)
+  let insertedActivity: any = null;
+  const insertAttempt = await supabase.from('activities').insert(activityData).select('id').single();
 
-  if (error) {
-    console.error('Error creating activity:', error);
-    return { error: error.message };
+  if (insertAttempt.error) {
+    const isColumnError = insertAttempt.error.message?.includes('column') &&
+      (insertAttempt.error.message.includes('channel') ||
+       insertAttempt.error.message.includes('interaction_state') ||
+       insertAttempt.error.message.includes('result') ||
+       insertAttempt.error.message.includes('effective_contact'));
+
+    if (isColumnError) {
+      const fallbackData = {
+        prospect_id,
+        type: legacyType,
+        outcome: legacyOutcome,
+        summary: legacySummary,
+        notes: notes || null,
+        created_by,
+        trip_id: activityData.trip_id,
+        trip_stop_id: activityData.trip_stop_id,
+        activity_at: activityData.activity_at,
+      };
+      const fallbackAttempt = await supabase.from('activities').insert(fallbackData).select('id').single();
+      if (fallbackAttempt.error) {
+        console.error('Error creating activity (fallback):', fallbackAttempt.error);
+        return { error: fallbackAttempt.error.message };
+      }
+      insertedActivity = fallbackAttempt.data;
+    } else {
+      console.error('Error creating activity:', insertAttempt.error);
+      return { error: insertAttempt.error.message };
+    }
+  } else {
+    insertedActivity = insertAttempt.data;
   }
 
+  // Crear próxima acción si el toggle está activo (separación explícita de resultado y próxima acción)
+  const createNextAction = formData.get('create_next_action') === 'true' || formData.get('create_next_action') === 'on';
+  if (createNextAction && prospect_id) {
+    const nextActionType = (formData.get('next_action_type') as NextActionType) || 'follow_up';
+    const nextActionDescription = (formData.get('next_action_description') as string || '').trim();
+    const nextActionDate = formData.get('next_action_date') as string;
+    const nextActionTime = formData.get('next_action_time') as string;
+    const nextActionAssignedTo = (formData.get('next_action_assigned_to') as string) || created_by;
+
+    let dueIso: string | null = null;
+    if (nextActionDate) {
+      const timeStr = nextActionTime ? `${nextActionTime}:00` : '12:00:00';
+      dueIso = fromZonedTime(`${nextActionDate}T${timeStr}`, TZ).toISOString();
+    }
+
+    const typeLabel = NEXT_ACTION_TYPE_LABELS[nextActionType] || 'Seguimiento';
+    const title = nextActionDescription ? `${typeLabel}: ${nextActionDescription}` : typeLabel;
+
+    await supabase.from('tasks').insert({
+      prospect_id,
+      source_activity_id: insertedActivity?.id || null,
+      trip_id: trip_id || null,
+      title,
+      description: nextActionDescription || null,
+      type: nextActionType,
+      status: 'pending',
+      priority: 'normal',
+      assigned_to: nextActionAssignedTo,
+      due_at: dueIso,
+      created_by,
+    });
+  }
+
+  // Actualización de estado comercial según reglas V3 (nunca degradar)
   const { data: prospect } = await supabase.from('prospects').select('contact_status').eq('id', prospect_id).single();
 
-  const newStatus = prospect ? (await import('@/lib/prospects/status-engine')).calculateNewStatus(
-    prospect.contact_status,
-    type,
-    outcome || null
-  ) : null;
+  const newStatus = prospect
+    ? calculateNewStatus(prospect.contact_status, channel, result)
+    : null;
 
   if (newStatus) {
-    await supabase.from('prospects').update({ 
+    await supabase.from('prospects').update({
       contact_status: newStatus,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     }).eq('id', prospect_id);
   } else {
-    // Just touch the prospect updated_at
     await supabase.from('prospects').update({ updated_at: new Date().toISOString() }).eq('id', prospect_id);
   }
 
   revalidatePath(`/prospects/${prospect_id}`);
+  revalidatePath('/prospects');
+  revalidatePath('/dashboard');
+  revalidatePath('/direction');
+  revalidatePath('/tasks');
   return { success: true };
 }
 
@@ -68,20 +182,37 @@ export async function updateActivity(formData: FormData) {
 
   const id = formData.get('id') as string;
   const prospect_id = formData.get('prospect_id') as string;
-  const type = formData.get('type') as string;
-  const outcome = formData.get('outcome') as string;
-  const summary = formData.get('summary') as string;
-  const notes = formData.get('notes') as string;
+  const rawChannel = formData.get('channel') as string || formData.get('type') as string || 'visit';
+  const channel = normalizeChannel(rawChannel);
+  const note_type = formData.get('note_type') as string;
+  const interaction_state = channel === 'internal_note' ? (note_type || 'observation') : (formData.get('interaction_state') as string || null);
+  const result = channel === 'internal_note' ? null : (formData.get('result') as string || formData.get('outcome') as string || null);
+  const notes = (formData.get('notes') as string || '').trim();
   const activity_at_str = formData.get('activity_at') as string;
 
   if (!id || !prospect_id) {
     return { error: 'Faltan datos obligatorios para editar la actividad.' };
   }
 
+  if (result === 'other' || interaction_state === 'other' || note_type === 'other') {
+    if (!notes) {
+      return { error: 'Las notas son obligatorias cuando se selecciona la opción "Otro".' };
+    }
+  }
+
+  const effectiveContactBool = isEffectiveContact(channel, interaction_state, result);
+  const legacyType = channelToLegacyType(channel);
+  const legacySummary = interaction_state || '';
+  const legacyOutcome = result || (channel === 'internal_note' ? 'other' : null);
+
   const updateData: any = {
-    type,
-    outcome: outcome || null,
-    summary: summary || null,
+    channel,
+    interaction_state,
+    result,
+    effective_contact: effectiveContactBool,
+    type: legacyType,
+    summary: legacySummary,
+    outcome: legacyOutcome,
     notes: notes || null,
   };
 
@@ -89,27 +220,45 @@ export async function updateActivity(formData: FormData) {
     updateData.activity_at = new Date(activity_at_str).toISOString();
   }
 
-  const { error } = await supabase.from('activities').update(updateData).eq('id', id);
+  let updateAttempt = await supabase.from('activities').update(updateData).eq('id', id);
 
-  if (error) {
-    console.error('Error updating activity:', error);
-    return { error: error.message };
+  if (updateAttempt.error) {
+    const isColumnError = updateAttempt.error.message?.includes('column') &&
+      (updateAttempt.error.message.includes('channel') ||
+       updateAttempt.error.message.includes('interaction_state') ||
+       updateAttempt.error.message.includes('result') ||
+       updateAttempt.error.message.includes('effective_contact'));
+
+    if (isColumnError) {
+      const fallbackData = {
+        type: legacyType,
+        outcome: legacyOutcome,
+        summary: legacySummary,
+        notes: notes || null,
+      };
+      if (activity_at_str) {
+        (fallbackData as any).activity_at = updateData.activity_at;
+      }
+      updateAttempt = await supabase.from('activities').update(fallbackData).eq('id', id);
+    }
+  }
+
+  if (updateAttempt.error) {
+    console.error('Error updating activity:', updateAttempt.error);
+    return { error: updateAttempt.error.message };
   }
 
   const { data: prospect } = await supabase.from('prospects').select('contact_status').eq('id', prospect_id).single();
-  const newStatus = prospect ? (await import('@/lib/prospects/status-engine')).calculateNewStatus(
-    prospect.contact_status,
-    type,
-    outcome || null
-  ) : null;
+  const newStatus = prospect
+    ? calculateNewStatus(prospect.contact_status, channel, result)
+    : null;
 
   if (newStatus) {
-    await supabase.from('prospects').update({ 
+    await supabase.from('prospects').update({
       contact_status: newStatus,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     }).eq('id', prospect_id);
   } else {
-    // Just touch the prospect updated_at
     await supabase.from('prospects').update({ updated_at: new Date().toISOString() }).eq('id', prospect_id);
   }
 

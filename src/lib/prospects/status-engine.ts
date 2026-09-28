@@ -1,4 +1,4 @@
-import { ProspectStatus, ActivityResult } from '../constants';
+import { ProspectStatus } from '../constants';
 
 const STATUS_RANKING: Record<ProspectStatus, number> = {
   pending: 10,
@@ -7,12 +7,16 @@ const STATUS_RANKING: Record<ProspectStatus, number> = {
   opportunity: 40,
   quote: 50,
   customer: 60,
-  discarded: 999, // Special
+  discarded: 0, // No es alcanzable por degradación automática
 };
 
 /**
- * Calculates the new prospect status based on an activity type and its result.
- * Ensures that the prospect's status never degrades (except for special manual overrides).
+ * Calcula el nuevo estado comercial del prospecto a partir de una actividad y su resultado.
+ * Reglas V3:
+ * - Cualquier actividad válida: pending -> in_progress
+ * - interested (y señales directas de interés como agendar reunión/visita o pedir llamada) -> interested
+ * - requested_quote / proposal_required -> quote
+ * - NUNCA degradar estado automáticamente.
  */
 export function calculateNewStatus(
   currentStatus: string,
@@ -20,28 +24,28 @@ export function calculateNewStatus(
   outcome: string | null
 ): ProspectStatus | null {
   const current = (currentStatus as ProspectStatus) || 'pending';
-  let candidateStatus: ProspectStatus | null = 'in_progress'; // Cualquier actividad válida => in_progress (como base)
+  let candidateStatus: ProspectStatus | null = 'in_progress';
 
-  if (outcome === 'interested') {
+  if (
+    outcome === 'interested' ||
+    outcome === 'wants_call' ||
+    outcome === 'schedule_meeting' ||
+    outcome === 'schedule_visit'
+  ) {
     candidateStatus = 'interested';
-  } else if (outcome === 'requested_quote') {
+  } else if (outcome === 'requested_quote' || outcome === 'proposal_required') {
     candidateStatus = 'quote';
-  } else if (outcome === 'not_interested' || outcome === 'invalid_data') {
-    candidateStatus = 'discarded';
   }
 
-  // Si no logramos definir un nuevo candidato, no hay cambio.
   if (!candidateStatus) return null;
 
-  // No degradar estados
-  if (candidateStatus === 'discarded') return candidateStatus; // discard always overrides
-  
-  const currentRank = STATUS_RANKING[current] || 0;
-  const newRank = STATUS_RANKING[candidateStatus] || 0;
+  const currentRank = STATUS_RANKING[current] ?? 0;
+  const newRank = STATUS_RANKING[candidateStatus] ?? 0;
 
+  // Solo avanzar si el nuevo rango es estrictamente superior (nunca degradar)
   if (newRank > currentRank) {
     return candidateStatus;
   }
 
-  return null; // No status change needed (it would be a downgrade)
+  return null;
 }
