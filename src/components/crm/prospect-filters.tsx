@@ -201,7 +201,7 @@ export function ProspectFilters({
         <input
           type="text"
           className="block w-full pl-10 pr-8 py-2 border border-gray-200 rounded-lg leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-400 sm:text-sm transition-all"
-          placeholder="Buscar empresa..."
+          placeholder="Buscar por empresa, ID, contacto, teléfono, dirección..."
           value={searchValue}
           onChange={handleSearchChange}
         />

@@ -114,8 +114,15 @@ export function ProspectCard({ prospect }: { prospect: any }) {
         
         {/* ROW 3: Categories and Status */}
         <div className="flex items-center justify-between mt-4 mb-2 pl-[52px]">
-          <div className="text-[10px] font-semibold tracking-wide text-slate-500 uppercase truncate pr-3">
-            {prospect.commercial_category || 'SIN CATEGORÍA'}
+          <div className="flex items-center gap-1.5 truncate pr-3">
+            {prospect.external_id && (
+              <span className="font-mono text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium shrink-0">
+                {prospect.external_id}
+              </span>
+            )}
+            <span className="text-[10px] font-semibold tracking-wide text-slate-500 uppercase truncate">
+              {prospect.commercial_category || 'SIN CATEGORÍA'}
+            </span>
           </div>
           <div className="flex items-center gap-1.5 bg-gray-50 text-gray-600 rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide shrink-0">
             <span>{PROSPECT_STATUS[prospect.contact_status as keyof typeof PROSPECT_STATUS] || 'Pendiente'}</span>

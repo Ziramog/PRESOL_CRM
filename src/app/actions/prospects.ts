@@ -2,17 +2,23 @@
 
 import { createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { getProspectSearchFilters } from '@/lib/prospects/search';
 
 export async function searchProspects(query: string) {
   if (!query.trim()) return { data: [] };
   
   const supabase = await createAdminClient();
+  const searchFilters = await getProspectSearchFilters(supabase, query);
   
-  const { data, error } = await supabase
+  let q = supabase
     .from('prospects')
-    .select('id, company_name, city, class')
-    .ilike('company_name', `%${query}%`)
-    .limit(5);
+    .select('id, company_name, city, class, external_id');
+
+  for (const filter of searchFilters) {
+    q = q.or(filter);
+  }
+
+  const { data, error } = await q.limit(10);
 
   if (error) {
     console.error('Error searching prospects:', error);

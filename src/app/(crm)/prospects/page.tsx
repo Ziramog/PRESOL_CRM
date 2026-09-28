@@ -7,6 +7,7 @@ import { NewProspectButton } from '@/components/crm/new-prospect-button';
 import { ExportProspectsButton } from '@/components/crm/v2/ExportProspectsButton';
 import { BusinessCardScanner } from '@/components/crm/v2/BusinessCardScanner';
 import { ProspectPagination } from '@/components/crm/prospect-pagination';
+import { getProspectSearchFilters } from '@/lib/prospects/search';
 
 // Columns the user can sort by
 const SORTABLE_COLUMNS: Record<string, string> = {
@@ -92,7 +93,10 @@ export default async function ProspectsPage({
   }
 
   // Filters
-  if (search) baseQuery = baseQuery.ilike('company_name', `%${search}%`);
+  const searchFilters = search ? await getProspectSearchFilters(supabaseAdmin, search) : [];
+  for (const filter of searchFilters) {
+    baseQuery = baseQuery.or(filter);
+  }
   if (prospectClass) baseQuery = baseQuery.eq('class', prospectClass);
   if (selectedCities.length > 0) baseQuery = baseQuery.in('city', selectedCities);
   if (sector) baseQuery = baseQuery.eq('sector', sector);
@@ -135,7 +139,9 @@ export default async function ProspectsPage({
     });
 
     let lightweightQuery = supabaseAdmin.from('prospects').select('id, contact_status, company_name, source_payload, created_at, updated_at, city, class, commercial_category, external_id');
-    if (search) lightweightQuery = lightweightQuery.ilike('company_name', `%${search}%`);
+    for (const filter of searchFilters) {
+      lightweightQuery = lightweightQuery.or(filter);
+    }
     if (prospectClass) lightweightQuery = lightweightQuery.eq('class', prospectClass);
     if (selectedCities.length > 0) lightweightQuery = lightweightQuery.in('city', selectedCities);
     if (sector) lightweightQuery = lightweightQuery.eq('sector', sector);
