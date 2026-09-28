@@ -183,11 +183,18 @@ export async function getDashboardData(params: DashboardParams) {
       .limit(20)
   );
 
-  const [summaryRes, resultsRes, tasksRes, recentRes] = await Promise.all([
+  // Fetch Operational Threads for Inbox
+  const openThreadsPromise = supabase
+    .from('interaction_threads')
+    .select('id, status, last_outbound_at')
+    .not('status', 'in', '("resolved","closed")');
+
+  const [summaryRes, resultsRes, tasksRes, recentRes, openThreadsRes] = await Promise.all([
     summaryPromise,
     resultsPromise,
     tasksPromise,
-    recentPromise
+    recentPromise,
+    openThreadsPromise
   ]);
 
   if (summaryRes.error) console.error('Error fetching summary:', summaryRes.error);
@@ -195,11 +202,19 @@ export async function getDashboardData(params: DashboardParams) {
   if (tasksRes.error) console.error('Error fetching tasks:', tasksRes.error);
   if (recentRes.error) console.error('Error fetching recent activity:', recentRes.error);
 
+  const openThreads = openThreadsRes.data || [];
+  const operationalInbox = {
+    all_open: openThreads.length,
+    requires_action: openThreads.filter((t: any) => t.status === 'action_required').length,
+    waiting_customer: openThreads.filter((t: any) => t.status === 'waiting_customer').length,
+  };
+
   return {
     summary: summaryRes.data || { yesterday: {}, today: {}, week: {} },
     results: resultsRes.data || [],
     followups: tasksRes.data || [],
     recent_activity: recentRes.data || [],
+    operational_inbox: operationalInbox,
     periodFrom: periodFromIso,
     periodTo: periodToIso,
     baseDate: zonedNow.toISOString()

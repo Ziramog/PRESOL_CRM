@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { Camera, Upload, X, Check, Building2, User, Mail, Phone, Briefcase, Loader2 } from 'lucide-react';
-import { createProspect } from '@/app/actions/prospects';
+import { createProspect, updateProspect } from '@/app/actions/prospects';
 import { createContact } from '@/app/actions/contacts';
 import { useRouter } from 'next/navigation';
 
@@ -103,6 +103,14 @@ export function BusinessCardScanner() {
 
         const contactRes = await createContact(contactData);
         if (contactRes.error) throw new Error(contactRes.error);
+
+        // También sincronizar en la empresa el nombre de referencia y teléfono
+        const compForm = new FormData();
+        compForm.append('company_name', existingCompany?.company_name || extractedData.companyName || 'Sin Nombre');
+        if (extractedData.contactName) compForm.append('ask_for', extractedData.contactName);
+        if (extractedData.phone) compForm.append('primary_phone', extractedData.phone);
+        if (extractedData.email) compForm.append('email', extractedData.email);
+        await updateProspect(prospectId, compForm);
       }
 
       // Success

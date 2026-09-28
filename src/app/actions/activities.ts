@@ -11,6 +11,7 @@ import {
   NextActionType,
 } from '@/lib/activities/config';
 import { calculateNewStatus } from '@/lib/prospects/status-engine';
+import { recordInteraction } from '@/lib/interactions/service';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
@@ -120,6 +121,30 @@ export async function createActivity(formData: FormData) {
     insertedActivity = insertAttempt.data;
   }
 
+  // Orquestación con Interaction Threads y Eventos
+  let activeThreadId: string | null = null;
+  try {
+    const contact_id = (formData.get('contact_id') as string) || null;
+    const { thread } = await recordInteraction(supabase, {
+      prospect_id,
+      contact_id,
+      owner_id: created_by,
+      channel,
+      activity_id: insertedActivity?.id || null,
+      interaction_state,
+      result,
+      direction: channel === 'internal_note' ? 'internal' : 'outbound',
+      effective_contact: effectiveContactBool,
+      notes,
+      occurred_at: activityData.activity_at,
+    });
+    if (thread) {
+      activeThreadId = thread.id;
+    }
+  } catch (threadErr) {
+    console.error('Error recording interaction thread/event in createActivity:', threadErr);
+  }
+
   // Crear próxima acción si el toggle está activo (separación explícita de resultado y próxima acción)
   const createNextAction = formData.get('create_next_action') === 'true' || formData.get('create_next_action') === 'on';
   if (createNextAction && prospect_id) {
@@ -141,6 +166,7 @@ export async function createActivity(formData: FormData) {
     await supabase.from('tasks').insert({
       prospect_id,
       source_activity_id: insertedActivity?.id || null,
+      interaction_thread_id: activeThreadId || null,
       trip_id: trip_id || null,
       title,
       description: nextActionDescription || null,
@@ -171,6 +197,7 @@ export async function createActivity(formData: FormData) {
 
   revalidatePath(`/prospects/${prospect_id}`);
   revalidatePath('/prospects');
+  revalidatePath('/inbox');
   revalidatePath('/dashboard');
   revalidatePath('/direction');
   revalidatePath('/tasks');

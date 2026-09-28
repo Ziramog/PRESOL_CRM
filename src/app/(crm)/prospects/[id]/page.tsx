@@ -15,6 +15,7 @@ import { InternalNotesAccordion } from '@/components/crm/v2/InternalNotesAccordi
 import { LinkedOpportunitiesAccordion } from '@/components/crm/v2/LinkedOpportunitiesAccordion';
 import { RealtimeListener } from '@/components/crm/realtime-listener';
 import { DataQualityCard } from '@/components/crm/v2/DataQualityCard';
+import { OpenInteractionsCard } from '@/components/crm/v2/OpenInteractionsCard';
 
 export default async function ProspectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -30,6 +31,22 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
     // Fetch all contacts explicitly since RPC might only return primary_contact
     const { data: contactsData } = await supabase.from('contacts').select('*').eq('prospect_id', id).order('created_at', { ascending: true });
     overview.contacts = contactsData || [];
+
+    // Si no existen contactos estructurados pero la ficha tiene ask_for o teléfono (ej. viene de tarjeta/excel), formalizar automáticamente
+    if (overview.contacts.length === 0 && (overview.prospect?.ask_for || overview.prospect?.primary_phone)) {
+      const { data: autoContact } = await supabase.from('contacts').insert([{
+        prospect_id: id,
+        full_name: overview.prospect.ask_for || overview.prospect.company_name,
+        role_title: 'Contacto Principal',
+        phone: overview.prospect.primary_phone || null,
+        email: overview.prospect.email || null,
+        is_primary: true
+      }]).select().single();
+      if (autoContact) {
+        overview.contacts = [autoContact];
+        overview.primary_contact = autoContact;
+      }
+    }
   } else {
     // Fallback if RPC is not yet applied
     const [
@@ -51,8 +68,23 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
     if (prospectResponse.error || !prospectResponse.data) notFound();
 
     const p = prospectResponse.data;
-    const contacts = contactsResponse.data || [];
-    const primaryContact = contacts.find(c => c.is_primary) || contacts[0];
+    let contacts = contactsResponse.data || [];
+    let primaryContact = contacts.find(c => c.is_primary) || contacts[0];
+
+    if (contacts.length === 0 && (p.ask_for || p.primary_phone)) {
+      const { data: autoContact } = await supabase.from('contacts').insert([{
+        prospect_id: id,
+        full_name: p.ask_for || p.company_name,
+        role_title: 'Contacto Principal',
+        phone: p.primary_phone || null,
+        email: p.email || null,
+        is_primary: true
+      }]).select().single();
+      if (autoContact) {
+        contacts = [autoContact];
+        primaryContact = autoContact;
+      }
+    }
     const activities = activitiesResponse.data || [];
     const tasks = tasksResponse.data || [];
 
@@ -114,6 +146,14 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
 
   const displayContacts = overview.contacts || (overview.primary_contact ? [overview.primary_contact] : []);
 
+  // Fetch open interaction threads for this prospect
+  const { data: openThreads } = await supabase
+    .from('interaction_threads')
+    .select('*')
+    .eq('prospect_id', id)
+    .not('status', 'in', '("resolved","closed")')
+    .order('last_event_at', { ascending: false });
+
   return (
     <div className="w-full px-4 md:px-8 pt-4 pb-24 md:pb-8">
       <RealtimeListener prospectId={id} />
@@ -129,6 +169,17 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
           nextTask={overview.next_task}
         />
       </div>
+
+      {openThreads && openThreads.length > 0 && (
+        <div className="mt-4">
+          <OpenInteractionsCard
+            prospectId={id}
+            prospectName={prospect.company_name}
+            threads={openThreads}
+            phone={prospect.primary_phone}
+          />
+        </div>
+      )}
 
       <div className="mt-4">
         <SmartCheckIn 

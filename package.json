@@ -7,7 +7,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "test": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" tests/activity-channel-config.test.ts",
+    "test": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" tests/activity-channel-config.test.ts && ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" tests/interaction-threads.test.ts",
     "import:prospects": "ts-node scripts/import-prospects.ts"
   },
   "dependencies": {

@@ -86,8 +86,8 @@ export async function createProspect(formData: FormData) {
     return { error: 'Error al crear el prospecto' };
   }
 
-  // If ask_for or primary_phone was provided, create structured primary contact
-  if (data?.id && (payload.primary_phone || payload.ask_for)) {
+  // If ask_for, primary_phone, or email was provided, create structured primary contact
+  if (data?.id && (payload.primary_phone || payload.ask_for || payload.email)) {
     try {
       await supabase.from('contacts').insert([{
         prospect_id: data.id,
@@ -157,6 +157,46 @@ export async function updateProspect(id: string, formData: FormData) {
   if (error) {
     console.error('Error updating prospect:', error);
     return { error: 'Error al actualizar el prospecto' };
+  }
+
+  // Sincronizar o crear contacto estructurado automáticamente si viene teléfono, persona o email
+  if (data?.id && (payload.primary_phone || payload.ask_for || payload.email)) {
+    try {
+      const { data: existingContacts } = await supabase
+        .from('contacts')
+        .select('id, full_name, phone, email, is_primary')
+        .eq('prospect_id', id);
+
+      if (!existingContacts || existingContacts.length === 0) {
+        await supabase.from('contacts').insert([{
+          prospect_id: id,
+          full_name: payload.ask_for || payload.company_name,
+          role_title: 'Contacto Principal',
+          phone: payload.primary_phone || null,
+          email: payload.email || null,
+          is_primary: true
+        }]);
+      } else {
+        const primary = existingContacts.find(c => c.is_primary) || existingContacts[0];
+        if (primary) {
+          const updates: any = {};
+          if (payload.ask_for && (primary.full_name === payload.company_name || !primary.full_name)) {
+            updates.full_name = payload.ask_for;
+          }
+          if (payload.primary_phone && !primary.phone) {
+            updates.phone = payload.primary_phone;
+          }
+          if (payload.email && !primary.email) {
+            updates.email = payload.email;
+          }
+          if (Object.keys(updates).length > 0) {
+            await supabase.from('contacts').update(updates).eq('id', primary.id);
+          }
+        }
+      }
+    } catch (contactErr) {
+      console.error('Error auto-syncing contact in updateProspect:', contactErr);
+    }
   }
 
   revalidatePath(`/prospects/${id}`);

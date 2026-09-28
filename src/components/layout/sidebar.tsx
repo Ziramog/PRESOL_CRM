@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Map, Users, CheckSquare, Settings, Home, Target, BarChart3, FileText, Calculator, Compass } from 'lucide-react';
+import { Map, Users, CheckSquare, Settings, Home, Target, BarChart3, FileText, Calculator, Compass, Inbox } from 'lucide-react';
 import Image from 'next/image';
 
 import { NotificationsBell } from './notifications-bell';
 
 const items = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
+  { name: 'Bandeja', href: '/inbox', icon: Inbox },
   { name: 'Prospectos', href: '/prospects', icon: Users },
   { name: 'Radar', href: '/radar', icon: Compass },
   { name: 'Cotizaciones', href: '/quotes', icon: FileText },

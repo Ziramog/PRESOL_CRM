@@ -35,10 +35,15 @@ export async function createContact(formData: FormData) {
       .update({ is_primary: false })
       .eq('prospect_id', prospect_id);
 
-    if (phone) {
+    const prospectUpdates: Record<string, any> = {};
+    if (full_name) prospectUpdates.ask_for = full_name;
+    if (phone) prospectUpdates.primary_phone = phone;
+    if (email) prospectUpdates.email = email;
+
+    if (Object.keys(prospectUpdates).length > 0) {
       await supabase
         .from('prospects')
-        .update({ primary_phone: phone })
+        .update(prospectUpdates)
         .eq('id', prospect_id);
     }
   }
@@ -85,10 +90,15 @@ export async function updateContact(id: string, formData: FormData) {
       .eq('prospect_id', prospect_id)
       .neq('id', id);
 
-    if (phone) {
+    const prospectUpdates: Record<string, any> = {};
+    if (full_name) prospectUpdates.ask_for = full_name;
+    if (phone) prospectUpdates.primary_phone = phone;
+    if (email) prospectUpdates.email = email;
+
+    if (Object.keys(prospectUpdates).length > 0) {
       await supabase
         .from('prospects')
-        .update({ primary_phone: phone })
+        .update(prospectUpdates)
         .eq('id', prospect_id);
     }
   }

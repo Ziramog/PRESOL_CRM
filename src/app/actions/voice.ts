@@ -1,68 +1,121 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+// PRESOL CRM — Save Voice Interaction Action
+// Reference: activity_upgrade_implementation.md (Secciones 30, 31, 69)
+
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { recordInteraction } from '@/lib/interactions/service';
+import { normalizeChannel, channelToLegacyType, isEffectiveContact } from '@/lib/activities/config';
+import { calculateNewStatus } from '@/lib/prospects/status-engine';
 
 export async function saveVoiceInteraction(prospectId: string, data: any) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const supabase = createAdminClient();
+    const authClient = await createClient();
+    const { data: { user } } = await authClient.auth.getUser();
 
     if (!user) {
       return { success: false, error: 'Unauthorized' };
     }
 
-    // 1. Iniciar transacción "virtual" (Supabase REST no tiene transacciones completas, pero hacemos operaciones seguidas)
-    
-    // a. Crear comentario/nota
-    if (data.action_type === 'note' && data.summary) {
-      const { error: commentError } = await supabase.from('comments').insert({
-        prospect_id: prospectId,
-        user_id: user.id,
-        body: data.summary,
-        is_direction_note: false
-      });
-      if (commentError) throw commentError;
+    const channel = normalizeChannel(data.channel || data.activity_type || 'visit');
+    const interaction_state = data.interaction_state || null;
+    const result = data.result || null;
+    const summary = data.summary || data.notes || '';
+    const effectiveContactBool = Boolean(
+      data.effective_contact ?? isEffectiveContact(channel, interaction_state, result)
+    );
+
+    const legacyType = channelToLegacyType(channel);
+    const legacyOutcome = result || (channel === 'internal_note' ? 'other' : null);
+
+    // 1. Crear actividad histórica en public.activities
+    const activityData: any = {
+      prospect_id: prospectId,
+      channel,
+      interaction_state,
+      result,
+      effective_contact: effectiveContactBool,
+      type: legacyType,
+      summary: interaction_state || summary.substring(0, 100),
+      outcome: legacyOutcome,
+      notes: summary,
+      created_by: user.id,
+      activity_at: new Date().toISOString(),
+    };
+
+    const { data: insertedActivity, error: activityError } = await supabase
+      .from('activities')
+      .insert(activityData)
+      .select('id')
+      .single();
+
+    if (activityError) {
+      console.error('Error inserting voice activity:', activityError);
     }
 
-    // b. Crear actividad en timeline
-    if (data.action_type === 'activity' && data.activity_type && data.summary) {
-      const { error: activityError } = await supabase.from('activities').insert({
+    // 2. Orquestar con Interaction Threads y Eventos
+    let activeThreadId: string | null = null;
+    try {
+      const { thread } = await recordInteraction(supabase, {
         prospect_id: prospectId,
-        user_id: user.id,
-        type: data.activity_type,
-        summary: data.summary
+        owner_id: user.id,
+        channel,
+        activity_id: insertedActivity?.id || null,
+        interaction_state,
+        result,
+        direction: channel === 'internal_note' ? 'internal' : 'outbound',
+        effective_contact: effectiveContactBool,
+        notes: summary,
       });
-      if (activityError) throw activityError;
-      
-      // Update last_contact_date
-      await supabase.from('prospects')
-        .update({ updated_at: new Date().toISOString() }) // use updated_at since last_contact_date doesn't exist
-        .eq('id', prospectId);
+      if (thread) activeThreadId = thread.id;
+    } catch (threadErr) {
+      console.error('Error in recordInteraction from voice:', threadErr);
     }
 
-    // c. Crear tarea / seguimiento
-    if (data.has_next_step && data.next_step_description) {
-      // Si no hay fecha, ponerla para hoy
-      let dueDate = data.next_step_date;
-      if (!dueDate) {
-        dueDate = new Date().toISOString();
-      } else {
-        // Asegurar formato correcto
-        dueDate = new Date(dueDate).toISOString();
+    // 3. Crear tarea si existe próxima acción
+    const hasNext = data.has_next_step || Boolean(data.next_action);
+    const nextDesc = data.next_step_description || data.next_action;
+    if (hasNext && nextDesc) {
+      let dueIso: string | null = null;
+      const rawDue = data.next_step_date || data.next_action_date;
+      if (rawDue) {
+        dueIso = new Date(rawDue).toISOString();
       }
 
-      const { error: taskError } = await supabase.from('tasks').insert({
+      await supabase.from('tasks').insert({
         prospect_id: prospectId,
-        user_id: user.id,
-        title: data.next_step_description,
-        due_date: dueDate,
-        status: 'pending'
+        source_activity_id: insertedActivity?.id || null,
+        interaction_thread_id: activeThreadId || null,
+        title: nextDesc.length > 80 ? nextDesc.substring(0, 80) : nextDesc,
+        description: summary || null,
+        type: data.next_action || 'follow_up',
+        status: 'pending',
+        priority: 'normal',
+        assigned_to: user.id,
+        due_at: dueIso,
+        created_by: user.id,
       });
-      if (taskError) throw taskError;
+    }
+
+    // 4. Actualizar estado comercial del prospecto (respetando nunca degradar)
+    const { data: prospect } = await supabase.from('prospects').select('contact_status').eq('id', prospectId).single();
+    const newStatus = prospect ? calculateNewStatus(prospect.contact_status, channel, result) : null;
+
+    if (newStatus) {
+      await supabase.from('prospects').update({
+        contact_status: newStatus,
+        updated_at: new Date().toISOString(),
+      }).eq('id', prospectId);
+    } else {
+      await supabase.from('prospects').update({ updated_at: new Date().toISOString() }).eq('id', prospectId);
     }
 
     revalidatePath(`/prospects/${prospectId}`);
+    revalidatePath('/inbox');
+    revalidatePath('/prospects');
+    revalidatePath('/tasks');
     return { success: true };
 
   } catch (error: any) {
