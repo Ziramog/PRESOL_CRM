@@ -9,6 +9,7 @@ import {
   InteractionEvent,
   EventDirection,
   SmartQueueId,
+  ThreadStatus,
 } from '@/types/interactions';
 import { subHours, startOfDay, endOfDay } from 'date-fns';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
@@ -154,11 +155,27 @@ export async function getCommercialInboxData(
     for (const act of (recentActs || [])) {
       if (!act.prospect_id || prospectThreadMap.has(act.prospect_id)) continue;
 
-      let status: any = 'waiting_customer';
-      if (['requested_info', 'requested_quote', 'interested', 'wants_call', 'proposal_required'].includes(act.outcome)) {
+      // Determinar si esta actividad representa un hilo comercial vivo
+      const isActionRequired = [
+        'requested_info',
+        'requested_quote',
+        'interested',
+        'wants_call',
+        'proposal_required',
+        'schedule_meeting',
+        'schedule_visit',
+      ].includes(act.outcome);
+
+      let status: ThreadStatus;
+      if (isActionRequired) {
         status = 'action_required';
-      } else if (['discarded', 'not_interested', 'completed'].includes(act.outcome)) {
-        continue; // Hilos descartados o resueltos
+      } else if (act.type === 'whatsapp' || act.type === 'email') {
+        status = 'waiting_customer';
+      } else if (act.type === 'call' && (act.outcome === 'no_answer' || act.outcome === 'retry_later')) {
+        status = 'waiting_customer';
+      } else {
+        // Visitas presenciales, reuniones concluidas o notas sin pedido de acción no esperan respuesta
+        continue;
       }
 
       const lastEventAt = act.activity_at || act.created_at;
@@ -366,14 +383,18 @@ export async function getCommercialInboxData(
           company_name
         )
       `)
-      .or(`activity_at.gte.${todayStart},created_at.gte.${todayStart}`)
+      .gte('activity_at', todayStart)
+      .lte('activity_at', todayEnd)
       .order('activity_at', { ascending: false })
       .limit(50);
 
     todayEventsData = (todayActs || []).map((a: any) => {
-      const eventDirection: EventDirection = ['requested_info', 'interested', 'wants_call'].includes(a.outcome)
-        ? 'inbound'
-        : 'outbound';
+      let eventDirection: EventDirection = 'internal';
+      if (a.type === 'whatsapp' || a.type === 'email' || a.type === 'call') {
+        eventDirection = ['requested_info', 'interested', 'wants_call'].includes(a.outcome)
+          ? 'inbound'
+          : 'outbound';
+      }
 
       return {
         id: a.id,

@@ -31,22 +31,29 @@ export async function getProspectSearchFilters(
 
   const filters: string[] = [];
 
-  for (const token of tokens) {
-    // 1. Buscar en la tabla de contactos asociados al prospecto
-    let matchedProspectIds: string[] = [];
-    try {
-      const { data: matchedContacts } = await supabase
-        .from('contacts')
-        .select('prospect_id')
-        .or(`full_name.ilike.%${token}%,phone.ilike.%${token}%,email.ilike.%${token}%,role_title.ilike.%${token}%`)
-        .limit(50);
+  // Hacer las consultas de contactos en paralelo
+  const contactQueries = tokens.map(token => 
+    supabase
+      .from('contacts')
+      .select('prospect_id')
+      .or(`full_name.ilike.%${token}%,phone.ilike.%${token}%,email.ilike.%${token}%,role_title.ilike.%${token}%`)
+      .limit(50)
+      .then((res: any) => ({ token, data: res.data }))
+      .catch((err: any) => {
+        console.warn('Error querying contacts for search token:', token, err);
+        return { token, data: [] };
+      })
+  );
 
-      matchedProspectIds = (matchedContacts || [])
-        .map((c: any) => c.prospect_id)
-        .filter(Boolean);
-    } catch (err) {
-      console.warn('Error querying contacts for search token:', token, err);
-    }
+  const contactsResults = await Promise.all(contactQueries);
+
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    const matchedContacts = contactsResults[i].data;
+    
+    let matchedProspectIds = (matchedContacts || [])
+      .map((c: any) => c.prospect_id)
+      .filter(Boolean);
 
     // 2. Construir lista de campos del prospecto a contrastar
     const fields = [

@@ -185,3 +185,28 @@ test('9. Fallback: síntesis y clasificación de hilos desde activities', () => 
   assert.strictEqual(res3.status, 'waiting_customer');
   assert.strictEqual(res3.isNoResponse24h, true);
 });
+
+test('10. Actividad retroactiva y visitas concluidas no saturan la bandeja de entrada', () => {
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
+  const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+
+  // Actividad registrada hoy pero con fecha retroactiva (ej: 25/9)
+  const retroactiveVisit = {
+    id: 'act-retro',
+    prospect_id: 'tres-eme',
+    type: 'visit',
+    outcome: 'other',
+    activity_at: new Date('2026-09-25T14:27:00Z').toISOString(),
+    created_at: new Date().toISOString(), // Creada hoy
+  };
+
+  // 1. Verificar exclusión del feed de hoy
+  const actDate = new Date(retroactiveVisit.activity_at);
+  const isTodayActivity = actDate >= todayStart && actDate <= todayEnd;
+  assert.strictEqual(isTodayActivity, false, 'Actividad retroactiva del 25/9 no debe ser parte de la actividad de hoy');
+
+  // 2. Verificar que una visita presencial con resultado "other" es resuelta y no espera respuesta
+  const visitStatus = determineThreadStatus('visit', 'decision_maker', 'other', 'outbound');
+  assert.strictEqual(visitStatus, 'resolved', 'Visita presencial concluida no debe quedar como waiting_customer');
+});

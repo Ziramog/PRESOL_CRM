@@ -112,6 +112,7 @@ export function ProspectFilters({
       } else {
         params.delete('search');
       }
+      params.delete('page'); // Reset pagination on search
       persistFilters(params);
       startTransition(() => router.push(`/prospects?${params.toString()}`));
     },
@@ -138,6 +139,7 @@ export function ProspectFilters({
     } else {
       params.delete(key);
     }
+    params.delete('page'); // Reset pagination on filter change
     persistFilters(params);
     startTransition(() => router.push(`/prospects?${params.toString()}`));
   };
@@ -146,6 +148,7 @@ export function ProspectFilters({
     const params = new URLSearchParams(searchParams.toString());
     const cities = params.getAll('city');
     params.delete('city');
+    params.delete('page'); // Reset pagination on filter change
     if (cities.includes(city)) {
       cities.filter((c) => c !== city).forEach((c) => params.append('city', c));
     } else {
@@ -162,6 +165,7 @@ export function ProspectFilters({
     params.delete('sector');
     params.delete('status');
     params.delete('favorites');
+    params.delete('page'); // Reset pagination
     persistFilters(params);
     startTransition(() => router.push(`/prospects?${params.toString()}`));
     try {

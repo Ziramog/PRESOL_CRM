@@ -85,13 +85,13 @@ export function ActivityTodayFeed({ events }: ActivityTodayFeedProps) {
                     <span className="font-bold text-slate-900">Prospecto</span>
                   )}
 
-                  {ev.direction === 'inbound' && (
+                  {['whatsapp', 'email', 'call'].includes(ev.channel) && ev.direction === 'inbound' && (
                     <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded-full border border-emerald-200">
                       <ArrowDownLeft className="w-2.5 h-2.5" />
                       Entrante
                     </span>
                   )}
-                  {ev.direction === 'outbound' && (
+                  {['whatsapp', 'email', 'call'].includes(ev.channel) && ev.direction === 'outbound' && (
                     <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded-full border border-blue-200">
                       <ArrowUpRight className="w-2.5 h-2.5" />
                       Saliente
@@ -99,14 +99,22 @@ export function ActivityTodayFeed({ events }: ActivityTodayFeedProps) {
                   )}
                 </div>
 
-                {ev.result && (
-                  <p className="text-[11px] text-slate-600 font-medium truncate mt-0.5">
-                    {ev.result}
+                {ev.result && ev.result !== 'other' && (
+                  <p className="text-[11px] text-slate-600 font-semibold truncate mt-0.5">
+                    {ev.result === 'follow_up' ? 'Seguimiento' :
+                     ev.result === 'requested_info' ? 'Solicitó información' :
+                     ev.result === 'requested_quote' ? 'Solicitó cotización' :
+                     ev.result === 'interested' ? 'Interesado' :
+                     ev.result === 'wants_call' ? 'Pidió llamada' :
+                     ev.result === 'no_answer' ? 'No contestó' :
+                     ev.result === 'schedule_meeting' ? 'Reunión agendada' :
+                     ev.result === 'schedule_visit' ? 'Visita agendada' :
+                     ev.result}
                   </p>
                 )}
 
                 {ev.notes && (
-                  <p className="text-[11px] text-slate-500 italic line-clamp-1 mt-0.5">
+                  <p className="text-[11px] text-slate-600 italic line-clamp-1 mt-0.5">
                     "{ev.notes}"
                   </p>
                 )}

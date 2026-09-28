@@ -66,9 +66,14 @@ export function determineThreadStatus(
     return 'scheduled';
   }
 
-  // Sin contacto o reintento posterior
-  if (result === 'retry_later' || result === 'no_answer') {
+  // Sin contacto o reintento posterior en llamadas
+  if (result === 'retry_later' || (channel === 'call' && result === 'no_answer')) {
     return 'waiting_customer';
+  }
+
+  // Visitas y reuniones concluidas sin pedido de acción comercial
+  if (channel === 'visit' || channel === 'virtual_meeting') {
+    return 'resolved';
   }
 
   return 'open';
