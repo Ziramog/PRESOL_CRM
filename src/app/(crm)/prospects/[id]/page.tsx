@@ -151,7 +151,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
           
           {/* Timeline (Actividad reciente) -> Col span 2 */}
           <div className="lg:col-span-2 h-full">
-            <ActivityTimeline activities={overview.recent_activities} />
+            <ActivityTimeline activities={overview.recent_activities} prospectId={id} />
           </div>
 
         </div>

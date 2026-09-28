@@ -70,6 +70,7 @@ export async function updateActivity(formData: FormData) {
   const prospect_id = formData.get('prospect_id') as string;
   const type = formData.get('type') as string;
   const outcome = formData.get('outcome') as string;
+  const summary = formData.get('summary') as string;
   const notes = formData.get('notes') as string;
   const activity_at_str = formData.get('activity_at') as string;
 
@@ -80,6 +81,7 @@ export async function updateActivity(formData: FormData) {
   const updateData: any = {
     type,
     outcome: outcome || null,
+    summary: summary || null,
     notes: notes || null,
   };
 

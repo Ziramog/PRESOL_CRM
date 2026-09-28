@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Phone, Mail, MessageSquare, MapPin, FileText, Activity, Clock, Building, User, StickyNote, Plus } from 'lucide-react';
+import { Phone, Mail, MessageSquare, MapPin, FileText, Activity, Clock, Building, User, StickyNote, Plus, Edit2 } from 'lucide-react';
 import { ACTIVITY_RESULTS, CONTACT_LEVELS } from '@/lib/constants';
+import { ActivityForm } from '@/components/crm/activity-form';
 
 interface ActivityTimelineProps {
   activities: any[];
+  prospectId?: string;
 }
 
 const TYPE_STYLES: Record<string, { icon: any, color: string, bg: string }> = {
@@ -41,8 +43,11 @@ function getRichOutcomeLabel(a: any) {
   return base;
 }
 
-export function ActivityTimeline({ activities }: ActivityTimelineProps) {
+export function ActivityTimeline({ activities, prospectId }: ActivityTimelineProps) {
   const [filterType, setFilterType] = useState('Todas');
+  const [editingActivity, setEditingActivity] = useState<any | null>(null);
+  const [showNewModal, setShowNewModal] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   
   const filteredActivities = activities?.filter(a => {
     if (filterType === 'Todas') return true;
@@ -54,7 +59,7 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
     return false;
   }) || [];
 
-  const displayActivities = filteredActivities.slice(0, 5);
+  const displayActivities = showAll ? filteredActivities : filteredActivities.slice(0, 5);
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 h-full flex flex-col">
@@ -63,27 +68,46 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
           <Clock className="w-5 h-5 text-blue-600" strokeWidth={2.5} />
           <h3 className="text-[15px] font-bold text-slate-900">Actividad reciente</h3>
         </div>
-        <select 
-          value={filterType}
-          onChange={(e) => setFilterType(e.target.value)}
-          className="text-[11px] bg-gray-50 border border-gray-100 rounded text-gray-600 py-1 px-1.5 outline-none cursor-pointer hover:bg-gray-100 transition-colors"
-        >
-          <option value="Todas">Todas</option>
-          <option value="Visitas">Visitas</option>
-          <option value="Llamadas">Llamadas</option>
-          <option value="WhatsApp">WhatsApp</option>
-          <option value="Email">Email</option>
-          <option value="Cotizaciones">Cotizaciones</option>
-        </select>
+        <div className="flex items-center gap-2">
+          {prospectId && (
+            <button 
+              type="button"
+              onClick={() => setShowNewModal(true)}
+              className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md text-[11px] font-bold transition-colors cursor-pointer"
+              title="Registrar nueva actividad"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Nueva</span>
+            </button>
+          )}
+          <select 
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="text-[11px] bg-gray-50 border border-gray-100 rounded text-gray-600 py-1 px-1.5 outline-none cursor-pointer hover:bg-gray-100 transition-colors"
+          >
+            <option value="Todas">Todas</option>
+            <option value="Visitas">Visitas</option>
+            <option value="Llamadas">Llamadas</option>
+            <option value="WhatsApp">WhatsApp</option>
+            <option value="Email">Email</option>
+            <option value="Cotizaciones">Cotizaciones</option>
+          </select>
+        </div>
       </div>
       
       <div className="relative flex-1 custom-scrollbar">
           {displayActivities.length === 0 ? (
             <div className="text-center py-6 flex flex-col items-center">
               <p className="text-[12px] text-gray-500 mb-2.5">Todavía no hay interacciones registradas.</p>
-              <button className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[12px] font-bold transition-colors">
-                <Plus className="w-3.5 h-3.5" /> Registrar primera gestión
-              </button>
+              {prospectId && (
+                <button 
+                  type="button"
+                  onClick={() => setShowNewModal(true)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[12px] font-bold transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Registrar primera gestión
+                </button>
+              )}
             </div>
           ) : (
           <>
@@ -120,11 +144,21 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                             <span className="text-[12px] sm:text-[13px] font-bold text-slate-900 truncate">
                               {getActivityTitle(activity.type)}
                             </span>
-                            {outcomeLabel && (
-                              <span className={`text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 ${badgeClass}`}>
-                                {outcomeLabel}
-                              </span>
-                            )}
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {outcomeLabel && (
+                                <span className={`text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${badgeClass}`}>
+                                  {outcomeLabel}
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => setEditingActivity(activity)}
+                                className="p-1 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-md transition-colors opacity-80 sm:opacity-0 group-hover:opacity-100 cursor-pointer"
+                                title="Editar actividad"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </div>
                           <span className="text-[11px] sm:text-[12px] text-blue-600 font-medium truncate">
                             {activity.user_full_name || activity.profiles?.full_name || 'Usuario'}
@@ -133,8 +167,15 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                       </div>
                       
                       {(activity.notes || activity.summary) && (
-                        <div className="ml-11 sm:ml-12 text-[11px] sm:text-[12px] text-slate-600 bg-slate-50 border border-slate-100 rounded-lg p-2.5 sm:p-3 break-words whitespace-pre-wrap">
+                        <div 
+                          onClick={() => setEditingActivity(activity)}
+                          className="ml-11 sm:ml-12 text-[11px] sm:text-[12px] text-slate-600 bg-slate-50 hover:bg-slate-100/80 border border-slate-100 rounded-lg p-2.5 sm:p-3 break-words whitespace-pre-wrap cursor-pointer transition-colors group/note relative"
+                          title="Haga clic para editar"
+                        >
                           {activity.notes || (CONTACT_LEVELS[activity.summary as keyof typeof CONTACT_LEVELS] || activity.summary)}
+                          <div className="absolute right-2 top-2 opacity-0 group-hover/note:opacity-100 text-slate-400">
+                            <Edit2 className="w-3 h-3" />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -148,8 +189,29 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
       
       {filteredActivities && filteredActivities.length > 5 && (
         <div className="pt-3 mt-4 border-t border-gray-100 text-center">
-          <button className="text-[11px] font-medium text-blue-600 hover:underline">Ver todas →</button>
+          <button 
+            type="button"
+            onClick={() => setShowAll(!showAll)}
+            className="text-[11px] font-medium text-blue-600 hover:underline cursor-pointer"
+          >
+            {showAll ? 'Ver menos ↑' : `Ver todas (${filteredActivities.length}) →`}
+          </button>
         </div>
+      )}
+
+      {editingActivity && (
+        <ActivityForm
+          prospectId={prospectId || editingActivity.prospect_id}
+          onClose={() => setEditingActivity(null)}
+          activityToEdit={editingActivity}
+        />
+      )}
+
+      {showNewModal && prospectId && (
+        <ActivityForm
+          prospectId={prospectId}
+          onClose={() => setShowNewModal(false)}
+        />
       )}
     </div>
   );

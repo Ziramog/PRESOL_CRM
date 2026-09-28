@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createActivity, updateActivity } from '@/app/actions/activities';
+import { useRouter } from 'next/navigation';
+import { createActivity, updateActivity, deleteActivity } from '@/app/actions/activities';
 import { updateStopStatus } from '@/app/actions/trips';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Trash2 } from 'lucide-react';
 import { ACTIVITY_RESULTS, OUTCOMES_BY_CONTACT_LEVEL, CONTACT_LEVELS, ContactLevel, ActivityResult } from '@/lib/constants';
 
 const formatDateTimeLocal = (dateStr?: string) => {
@@ -19,11 +20,13 @@ export function ActivityForm({
   tripContext,
   activityToEdit
 }: { 
-  prospectId: string, 
+  prospectId?: string, 
   onClose: () => void,
   tripContext?: { tripId: string, tripStopId: string },
   activityToEdit?: any
 }) {
+  const router = useRouter();
+  const effectiveProspectId = prospectId || activityToEdit?.prospect_id || (Array.isArray(activityToEdit?.prospects) ? activityToEdit?.prospects[0]?.id : activityToEdit?.prospects?.id);
   const [isPending, setIsPending] = useState(false);
   const [activityType, setActivityType] = useState(activityToEdit?.type || 'visit');
   const [contactLevel, setContactLevel] = useState<ContactLevel | ''>((activityToEdit?.summary as ContactLevel) || '');
@@ -80,6 +83,21 @@ export function ActivityForm({
       if (tripContext && !activityToEdit) {
         await updateStopStatus(tripContext.tripStopId, tripContext.tripId, 'visited');
       }
+      router.refresh();
+      onClose();
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!activityToEdit?.id || !confirm('¿Estás seguro de que deseas eliminar esta actividad?')) return;
+    setIsPending(true);
+    setError(null);
+    const result = await deleteActivity(activityToEdit.id, effectiveProspectId || '');
+    if (result.error) {
+      setError(result.error);
+      setIsPending(false);
+    } else {
+      router.refresh();
       onClose();
     }
   };
@@ -98,13 +116,26 @@ export function ActivityForm({
               {activityToEdit ? 'Modificar datos de la interacción' : 'Nueva interacción comercial'}
             </p>
           </div>
-          <button type="button" onClick={onClose} className="p-1.5 rounded-sm text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-            <X className="w-5 h-5" strokeWidth={1.5} />
-          </button>
+          <div className="flex items-center gap-1.5">
+            {activityToEdit && (
+              <button 
+                type="button" 
+                onClick={handleDelete}
+                disabled={isPending}
+                className="p-1.5 rounded-sm text-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                title="Eliminar actividad"
+              >
+                <Trash2 className="w-5 h-5" strokeWidth={1.5} />
+              </button>
+            )}
+            <button type="button" onClick={onClose} className="p-1.5 rounded-sm text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer">
+              <X className="w-5 h-5" strokeWidth={1.5} />
+            </button>
+          </div>
         </div>
         
         <form id="activity-form" onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto min-h-0 flex-1">
-          <input type="hidden" name="prospect_id" value={prospectId} />
+          <input type="hidden" name="prospect_id" value={effectiveProspectId || ''} />
           
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Canal de comunicación</label>

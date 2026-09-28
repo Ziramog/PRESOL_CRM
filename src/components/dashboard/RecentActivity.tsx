@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ACTIVITY_RESULTS } from '@/lib/constants';
 import { formatInTimeZone } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
-import { Phone, Building, MessageCircle, Mail, FileText, StickyNote, User, Clock } from 'lucide-react';
+import { Phone, Building, MessageCircle, Mail, FileText, StickyNote, User, Clock, Edit2 } from 'lucide-react';
+import { ActivityForm } from '@/components/crm/activity-form';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
@@ -50,6 +52,7 @@ function getRichOutcomeLabel(a: any) {
 
 export function RecentActivity({ activities, showDate = false }: { activities: any[], showDate?: boolean }) {
   const searchParams = useSearchParams();
+  const [editingActivity, setEditingActivity] = useState<any | null>(null);
 
   if (!activities || activities.length === 0) {
     return (
@@ -148,18 +151,43 @@ export function RecentActivity({ activities, showDate = false }: { activities: a
                           {typeLabel}
                         </span>
                       </div>
-                      {outcomeLabel && (
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 w-fit sm:mt-0 mt-1 ${badgeClass}`}>
-                          {outcomeLabel}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {outcomeLabel && (
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 w-fit sm:mt-0 mt-1 ${badgeClass}`}>
+                            {outcomeLabel}
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setEditingActivity(a);
+                          }}
+                          className="p-1 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-md transition-colors opacity-80 sm:opacity-0 group-hover:opacity-100 cursor-pointer"
+                          title="Editar actividad"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
 
                   {/* Notes bubble */}
                   {a.notes && (
-                    <div className="ml-[48px] text-[12px] sm:text-[13px] text-slate-700 bg-slate-50 border border-slate-100 rounded-xl p-3 break-words whitespace-pre-wrap leading-relaxed">
+                    <div 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setEditingActivity(a);
+                      }}
+                      className="ml-[48px] text-[12px] sm:text-[13px] text-slate-700 bg-slate-50 hover:bg-slate-100/80 border border-slate-100 rounded-xl p-3 break-words whitespace-pre-wrap leading-relaxed cursor-pointer transition-colors group/note relative"
+                      title="Clic para editar notas"
+                    >
                       {a.notes}
+                      <div className="absolute right-2 top-2 opacity-0 group-hover/note:opacity-100 text-slate-400">
+                        <Edit2 className="w-3 h-3" />
+                      </div>
                     </div>
                   )}
                 </Link>
@@ -168,6 +196,19 @@ export function RecentActivity({ activities, showDate = false }: { activities: a
           })}
         </div>
       </div>
+
+      {editingActivity && (
+        <ActivityForm
+          prospectId={
+            editingActivity.prospect_id ||
+            (Array.isArray(editingActivity.prospects)
+              ? editingActivity.prospects[0]?.id
+              : editingActivity.prospects?.id)
+          }
+          onClose={() => setEditingActivity(null)}
+          activityToEdit={editingActivity}
+        />
+      )}
     </div>
   );
 }
