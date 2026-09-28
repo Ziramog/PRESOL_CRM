@@ -7,6 +7,14 @@ export const NO_RESPONSE_HOURS = 24;
 export const STALE_HOURS = 48;
 
 export const SMART_QUEUE_CONFIG: Record<SmartQueueId, SmartQueueDefinition> = {
+  today: {
+    id: 'today',
+    label: 'Actividad de hoy',
+    shortLabel: 'Hoy',
+    description: 'Todas las interacciones que ocurrieron durante el día',
+    iconName: 'Calendar',
+    priority: 5,
+  },
   all: {
     id: 'all',
     label: 'Todas las interacciones',

@@ -1,5 +1,5 @@
 // PRESOL CRM — Commercial Inbox Aggregation Queries
-// Reference: activity_upgrade_implementation.md (Secciones 11, 46, 51, 74)
+// Bandeja Comercial: feeds unificados, sin sidebar separada
 
 import { SupabaseClient } from '@supabase/supabase-js';
 import {
@@ -33,11 +33,14 @@ export async function getCommercialInboxData(
   const todayEnd = fromZonedTime(endOfDay(zonedNow), TZ).toISOString();
   const twentyFourHoursAgo = subHours(now, 24).toISOString();
 
-  // 1. OBTENER THREADS ACTIVOS (Intentar tabla nativa interaction_threads)
-  let allActiveThreads: InteractionThreadWithRelations[] = [];
+  // ─── 1. OBTENER THREADS ──────────────────────────────────────────
+  // Intentar tabla nativa interaction_threads primero
+  let allThreads: InteractionThreadWithRelations[] = [];
   let isNativeThreads = false;
 
   try {
+    // Para "Hoy": incluir threads resueltos recientes (last_event_at hoy)
+    // Para el resto: solo threads activos (no resolved/closed)
     let threadsQuery = supabase
       .from('interaction_threads')
       .select(`
@@ -66,7 +69,6 @@ export async function getCommercialInboxData(
           full_name
         )
       `)
-      .not('status', 'in', '("resolved","closed")')
       .order('last_event_at', { ascending: false, nullsFirst: false });
 
     if (filters.channel && filters.channel !== 'all') {
@@ -81,7 +83,7 @@ export async function getCommercialInboxData(
 
     if (!threadsErr && rawThreads && rawThreads.length > 0) {
       isNativeThreads = true;
-      allActiveThreads = rawThreads.map((t: any) => ({
+      allThreads = rawThreads.map((t: any) => ({
         ...t,
         prospect: t.prospect || null,
         contact: t.contact || null,
@@ -92,8 +94,7 @@ export async function getCommercialInboxData(
     isNativeThreads = false;
   }
 
-  // 1.B FALLBACK INTELIGENTE: Si interaction_threads no existe o no tiene registros aún,
-  // construir los hilos comerciales directamente desde la tabla activities
+  // ─── 1.B FALLBACK: construir threads desde activities ────────────
   if (!isNativeThreads) {
     const thirtyDaysAgo = subHours(now, 30 * 24).toISOString();
     let actsQuery = supabase
@@ -155,7 +156,7 @@ export async function getCommercialInboxData(
     for (const act of (recentActs || [])) {
       if (!act.prospect_id || prospectThreadMap.has(act.prospect_id)) continue;
 
-      // Determinar si esta actividad representa un hilo comercial vivo
+      // Determinar status del hilo sintetizado
       const isActionRequired = [
         'requested_info',
         'requested_quote',
@@ -173,8 +174,9 @@ export async function getCommercialInboxData(
         status = 'waiting_customer';
       } else if (act.type === 'call' && (act.outcome === 'no_answer' || act.outcome === 'retry_later')) {
         status = 'waiting_customer';
+      } else if (act.type === 'visit' || act.type === 'virtual_meeting') {
+        status = 'resolved';
       } else {
-        // Visitas presenciales, reuniones concluidas o notas sin pedido de acción no esperan respuesta
         continue;
       }
 
@@ -201,7 +203,7 @@ export async function getCommercialInboxData(
         last_inbound_at: eventDirection === 'inbound' ? lastEventAt : null,
         last_outbound_at: eventDirection === 'outbound' ? lastEventAt : null,
         opened_at: act.created_at,
-        resolved_at: null,
+        resolved_at: status === 'resolved' ? lastEventAt : null,
         metadata: {},
         created_at: act.created_at,
         updated_at: act.activity_at || act.created_at,
@@ -242,15 +244,21 @@ export async function getCommercialInboxData(
       prospectThreadMap.set(act.prospect_id, threadItem);
     }
 
-    allActiveThreads = Array.from(prospectThreadMap.values());
+    allThreads = Array.from(prospectThreadMap.values());
   }
 
-  // 2. CALCULAR CONTADORES DE SMART QUEUES
+  // ─── 2. CALCULAR CONTADORES ──────────────────────────────────────
   let requiresActionCount = 0;
   let waitingCustomerCount = 0;
   let noResponse24hCount = 0;
+  let todayCount = 0;
 
-  for (const t of allActiveThreads) {
+  for (const t of allThreads) {
+    // Contador "Hoy"
+    if (t.last_event_at && t.last_event_at >= todayStart && t.last_event_at <= todayEnd) {
+      todayCount++;
+    }
+
     if (t.status === 'action_required') {
       requiresActionCount++;
     } else if (t.status === 'waiting_customer') {
@@ -261,7 +269,7 @@ export async function getCommercialInboxData(
     }
   }
 
-  // Contadores de tareas (usando la tabla tasks existente)
+  // Contadores de tareas
   const [tasksTodayRes, overdueTasksRes] = await Promise.all([
     supabase
       .from('tasks')
@@ -282,42 +290,54 @@ export async function getCommercialInboxData(
     no_response_24h: noResponse24hCount,
     tasks_today: tasksTodayRes.count || 0,
     overdue_tasks: overdueTasksRes.count || 0,
-    all_open: allActiveThreads.length,
+    all_open: allThreads.filter(t => t.status !== 'resolved' && t.status !== 'closed').length,
+    today: todayCount,
   };
 
-  // 3. FILTRAR POR SMART QUEUE SELECCIONADA
-  let filteredThreads = allActiveThreads;
+  // ─── 3. FILTRAR POR SMART QUEUE ──────────────────────────────────
+  let filteredThreads = allThreads;
 
   if (filters.queue && filters.queue !== 'all') {
     switch (filters.queue) {
+      case 'today':
+        filteredThreads = allThreads.filter(
+          (t) => t.last_event_at && t.last_event_at >= todayStart && t.last_event_at <= todayEnd
+        );
+        break;
       case 'requires_action':
-        filteredThreads = allActiveThreads.filter((t) => t.status === 'action_required');
+        filteredThreads = allThreads.filter((t) => t.status === 'action_required');
         break;
       case 'waiting_customer':
-        filteredThreads = allActiveThreads.filter((t) => t.status === 'waiting_customer');
+        filteredThreads = allThreads.filter((t) => t.status === 'waiting_customer');
         break;
       case 'no_response_24h':
-        filteredThreads = allActiveThreads.filter(
+        filteredThreads = allThreads.filter(
           (t) => t.status === 'waiting_customer' && t.last_outbound_at && new Date(t.last_outbound_at) < new Date(twentyFourHoursAgo)
         );
         break;
       default:
+        // 'all' muestra solo threads activos (no resolved/closed)
+        filteredThreads = allThreads.filter(t => t.status !== 'resolved' && t.status !== 'closed');
         break;
     }
+  } else {
+    // "all" = solo threads activos
+    filteredThreads = allThreads.filter(t => t.status !== 'resolved' && t.status !== 'closed');
   }
 
-  // Filtrar por término de búsqueda si se proporcionó
+  // Filtrar por término de búsqueda
   if (filters.search && filters.search.trim()) {
     const q = filters.search.toLowerCase().trim();
     filteredThreads = filteredThreads.filter(
       (t) =>
         t.prospect?.company_name?.toLowerCase().includes(q) ||
         t.contact?.full_name?.toLowerCase().includes(q) ||
-        t.subject?.toLowerCase().includes(q)
+        t.subject?.toLowerCase().includes(q) ||
+        t.latest_event?.notes?.toLowerCase().includes(q)
     );
   }
 
-  // 4. OBTENER ÚLTIMO EVENTO DE CADA THREAD (EN LOTE, SI ES NATIVO)
+  // ─── 4. OBTENER ÚLTIMO EVENTO DE CADA THREAD (NATIVO) ────────────
   if (isNativeThreads) {
     const threadIds = filteredThreads.map((t) => t.id);
     if (threadIds.length > 0) {
@@ -341,89 +361,8 @@ export async function getCommercialInboxData(
     }
   }
 
-  // 5. OBTENER FEED DEL DÍA ("Actividad de hoy")
-  let todayEventsData: (InteractionEvent & {
-    prospect?: { id: string; company_name: string };
-    contact?: { id: string; full_name: string | null };
-  })[] = [];
-
-  if (isNativeThreads) {
-    const { data: nativeTodayEvents } = await supabase
-      .from('interaction_events')
-      .select(`
-        *,
-        prospect:prospects (id, company_name),
-        contact:contacts (id, full_name)
-      `)
-      .gte('occurred_at', todayStart)
-      .order('occurred_at', { ascending: false })
-      .limit(50);
-
-    if (nativeTodayEvents && nativeTodayEvents.length > 0) {
-      todayEventsData = nativeTodayEvents;
-    }
-  }
-
-  // Fallback: Si no hay eventos nativos, obtener actividades reales del día desde activities
-  if (todayEventsData.length === 0) {
-    const { data: todayActs } = await supabase
-      .from('activities')
-      .select(`
-        id,
-        prospect_id,
-        type,
-        outcome,
-        summary,
-        notes,
-        activity_at,
-        created_at,
-        created_by,
-        prospect:prospects (
-          id,
-          company_name
-        )
-      `)
-      .gte('activity_at', todayStart)
-      .lte('activity_at', todayEnd)
-      .order('activity_at', { ascending: false })
-      .limit(50);
-
-    todayEventsData = (todayActs || []).map((a: any) => {
-      let eventDirection: EventDirection = 'internal';
-      if (a.type === 'whatsapp' || a.type === 'email' || a.type === 'call') {
-        eventDirection = ['requested_info', 'interested', 'wants_call'].includes(a.outcome)
-          ? 'inbound'
-          : 'outbound';
-      }
-
-      return {
-        id: a.id,
-        thread_id: a.id,
-        prospect_id: a.prospect_id,
-        contact_id: null,
-        activity_id: a.id,
-        user_id: a.created_by,
-        channel: a.type || 'other',
-        event_type: a.type === 'call' ? 'call_connected' : a.type === 'visit' ? 'visit_completed' : 'message_sent',
-        interaction_state: a.summary || null,
-        result: a.outcome || null,
-        direction: eventDirection,
-        effective_contact: true,
-        notes: a.notes,
-        provider: null,
-        provider_event_id: null,
-        occurred_at: a.activity_at || a.created_at,
-        created_at: a.created_at,
-        metadata: {},
-        prospect: a.prospect ? { id: a.prospect.id, company_name: a.prospect.company_name } : undefined,
-        contact: undefined,
-      };
-    });
-  }
-
   return {
     counts,
     threads: filteredThreads,
-    today_events: todayEventsData,
   };
 }

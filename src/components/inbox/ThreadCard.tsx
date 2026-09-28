@@ -1,13 +1,12 @@
 'use client';
 
-// PRESOL CRM — Actionable Thread Card
-// Reference: activity_upgrade_implementation.md (Secciones 17, 18, 19, 20, 21, 22)
+// PRESOL CRM — Actionable Thread Card (Bandeja Comercial v2)
+// Unidad operativa central: contexto + estado + acciones por canal
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   InteractionThreadWithRelations,
-  InteractionEventType,
 } from '@/types/interactions';
 import { THREAD_STATUS_LABELS } from '@/lib/interactions/config';
 import {
@@ -17,19 +16,53 @@ import {
   Mail,
   Video,
   FileText,
-  Clock,
-  CheckCircle2,
-  ExternalLink,
-  ChevronDown,
-  ChevronUp,
-  MoreVertical,
   Check,
   Loader2,
+  CheckCircle2,
+  ExternalLink,
+  ArrowUpRight,
+  ArrowDownLeft,
+  ListTodo,
+  RotateCcw,
+  Send,
+  PhoneCall,
+  FileBarChart,
 } from 'lucide-react';
 import { ThreadQuickActionsModal } from './ThreadQuickActionsModal';
 import { resolveThreadAction, reopenThreadAction } from '@/app/actions/interactions';
-import { formatDistanceToNowStrict } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
+
+const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
+
+// Etiquetas legibles para resultados
+const RESULT_LABELS: Record<string, string> = {
+  follow_up: 'Seguimiento',
+  requested_info: 'Solicitó información',
+  requested_quote: 'Solicitó cotización',
+  interested: 'Interesado',
+  wants_call: 'Pidió llamada',
+  no_answer: 'No contestó',
+  schedule_meeting: 'Reunión agendada',
+  schedule_visit: 'Visita agendada',
+  not_interested: 'Sin interés',
+  presentation_sent: 'Presentación enviada',
+  brochure_sent: 'Folleto enviado',
+  info_sent: 'Información enviada',
+  quote_sent: 'Cotización enviada',
+  awaiting_response: 'Esperando respuesta',
+  retry_later: 'Reintentar más tarde',
+  provided_contact_details: 'Dio datos de contacto',
+  completed: 'Completado',
+  discarded: 'Descartado',
+};
+
+// Dirección legible
+const DIRECTION_CONFIG = {
+  outbound: { label: 'Saliente', icon: ArrowUpRight, class: 'text-blue-700 bg-blue-50 border-blue-200' },
+  inbound: { label: 'Entrante', icon: ArrowDownLeft, class: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+  internal: { label: 'Interno', icon: FileText, class: 'text-slate-600 bg-slate-50 border-slate-200' },
+};
 
 interface ThreadCardProps {
   thread: InteractionThreadWithRelations;
@@ -39,47 +72,53 @@ interface ThreadCardProps {
 export function ThreadCard({ thread, onRefresh }: ThreadCardProps) {
   const [showResponseModal, setShowResponseModal] = useState(false);
   const [isResolving, setIsResolving] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const statusConfig = THREAD_STATUS_LABELS[thread.status] || THREAD_STATUS_LABELS.open;
 
-  // Icono y color por canal
+  // Canal meta
   const getChannelMeta = (channel: string) => {
     switch (channel) {
       case 'whatsapp':
-        return { icon: MessageCircle, label: 'WhatsApp', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' };
+        return { icon: MessageCircle, label: 'WHATSAPP', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' };
       case 'call':
-        return { icon: Phone, label: 'Llamada', color: 'text-blue-600 bg-blue-50 border-blue-200' };
+        return { icon: Phone, label: 'LLAMADA', color: 'text-blue-600 bg-blue-50 border-blue-200' };
       case 'visit':
-        return { icon: MapPin, label: 'Visita', color: 'text-purple-600 bg-purple-50 border-purple-200' };
+        return { icon: MapPin, label: 'VISITA', color: 'text-purple-600 bg-purple-50 border-purple-200' };
       case 'email':
-        return { icon: Mail, label: 'Email', color: 'text-sky-600 bg-sky-50 border-sky-200' };
+        return { icon: Mail, label: 'EMAIL', color: 'text-sky-600 bg-sky-50 border-sky-200' };
       case 'virtual_meeting':
-        return { icon: Video, label: 'Reunión', color: 'text-indigo-600 bg-indigo-50 border-indigo-200' };
+        return { icon: Video, label: 'REUNIÓN', color: 'text-indigo-600 bg-indigo-50 border-indigo-200' };
       default:
-        return { icon: FileText, label: 'Actividad', color: 'text-slate-600 bg-slate-50 border-slate-200' };
+        return { icon: FileText, label: 'ACTIVIDAD', color: 'text-slate-600 bg-slate-50 border-slate-200' };
     }
   };
 
   const channelMeta = getChannelMeta(thread.channel);
   const ChannelIcon = channelMeta.icon;
 
-  // Teléfono del contacto o del prospecto
-  const rawPhone = thread.contact?.phone || thread.prospect?.primary_phone;
+  // Teléfono del contacto o prospecto
+  const rawPhone = thread.contact?.phone || thread.contact?.whatsapp || thread.prospect?.primary_phone;
   const cleanPhone = rawPhone ? rawPhone.replace(/\D/g, '') : null;
 
-  // Formato de tiempo transcurrido
-  let timeAgo = '';
+  // Hora formateada
+  let timeDisplay = '';
   if (thread.last_event_at) {
     try {
-      timeAgo = formatDistanceToNowStrict(new Date(thread.last_event_at), {
-        addSuffix: true,
-        locale: es,
-      });
+      const zoned = toZonedTime(new Date(thread.last_event_at), TZ);
+      timeDisplay = format(zoned, 'HH:mm');
     } catch {
-      timeAgo = '';
+      timeDisplay = '';
     }
   }
+
+  // Dirección del último evento
+  const direction = thread.latest_event?.direction || 'outbound';
+  const dirConfig = DIRECTION_CONFIG[direction as keyof typeof DIRECTION_CONFIG] || DIRECTION_CONFIG.outbound;
+  const DirIcon = dirConfig.icon;
+
+  // Resultado legible
+  const rawResult = thread.latest_event?.result || null;
+  const resultLabel = rawResult && rawResult !== 'other' ? (RESULT_LABELS[rawResult] || rawResult) : null;
 
   const handleResolve = async () => {
     setIsResolving(true);
@@ -95,150 +134,202 @@ export function ThreadCard({ thread, onRefresh }: ThreadCardProps) {
     if (onRefresh) onRefresh();
   };
 
+  // ─── Acciones contextuales según canal + estado ──────────────────
+  const renderActions = () => {
+    const actions: React.ReactNode[] = [];
+    const isWaiting = thread.status === 'waiting_customer';
+    const isActionRequired = thread.status === 'action_required';
+    const isResolved = thread.status === 'resolved';
+    const isCommunication = ['whatsapp', 'email', 'call'].includes(thread.channel);
+
+    // Botón primario: "Respondió" (para threads esperando respuesta)
+    if (isWaiting && isCommunication) {
+      actions.push(
+        <button
+          key="responded"
+          type="button"
+          onClick={() => setShowResponseModal(true)}
+          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
+        >
+          <Check className="w-3.5 h-3.5" />
+          Respondió
+        </button>
+      );
+    }
+
+    // "Sin respuesta" (para WhatsApp/Email/Call esperando)
+    if (isWaiting && isCommunication) {
+      actions.push(
+        <button
+          key="no-response"
+          type="button"
+          onClick={handleResolve}
+          disabled={isResolving}
+          className="px-2.5 py-1.5 bg-white hover:bg-orange-50 text-orange-700 border border-orange-200 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer"
+        >
+          Sin respuesta
+        </button>
+      );
+    }
+
+    // Abrir WhatsApp
+    if (cleanPhone && thread.channel !== 'email') {
+      actions.push(
+        <a
+          key="whatsapp"
+          href={`https://wa.me/${cleanPhone}`}
+          target="_blank"
+          rel="noreferrer"
+          className="px-2.5 py-1.5 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1"
+        >
+          <MessageCircle className="w-3.5 h-3.5" />
+          WhatsApp
+        </a>
+      );
+    }
+
+    // Llamar
+    if (cleanPhone) {
+      actions.push(
+        <a
+          key="call"
+          href={`tel:${cleanPhone}`}
+          className="px-2.5 py-1.5 bg-white hover:bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1"
+        >
+          <Phone className="w-3.5 h-3.5" />
+          Llamar
+        </a>
+      );
+    }
+
+    // Crear cotización (para visitas con pedido)
+    if (thread.channel === 'visit' && ['requested_quote', 'interested'].includes(rawResult || '')) {
+      actions.push(
+        <Link
+          key="quote"
+          href="/quotes/new"
+          className="px-2.5 py-1.5 bg-white hover:bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1"
+        >
+          <FileBarChart className="w-3.5 h-3.5" />
+          Crear cotización
+        </Link>
+      );
+    }
+
+    // Resolver / Reabrir
+    if (!isResolved) {
+      actions.push(
+        <button
+          key="resolve"
+          type="button"
+          disabled={isResolving}
+          onClick={handleResolve}
+          className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl text-xs font-medium transition-colors flex items-center gap-1 cursor-pointer"
+          title="Marcar como resuelta"
+        >
+          {isResolving ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />
+          )}
+          Resolver
+        </button>
+      );
+    } else {
+      actions.push(
+        <button
+          key="reopen"
+          type="button"
+          disabled={isResolving}
+          onClick={handleReopen}
+          className="px-2.5 py-1.5 bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 rounded-xl text-xs font-medium transition-colors cursor-pointer flex items-center gap-1"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          Reabrir
+        </button>
+      );
+    }
+
+    return actions;
+  };
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:border-slate-300 transition-all overflow-hidden flex flex-col">
-      {/* Header Card */}
-      <div className="p-3.5 sm:p-4">
-        <div className="flex items-start justify-between gap-3">
-          {/* Left info */}
-          <div className="flex items-start gap-2.5 min-w-0">
-            <span
-              className={`p-2 rounded-xl border flex items-center justify-center shrink-0 ${channelMeta.color}`}
-            >
-              <ChannelIcon className="w-4 h-4" />
+    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:border-slate-300 transition-all overflow-hidden">
+      <div className="p-4">
+        {/* ─── Row 1: Canal + Dirección + Hora ─── */}
+        <div className="flex items-center justify-between gap-2 mb-2.5">
+          <div className="flex items-center gap-2">
+            <span className={`p-1.5 rounded-lg border flex items-center justify-center ${channelMeta.color}`}>
+              <ChannelIcon className="w-3.5 h-3.5" />
             </span>
-
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Link
-                  href={`/prospects/${thread.prospect_id}`}
-                  className="font-bold text-slate-900 text-sm hover:text-blue-600 hover:underline truncate"
-                >
-                  {thread.prospect?.company_name || 'Empresa sin nombre'}
-                </Link>
-                {thread.prospect?.city && (
-                  <span className="text-[11px] text-slate-400 font-medium">
-                    • {thread.prospect.city}
-                  </span>
-                )}
-              </div>
-
-              {thread.contact && (
-                <p className="text-xs text-slate-600 font-medium truncate mt-0.5">
-                  {thread.contact.full_name || 'Contacto'}
-                  {thread.contact.role_title ? ` (${thread.contact.role_title})` : ''}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Right badge & time */}
-          <div className="flex flex-col items-end shrink-0 gap-1">
-            <span
-              className={`text-[11px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${statusConfig.badgeClass}`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dotClass}`} />
-              {statusConfig.label}
+            <span className="text-[11px] font-extrabold text-slate-700 tracking-wide uppercase">
+              {channelMeta.label}
             </span>
-            {timeAgo && (
-              <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {timeAgo}
+            {isCommunicationChannel(thread.channel) && (
+              <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${dirConfig.class}`}>
+                <DirIcon className="w-2.5 h-2.5" />
+                {dirConfig.label}
               </span>
             )}
           </div>
-        </div>
-
-        {/* Latest event notes / Subject */}
-        <div className="mt-2.5 pt-2.5 border-t border-slate-100 flex flex-col gap-1">
-          {thread.subject && (
-            <p className="text-xs font-bold text-slate-800 line-clamp-1">
-              {thread.subject}
-            </p>
+          {timeDisplay && (
+            <span className="text-xs font-mono text-slate-400 tabular-nums">
+              {timeDisplay}
+            </span>
           )}
-
-          {thread.latest_event?.notes ? (
-            <p className="text-xs text-slate-600 line-clamp-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
-              "{thread.latest_event.notes}"
-            </p>
-          ) : thread.latest_event?.result ? (
-            <p className="text-xs text-slate-500 italic">
-              Resultado: {thread.latest_event.result}
-            </p>
-          ) : null}
         </div>
 
-        {/* Action Buttons */}
-        <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {/* Si está esperando respuesta, botón principal: "Respondió" */}
-            {thread.status === 'waiting_customer' && (
-              <button
-                type="button"
-                onClick={() => setShowResponseModal(true)}
-                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
-              >
-                <Check className="w-3.5 h-3.5" />
-                Respondió
-              </button>
-            )}
-
-            {/* Abrir WhatsApp directo si hay número */}
-            {cleanPhone && (
-              <a
-                href={`https://wa.me/${cleanPhone}`}
-                target="_blank"
-                rel="noreferrer"
-                className="px-2.5 py-1.5 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1"
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-                WhatsApp
-              </a>
-            )}
-
-            {/* Llamada telefónica */}
-            {cleanPhone && (
-              <a
-                href={`tel:${cleanPhone}`}
-                className="px-2.5 py-1.5 bg-white hover:bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1"
-              >
-                <Phone className="w-3.5 h-3.5" />
-                Llamar
-              </a>
-            )}
-
-            {/* Resolver interacción */}
-            {thread.status !== 'resolved' ? (
-              <button
-                type="button"
-                disabled={isResolving}
-                onClick={handleResolve}
-                className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl text-xs font-medium transition-colors flex items-center gap-1 cursor-pointer"
-                title="Marcar como resuelta"
-              >
-                {isResolving ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />
-                )}
-                Resolver
-              </button>
-            ) : (
-              <button
-                type="button"
-                disabled={isResolving}
-                onClick={handleReopen}
-                className="px-2.5 py-1.5 bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 rounded-xl text-xs font-medium transition-colors cursor-pointer"
-              >
-                Reabrir
-              </button>
-            )}
-          </div>
-
-          {/* Enlace a ficha completa */}
+        {/* ─── Row 2: Empresa + Contacto ─── */}
+        <div className="mb-2">
           <Link
             href={`/prospects/${thread.prospect_id}`}
-            className="text-xs font-semibold text-slate-500 hover:text-blue-600 flex items-center gap-1 py-1 px-2 rounded-lg hover:bg-slate-50 transition-colors"
+            className="font-bold text-slate-900 text-sm hover:text-blue-600 hover:underline"
+          >
+            {thread.prospect?.company_name || 'Empresa sin nombre'}
+          </Link>
+          {thread.prospect?.city && (
+            <span className="text-[11px] text-slate-400 font-medium ml-2">
+              • {thread.prospect.city}
+            </span>
+          )}
+          {thread.contact && (
+            <p className="text-xs text-slate-600 font-medium mt-0.5">
+              {thread.contact.full_name || 'Contacto'}
+              {thread.contact.role_title ? ` · ${thread.contact.role_title}` : ''}
+            </p>
+          )}
+        </div>
+
+        {/* ─── Row 3: Resultado + Notas ─── */}
+        {resultLabel && (
+          <p className="text-xs font-semibold text-slate-700 mb-1">
+            {resultLabel}
+          </p>
+        )}
+        {thread.latest_event?.notes && (
+          <p className="text-xs text-slate-600 italic line-clamp-2 bg-slate-50 p-2 rounded-lg border border-slate-100 mb-2.5">
+            &ldquo;{thread.latest_event.notes}&rdquo;
+          </p>
+        )}
+
+        {/* ─── Row 4: Estado actual ─── */}
+        <div className="flex items-center gap-2 mb-3">
+          <span
+            className={`text-[11px] font-bold px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${statusConfig.badgeClass}`}
+          >
+            <span className={`w-2 h-2 rounded-full ${statusConfig.dotClass}`} />
+            {statusConfig.label}
+          </span>
+        </div>
+
+        {/* ─── Row 5: Acciones ─── */}
+        <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-slate-100">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {renderActions()}
+          </div>
+          <Link
+            href={`/prospects/${thread.prospect_id}`}
+            className="text-xs font-semibold text-slate-500 hover:text-blue-600 flex items-center gap-1 py-1 px-2 rounded-lg hover:bg-slate-50 transition-colors shrink-0"
           >
             <span>Ver ficha</span>
             <ExternalLink className="w-3 h-3" />
@@ -246,7 +337,7 @@ export function ThreadCard({ thread, onRefresh }: ThreadCardProps) {
         </div>
       </div>
 
-      {/* Modal "¿Qué pasó?" */}
+      {/* Modal "¿Qué respondió?" */}
       <ThreadQuickActionsModal
         threadId={thread.id}
         prospectName={thread.prospect?.company_name || 'Empresa'}
@@ -257,4 +348,8 @@ export function ThreadCard({ thread, onRefresh }: ThreadCardProps) {
       />
     </div>
   );
+}
+
+function isCommunicationChannel(channel: string): boolean {
+  return ['whatsapp', 'email', 'call'].includes(channel);
 }

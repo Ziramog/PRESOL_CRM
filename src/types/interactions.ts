@@ -105,6 +105,7 @@ export interface InteractionThreadWithRelations extends InteractionThread {
 
 export type SmartQueueId =
   | 'all'
+  | 'today'
   | 'requires_action'
   | 'waiting_customer'
   | 'no_response_24h'
@@ -130,15 +131,12 @@ export interface CommercialInboxCounts {
   tasks_today: number;
   overdue_tasks: number;
   all_open: number;
+  today: number;
 }
 
 export interface CommercialInboxPayload {
   counts: CommercialInboxCounts;
   threads: InteractionThreadWithRelations[];
-  today_events: (InteractionEvent & {
-    prospect?: { id: string; company_name: string };
-    contact?: { id: string; full_name: string | null };
-  })[];
 }
 
 export interface AIInteractionSuggestion {

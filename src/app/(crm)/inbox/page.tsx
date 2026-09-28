@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function CommercialInboxPage() {
   const supabase = createAdminClient();
-  const payload = await getCommercialInboxData(supabase);
+  const payload = await getCommercialInboxData(supabase, { queue: 'today' });
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
