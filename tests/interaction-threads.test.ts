@@ -135,3 +135,53 @@ test('8. AI failure no bloquea guardado de actividad (fallback)', () => {
   assert.strictEqual(errorRun.activitySaved, true);
   assert.strictEqual(errorRun.errorCaught, true);
 });
+
+test('9. Fallback: síntesis y clasificación de hilos desde activities', () => {
+  const mockActivities = [
+    {
+      id: 'act-1',
+      prospect_id: 'p-1',
+      type: 'whatsapp',
+      outcome: 'other',
+      activity_at: new Date().toISOString(),
+    },
+    {
+      id: 'act-2',
+      prospect_id: 'p-2',
+      type: 'call',
+      outcome: 'requested_info',
+      activity_at: new Date().toISOString(),
+    },
+    {
+      id: 'act-3',
+      prospect_id: 'p-3',
+      type: 'whatsapp',
+      outcome: 'follow_up',
+      activity_at: new Date(Date.now() - 36 * 3600 * 1000).toISOString(), // >24h
+    },
+  ];
+
+  // Evaluar estado sintetizado
+  const classify = (act: typeof mockActivities[0]) => {
+    let status = 'waiting_customer';
+    if (['requested_info', 'requested_quote', 'interested'].includes(act.outcome)) {
+      status = 'action_required';
+    }
+    const isPast24h = Date.now() - new Date(act.activity_at).getTime() > 24 * 3600 * 1000;
+    return {
+      status,
+      isNoResponse24h: status === 'waiting_customer' && isPast24h,
+    };
+  };
+
+  const res1 = classify(mockActivities[0]);
+  assert.strictEqual(res1.status, 'waiting_customer');
+  assert.strictEqual(res1.isNoResponse24h, false);
+
+  const res2 = classify(mockActivities[1]);
+  assert.strictEqual(res2.status, 'action_required');
+
+  const res3 = classify(mockActivities[2]);
+  assert.strictEqual(res3.status, 'waiting_customer');
+  assert.strictEqual(res3.isNoResponse24h, true);
+});

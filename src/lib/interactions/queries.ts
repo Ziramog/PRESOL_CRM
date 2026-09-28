@@ -6,9 +6,14 @@ import {
   CommercialInboxCounts,
   CommercialInboxPayload,
   InteractionThreadWithRelations,
+  InteractionEvent,
+  EventDirection,
   SmartQueueId,
 } from '@/types/interactions';
 import { subHours, startOfDay, endOfDay } from 'date-fns';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+
+const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
 export interface InboxFilterOptions {
   queue?: SmartQueueId;
@@ -22,62 +27,206 @@ export async function getCommercialInboxData(
   filters: InboxFilterOptions = {}
 ): Promise<CommercialInboxPayload> {
   const now = new Date();
+  const zonedNow = toZonedTime(now, TZ);
+  const todayStart = fromZonedTime(startOfDay(zonedNow), TZ).toISOString();
+  const todayEnd = fromZonedTime(endOfDay(zonedNow), TZ).toISOString();
   const twentyFourHoursAgo = subHours(now, 24).toISOString();
-  const todayStart = startOfDay(now).toISOString();
-  const todayEnd = endOfDay(now).toISOString();
 
-  // 1. OBTENER THREADS ACTIVOS CON RELACIONES
-  let threadsQuery = supabase
-    .from('interaction_threads')
-    .select(`
-      *,
-      prospect:prospects (
-        id,
-        company_name,
-        city,
-        commercial_category,
-        contact_status,
-        primary_phone,
-        ask_for,
-        is_favorite
-      ),
-      contact:contacts (
-        id,
-        full_name,
-        role_title,
-        phone,
-        whatsapp,
-        email,
-        is_primary
-      ),
-      owner:profiles (
-        id,
-        full_name
-      )
-    `)
-    .not('status', 'in', '("resolved","closed")')
-    .order('last_event_at', { ascending: false, nullsFirst: false });
+  // 1. OBTENER THREADS ACTIVOS (Intentar tabla nativa interaction_threads)
+  let allActiveThreads: InteractionThreadWithRelations[] = [];
+  let isNativeThreads = false;
 
-  if (filters.channel && filters.channel !== 'all') {
-    threadsQuery = threadsQuery.eq('channel', filters.channel);
+  try {
+    let threadsQuery = supabase
+      .from('interaction_threads')
+      .select(`
+        *,
+        prospect:prospects (
+          id,
+          company_name,
+          city,
+          commercial_category,
+          contact_status,
+          primary_phone,
+          ask_for,
+          is_favorite
+        ),
+        contact:contacts (
+          id,
+          full_name,
+          role_title,
+          phone,
+          whatsapp,
+          email,
+          is_primary
+        ),
+        owner:profiles (
+          id,
+          full_name
+        )
+      `)
+      .not('status', 'in', '("resolved","closed")')
+      .order('last_event_at', { ascending: false, nullsFirst: false });
+
+    if (filters.channel && filters.channel !== 'all') {
+      threadsQuery = threadsQuery.eq('channel', filters.channel);
+    }
+
+    if (filters.userId && filters.userId !== 'all') {
+      threadsQuery = threadsQuery.eq('owner_id', filters.userId);
+    }
+
+    const { data: rawThreads, error: threadsErr } = await threadsQuery;
+
+    if (!threadsErr && rawThreads && rawThreads.length > 0) {
+      isNativeThreads = true;
+      allActiveThreads = rawThreads.map((t: any) => ({
+        ...t,
+        prospect: t.prospect || null,
+        contact: t.contact || null,
+        owner: t.owner || null,
+      }));
+    }
+  } catch (err) {
+    isNativeThreads = false;
   }
 
-  if (filters.userId && filters.userId !== 'all') {
-    threadsQuery = threadsQuery.eq('owner_id', filters.userId);
+  // 1.B FALLBACK INTELIGENTE: Si interaction_threads no existe o no tiene registros aún,
+  // construir los hilos comerciales directamente desde la tabla activities
+  if (!isNativeThreads) {
+    const thirtyDaysAgo = subHours(now, 30 * 24).toISOString();
+    let actsQuery = supabase
+      .from('activities')
+      .select(`
+        id,
+        prospect_id,
+        type,
+        outcome,
+        summary,
+        notes,
+        activity_at,
+        created_at,
+        created_by,
+        prospect:prospects (
+          id,
+          company_name,
+          city,
+          commercial_category,
+          contact_status,
+          primary_phone,
+          ask_for,
+          is_favorite,
+          contacts (
+            id,
+            full_name,
+            role_title,
+            phone,
+            whatsapp,
+            email,
+            is_primary
+          )
+        ),
+        owner:profiles (
+          id,
+          full_name
+        )
+      `)
+      .gte('activity_at', thirtyDaysAgo)
+      .order('activity_at', { ascending: false })
+      .limit(300);
+
+    if (filters.channel && filters.channel !== 'all') {
+      actsQuery = actsQuery.eq('type', filters.channel);
+    }
+
+    if (filters.userId && filters.userId !== 'all') {
+      actsQuery = actsQuery.eq('created_by', filters.userId);
+    }
+
+    const { data: recentActs, error: actsErr } = await actsQuery;
+
+    if (actsErr) {
+      console.warn('Error fetching activities fallback for inbox:', actsErr);
+    }
+
+    const prospectThreadMap = new Map<string, InteractionThreadWithRelations>();
+
+    for (const act of (recentActs || [])) {
+      if (!act.prospect_id || prospectThreadMap.has(act.prospect_id)) continue;
+
+      let status: any = 'waiting_customer';
+      if (['requested_info', 'requested_quote', 'interested', 'wants_call', 'proposal_required'].includes(act.outcome)) {
+        status = 'action_required';
+      } else if (['discarded', 'not_interested', 'completed'].includes(act.outcome)) {
+        continue; // Hilos descartados o resueltos
+      }
+
+      const lastEventAt = act.activity_at || act.created_at;
+      const rawProspect: any = act.prospect;
+      const primaryContact = Array.isArray(rawProspect?.contacts)
+        ? rawProspect.contacts.find((c: any) => c.is_primary) || rawProspect.contacts[0] || null
+        : null;
+
+      const eventDirection: EventDirection = ['requested_info', 'interested', 'wants_call'].includes(act.outcome)
+        ? 'inbound'
+        : 'outbound';
+
+      const threadItem: InteractionThreadWithRelations = {
+        id: act.id,
+        prospect_id: act.prospect_id,
+        contact_id: primaryContact?.id || null,
+        owner_id: act.created_by || null,
+        channel: act.type || 'other',
+        subject: act.notes || `${act.type} con ${rawProspect?.company_name || 'Prospecto'}`,
+        status,
+        priority: 'normal',
+        last_event_at: lastEventAt,
+        last_inbound_at: eventDirection === 'inbound' ? lastEventAt : null,
+        last_outbound_at: eventDirection === 'outbound' ? lastEventAt : null,
+        opened_at: act.created_at,
+        resolved_at: null,
+        metadata: {},
+        created_at: act.created_at,
+        updated_at: act.activity_at || act.created_at,
+        prospect: rawProspect ? {
+          id: rawProspect.id,
+          company_name: rawProspect.company_name,
+          city: rawProspect.city,
+          commercial_category: rawProspect.commercial_category,
+          contact_status: rawProspect.contact_status,
+          primary_phone: rawProspect.primary_phone,
+          ask_for: rawProspect.ask_for,
+          is_favorite: rawProspect.is_favorite,
+        } : undefined,
+        contact: (primaryContact as any) || null,
+        owner: (act.owner as any) || null,
+        latest_event: {
+          id: act.id,
+          thread_id: act.id,
+          prospect_id: act.prospect_id,
+          contact_id: primaryContact?.id || null,
+          activity_id: act.id,
+          user_id: act.created_by,
+          channel: act.type,
+          event_type: 'message_sent',
+          interaction_state: act.summary || null,
+          result: act.outcome || null,
+          direction: eventDirection,
+          effective_contact: true,
+          notes: act.notes,
+          provider: null,
+          provider_event_id: null,
+          occurred_at: lastEventAt,
+          created_at: act.created_at,
+          metadata: {},
+        },
+      };
+
+      prospectThreadMap.set(act.prospect_id, threadItem);
+    }
+
+    allActiveThreads = Array.from(prospectThreadMap.values());
   }
-
-  const { data: rawThreads, error: threadsErr } = await threadsQuery;
-
-  if (threadsErr) {
-    console.error('Error fetching inbox threads:', threadsErr);
-  }
-
-  const allActiveThreads: InteractionThreadWithRelations[] = (rawThreads || []).map((t: any) => ({
-    ...t,
-    prospect: t.prospect || null,
-    contact: t.contact || null,
-    owner: t.owner || null,
-  }));
 
   // 2. CALCULAR CONTADORES DE SMART QUEUES
   let requiresActionCount = 0;
@@ -151,43 +300,109 @@ export async function getCommercialInboxData(
     );
   }
 
-  // 4. OBTENER ÚLTIMO EVENTO DE CADA THREAD (EN LOTE)
-  const threadIds = filteredThreads.map((t) => t.id);
-  if (threadIds.length > 0) {
-    const { data: latestEvents } = await supabase
-      .from('interaction_events')
-      .select('*')
-      .in('thread_id', threadIds)
-      .order('occurred_at', { ascending: false });
+  // 4. OBTENER ÚLTIMO EVENTO DE CADA THREAD (EN LOTE, SI ES NATIVO)
+  if (isNativeThreads) {
+    const threadIds = filteredThreads.map((t) => t.id);
+    if (threadIds.length > 0) {
+      const { data: latestEvents } = await supabase
+        .from('interaction_events')
+        .select('*')
+        .in('thread_id', threadIds)
+        .order('occurred_at', { ascending: false });
 
-    if (latestEvents) {
-      const eventMap = new Map<string, any>();
-      for (const ev of latestEvents) {
-        if (!eventMap.has(ev.thread_id)) {
-          eventMap.set(ev.thread_id, ev);
+      if (latestEvents) {
+        const eventMap = new Map<string, any>();
+        for (const ev of latestEvents) {
+          if (!eventMap.has(ev.thread_id)) {
+            eventMap.set(ev.thread_id, ev);
+          }
         }
+        filteredThreads.forEach((t) => {
+          t.latest_event = eventMap.get(t.id) || null;
+        });
       }
-      filteredThreads.forEach((t) => {
-        t.latest_event = eventMap.get(t.id) || null;
-      });
     }
   }
 
   // 5. OBTENER FEED DEL DÍA ("Actividad de hoy")
-  const { data: todayEventsData } = await supabase
-    .from('interaction_events')
-    .select(`
-      *,
-      prospect:prospects (id, company_name),
-      contact:contacts (id, full_name)
-    `)
-    .gte('occurred_at', todayStart)
-    .order('occurred_at', { ascending: false })
-    .limit(30);
+  let todayEventsData: (InteractionEvent & {
+    prospect?: { id: string; company_name: string };
+    contact?: { id: string; full_name: string | null };
+  })[] = [];
+
+  if (isNativeThreads) {
+    const { data: nativeTodayEvents } = await supabase
+      .from('interaction_events')
+      .select(`
+        *,
+        prospect:prospects (id, company_name),
+        contact:contacts (id, full_name)
+      `)
+      .gte('occurred_at', todayStart)
+      .order('occurred_at', { ascending: false })
+      .limit(50);
+
+    if (nativeTodayEvents && nativeTodayEvents.length > 0) {
+      todayEventsData = nativeTodayEvents;
+    }
+  }
+
+  // Fallback: Si no hay eventos nativos, obtener actividades reales del día desde activities
+  if (todayEventsData.length === 0) {
+    const { data: todayActs } = await supabase
+      .from('activities')
+      .select(`
+        id,
+        prospect_id,
+        type,
+        outcome,
+        summary,
+        notes,
+        activity_at,
+        created_at,
+        created_by,
+        prospect:prospects (
+          id,
+          company_name
+        )
+      `)
+      .or(`activity_at.gte.${todayStart},created_at.gte.${todayStart}`)
+      .order('activity_at', { ascending: false })
+      .limit(50);
+
+    todayEventsData = (todayActs || []).map((a: any) => {
+      const eventDirection: EventDirection = ['requested_info', 'interested', 'wants_call'].includes(a.outcome)
+        ? 'inbound'
+        : 'outbound';
+
+      return {
+        id: a.id,
+        thread_id: a.id,
+        prospect_id: a.prospect_id,
+        contact_id: null,
+        activity_id: a.id,
+        user_id: a.created_by,
+        channel: a.type || 'other',
+        event_type: a.type === 'call' ? 'call_connected' : a.type === 'visit' ? 'visit_completed' : 'message_sent',
+        interaction_state: a.summary || null,
+        result: a.outcome || null,
+        direction: eventDirection,
+        effective_contact: true,
+        notes: a.notes,
+        provider: null,
+        provider_event_id: null,
+        occurred_at: a.activity_at || a.created_at,
+        created_at: a.created_at,
+        metadata: {},
+        prospect: a.prospect ? { id: a.prospect.id, company_name: a.prospect.company_name } : undefined,
+        contact: undefined,
+      };
+    });
+  }
 
   return {
     counts,
     threads: filteredThreads,
-    today_events: todayEventsData || [],
+    today_events: todayEventsData,
   };
 }
