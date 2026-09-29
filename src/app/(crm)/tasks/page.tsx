@@ -1,6 +1,8 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { TaskListItem } from '@/components/crm/task-list-item';
-import { isBefore, isToday, startOfDay, parseISO } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
+
+const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
 export default async function TasksPage() {
   const supabase = await createAdminClient();
@@ -22,11 +24,23 @@ export default async function TasksPage() {
     if (data) tasks = data;
   }
 
-  const today = startOfDay(new Date());
+  const todayStr = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
 
-  const overdueTasks = tasks.filter(t => t.due_at && isBefore(parseISO(t.due_at), today));
-  const todayTasks = tasks.filter(t => t.due_at && isToday(parseISO(t.due_at)));
-  const upcomingTasks = tasks.filter(t => t.due_at && isBefore(today, parseISO(t.due_at)) && !isToday(parseISO(t.due_at)));
+  const overdueTasks = tasks.filter(t => {
+    if (!t.due_at) return false;
+    const taskDateStr = formatInTimeZone(new Date(t.due_at), TZ, 'yyyy-MM-dd');
+    return taskDateStr < todayStr;
+  });
+  const todayTasks = tasks.filter(t => {
+    if (!t.due_at) return false;
+    const taskDateStr = formatInTimeZone(new Date(t.due_at), TZ, 'yyyy-MM-dd');
+    return taskDateStr === todayStr;
+  });
+  const upcomingTasks = tasks.filter(t => {
+    if (!t.due_at) return false;
+    const taskDateStr = formatInTimeZone(new Date(t.due_at), TZ, 'yyyy-MM-dd');
+    return taskDateStr > todayStr;
+  });
   const noDateTasks = tasks.filter(t => !t.due_at);
 
   return (

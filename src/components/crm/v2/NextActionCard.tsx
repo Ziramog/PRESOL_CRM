@@ -2,10 +2,12 @@
 
 import { useState, useTransition, useEffect } from 'react';
 import { Calendar, CheckSquare, Clock, CalendarDays, MoreHorizontal, Plus } from 'lucide-react';
-import { format, isPast, isToday, differenceInDays } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
 import { TaskForm } from '@/components/crm/task-form';
 import { completeTask } from '@/app/actions/tasks';
+
+const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
 export function NextActionCard({ tasks, prospectId }: { tasks: any[], prospectId: string }) {
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -53,18 +55,18 @@ export function NextActionCard({ tasks, prospectId }: { tasks: any[], prospectId
   
   let dateStatus = 'Vencida';
   let dateColor = 'text-rose-700 bg-rose-50 border-rose-200';
-  let dateText = 'Sin fecha';
   
   if (dueDate) {
-    if (isPast(dueDate) && !isToday(dueDate)) {
+    const todayStr = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+    const dueStr = formatInTimeZone(dueDate, TZ, 'yyyy-MM-dd');
+    if (dueStr < todayStr) {
       dateStatus = 'Vencida';
       dateColor = 'text-rose-700 bg-rose-50 border-rose-100';
-    } else if (isToday(dueDate)) {
+    } else if (dueStr === todayStr) {
       dateStatus = 'Hoy';
       dateColor = 'text-amber-700 bg-amber-50 border-amber-100';
     } else {
-      const days = differenceInDays(dueDate, new Date());
-      dateStatus = `En ${days} días`;
+      dateStatus = 'Programada';
       dateColor = 'text-blue-700 bg-blue-50 border-blue-100';
     }
   }
@@ -97,11 +99,15 @@ export function NextActionCard({ tasks, prospectId }: { tasks: any[], prospectId
              <>
                <div className="flex items-center gap-2">
                  <Calendar className="w-4 h-4 text-slate-400" />
-                 <span suppressHydrationWarning className="capitalize">{format(dueDate, "EEEE d 'de' MMMM 'de' yyyy", { locale: es })}</span>
+                 <span suppressHydrationWarning className="capitalize">
+                   {formatInTimeZone(dueDate, TZ, "EEEE d 'de' MMMM 'de' yyyy", { locale: es })}
+                 </span>
                </div>
                <div className="flex items-center gap-2">
                  <Clock className="w-4 h-4 text-slate-400" />
-                 <span suppressHydrationWarning>{format(dueDate, "HH:mm")}</span>
+                 <span suppressHydrationWarning>
+                   {formatInTimeZone(dueDate, TZ, "HH:mm 'hs'")}
+                 </span>
                </div>
              </>
           )}

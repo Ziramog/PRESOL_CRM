@@ -6,6 +6,7 @@ export type ActivityChannel =
   | 'call'
   | 'whatsapp'
   | 'email'
+  | 'meeting_presencial'
   | 'virtual_meeting'
   | 'internal_note';
 
@@ -14,6 +15,8 @@ export type NextActionType =
   | 'whatsapp'
   | 'email'
   | 'visit'
+  | 'meeting_presencial'
+  | 'virtual_meeting'
   | 'meeting'
   | 'send_info'
   | 'send_quote'
@@ -52,6 +55,8 @@ export const NEXT_ACTION_TYPE_LABELS: Record<NextActionType, string> = {
   whatsapp: 'Enviar WhatsApp',
   email: 'Enviar email',
   visit: 'Visitar',
+  meeting_presencial: 'Reunión presencial',
+  virtual_meeting: 'Reunión virtual',
   meeting: 'Agendar reunión',
   send_info: 'Enviar información',
   send_quote: 'Enviar cotización',
@@ -424,6 +429,76 @@ export const ACTIVITY_CHANNEL_CONFIG: Record<ActivityChannel, ChannelConfig> = {
     },
   },
 
+  meeting_presencial: {
+    code: 'meeting_presencial',
+    label: 'Reunión presencial',
+    interactionLabel: '¿Quién participó?',
+    interactionStates: {
+      not_held: {
+        code: 'not_held',
+        label: 'No se realizó',
+        results: [
+          { code: 'no_show', label: 'No asistieron', effective_contact: false, suggested_next_action: 'meeting_presencial' },
+          { code: 'cancelled', label: 'Cancelada', effective_contact: false, suggested_next_action: 'meeting_presencial' },
+          { code: 'reschedule', label: 'Reprogramar', effective_contact: false, suggested_next_action: 'meeting_presencial' },
+          { code: 'other', label: 'Otro', effective_contact: false, suggested_next_action: null },
+        ],
+      },
+      gatekeeper: {
+        code: 'gatekeeper',
+        label: 'Recepción / filtro',
+        results: [
+          { code: 'requested_info', label: 'Pidió información', effective_contact: true, suggested_next_action: 'send_info' },
+          { code: 'referred_contact', label: 'Derivó a contacto', effective_contact: true, suggested_next_action: 'call' },
+          { code: 'provided_contact_details', label: 'Dio datos de contacto', effective_contact: true, suggested_next_action: 'call' },
+          { code: 'follow_up', label: 'Requiere seguimiento', effective_contact: true, suggested_next_action: 'follow_up' },
+          { code: 'not_interested', label: 'Sin interés', effective_contact: true, suggested_next_action: null },
+          { code: 'other', label: 'Otro', effective_contact: true, suggested_next_action: null },
+        ],
+      },
+      decision_maker: {
+        code: 'decision_maker',
+        label: 'Responsable / decisor',
+        results: [
+          { code: 'interested', label: 'Interesado', effective_contact: true, suggested_next_action: 'follow_up' },
+          { code: 'requested_info', label: 'Pidió información', effective_contact: true, suggested_next_action: 'send_info' },
+          { code: 'requested_quote', label: 'Pidió cotización', effective_contact: true, suggested_next_action: 'send_quote' },
+          { code: 'proposal_required', label: 'Requiere propuesta formal', effective_contact: true, suggested_next_action: 'send_quote' },
+          { code: 'schedule_meeting', label: 'Agendar nueva reunión', effective_contact: true, suggested_next_action: 'meeting_presencial' },
+          { code: 'follow_up', label: 'Requiere seguimiento', effective_contact: true, suggested_next_action: 'follow_up' },
+          { code: 'not_interested', label: 'Sin interés', effective_contact: true, suggested_next_action: null },
+          { code: 'other', label: 'Otro', effective_contact: true, suggested_next_action: null },
+        ],
+      },
+      multiple_attendees: {
+        code: 'multiple_attendees',
+        label: 'Múltiples participantes',
+        results: [
+          { code: 'interested', label: 'Interesado', effective_contact: true, suggested_next_action: 'follow_up' },
+          { code: 'requested_info', label: 'Pidió información', effective_contact: true, suggested_next_action: 'send_info' },
+          { code: 'requested_quote', label: 'Pidió cotización', effective_contact: true, suggested_next_action: 'send_quote' },
+          { code: 'proposal_required', label: 'Requiere propuesta formal', effective_contact: true, suggested_next_action: 'send_quote' },
+          { code: 'schedule_meeting', label: 'Agendar nueva reunión', effective_contact: true, suggested_next_action: 'meeting_presencial' },
+          { code: 'follow_up', label: 'Requiere seguimiento', effective_contact: true, suggested_next_action: 'follow_up' },
+          { code: 'not_interested', label: 'Sin interés', effective_contact: true, suggested_next_action: null },
+          { code: 'other', label: 'Otro', effective_contact: true, suggested_next_action: null },
+        ],
+      },
+      other_contact: {
+        code: 'other_contact',
+        label: 'Otro contacto',
+        results: [
+          { code: 'requested_info', label: 'Pidió información', effective_contact: true, suggested_next_action: 'send_info' },
+          { code: 'referred_contact', label: 'Derivó a contacto', effective_contact: true, suggested_next_action: 'call' },
+          { code: 'provided_contact_details', label: 'Dio datos de contacto', effective_contact: true, suggested_next_action: 'call' },
+          { code: 'follow_up', label: 'Requiere seguimiento', effective_contact: true, suggested_next_action: 'follow_up' },
+          { code: 'not_interested', label: 'Sin interés', effective_contact: true, suggested_next_action: null },
+          { code: 'other', label: 'Otro', effective_contact: true, suggested_next_action: null },
+        ],
+      },
+    },
+  },
+
   internal_note: {
     code: 'internal_note',
     label: 'Nota interna',
@@ -436,6 +511,8 @@ export const ACTIVITY_CHANNEL_CONFIG: Record<ActivityChannel, ChannelConfig> = {
  */
 export function normalizeChannel(typeOrChannel?: string | null): ActivityChannel {
   if (!typeOrChannel) return 'visit';
+  if (typeOrChannel === 'meeting_presencial') return 'meeting_presencial';
+  if (typeOrChannel === 'virtual_meeting') return 'virtual_meeting';
   if (typeOrChannel === 'meeting') return 'virtual_meeting';
   if (typeOrChannel === 'note') return 'internal_note';
   if (typeOrChannel in ACTIVITY_CHANNEL_CONFIG) return typeOrChannel as ActivityChannel;
@@ -446,7 +523,7 @@ export function normalizeChannel(typeOrChannel?: string | null): ActivityChannel
  * Mapea ActivityChannel a legacy type (para compatibilidad con base de datos o componentes viejos)
  */
 export function channelToLegacyType(channel: ActivityChannel): string {
-  if (channel === 'virtual_meeting') return 'meeting';
+  if (channel === 'virtual_meeting' || channel === 'meeting_presencial') return 'meeting';
   if (channel === 'internal_note') return 'note';
   return channel;
 }
@@ -516,6 +593,7 @@ export function nextActionToLegacyTaskType(action: string | null | undefined): s
   if (action === 'send_info') return 'send_brochure';
   if (action === 'send_quote') return 'send_quote';
   if (action === 'whatsapp' || action === 'email') return 'follow_up';
+  if (action === 'meeting_presencial' || action === 'virtual_meeting') return 'meeting';
   if (['call', 'visit', 'send_brochure', 'send_quote', 'follow_up', 'verify_data', 'meeting', 'other'].includes(action)) {
     return action;
   }

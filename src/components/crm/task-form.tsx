@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { createTask } from '@/app/actions/tasks';
-import { X, Calendar as CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { X, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { formatInTimeZone } from 'date-fns-tz';
+
+const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
 export function TaskForm({ prospectId, onClose }: { prospectId: string, onClose: () => void }) {
   const [isPending, setIsPending] = useState(false);
@@ -26,7 +28,7 @@ export function TaskForm({ prospectId, onClose }: { prospectId: string, onClose:
     }
   };
 
-  const today = format(new Date(), 'yyyy-MM-dd');
+  const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
   
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
@@ -52,11 +54,11 @@ export function TaskForm({ prospectId, onClose }: { prospectId: string, onClose:
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1.5">
                 <CalendarIcon className="w-4 h-4 text-gray-400" />
-                Vencimiento
+                Fecha límite
               </label>
               <input 
                 type="date"
@@ -65,6 +67,39 @@ export function TaskForm({ prospectId, onClose }: { prospectId: string, onClose:
                 defaultValue={today}
                 className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-gray-400" />
+                Horario
+              </label>
+              <input 
+                type="time"
+                name="due_time"
+                defaultValue="10:00"
+                className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Tipo de tarea</label>
+              <select 
+                name="type" 
+                defaultValue="follow_up"
+                className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2"
+              >
+                <option value="follow_up">Seguimiento general</option>
+                <option value="call">Llamada telefónica</option>
+                <option value="whatsapp">Mensaje de WhatsApp</option>
+                <option value="email">Correo electrónico</option>
+                <option value="meeting">Reunión presencial</option>
+                <option value="virtual_meeting">Reunión virtual</option>
+                <option value="visit">Visita en terreno</option>
+                <option value="send_quote">Enviar cotización</option>
+                <option value="send_brochure">Enviar información</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Prioridad</label>

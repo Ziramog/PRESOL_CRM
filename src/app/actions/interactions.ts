@@ -12,7 +12,7 @@ import {
 } from '@/lib/interactions/service';
 import { ThreadStatus } from '@/types/interactions';
 import { fromZonedTime } from 'date-fns-tz';
-import { NEXT_ACTION_TYPE_LABELS, NextActionType } from '@/lib/activities/config';
+import { NEXT_ACTION_TYPE_LABELS, NextActionType, nextActionToLegacyTaskType } from '@/lib/activities/config';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
@@ -173,7 +173,7 @@ export async function recordCustomerResponseAction(
 
     let dueIso: string | null = null;
     if (payload.next_action_date) {
-      const timeStr = payload.next_action_time ? `${payload.next_action_time}:00` : '12:00:00';
+      const timeStr = payload.next_action_time ? (payload.next_action_time.length === 5 ? `${payload.next_action_time}:00` : payload.next_action_time) : '10:00:00';
       dueIso = fromZonedTime(`${payload.next_action_date}T${timeStr}`, TZ).toISOString();
     }
 
@@ -181,7 +181,7 @@ export async function recordCustomerResponseAction(
       prospect_id: prospectId,
       title,
       description: payload.notes || null,
-      type: nextType,
+      type: nextActionToLegacyTaskType(nextType),
       status: 'pending',
       priority: 'normal',
       assigned_to: payload.next_action_assigned_to || userId || null,

@@ -83,7 +83,7 @@ export async function createActivity(formData: FormData) {
   if (trip_stop_id) activityData.trip_stop_id = trip_stop_id;
 
   if (activity_at_str) {
-    activityData.activity_at = new Date(activity_at_str).toISOString();
+    activityData.activity_at = fromZonedTime(activity_at_str, TZ).toISOString();
   }
 
   // Inserción con tolerancia a esquema y constraints
@@ -173,7 +173,7 @@ export async function createActivity(formData: FormData) {
 
     let dueIso: string | null = null;
     if (nextActionDate) {
-      const timeStr = nextActionTime ? `${nextActionTime}:00` : '12:00:00';
+      const timeStr = nextActionTime ? (nextActionTime.length === 5 ? `${nextActionTime}:00` : nextActionTime) : '10:00:00';
       dueIso = fromZonedTime(`${nextActionDate}T${timeStr}`, TZ).toISOString();
     }
 
@@ -261,7 +261,7 @@ export async function updateActivity(formData: FormData) {
   };
 
   if (activity_at_str) {
-    updateData.activity_at = new Date(activity_at_str).toISOString();
+    updateData.activity_at = fromZonedTime(activity_at_str, TZ).toISOString();
   }
 
   let updateAttempt = await supabase.from('activities').update(updateData).eq('id', id);

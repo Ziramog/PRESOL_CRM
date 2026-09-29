@@ -13,7 +13,10 @@ import {
   nextActionToLegacyTaskType,
   isEffectiveContact
 } from '@/lib/activities/config';
+import { fromZonedTime } from 'date-fns-tz';
 import { calculateNewStatus } from '@/lib/prospects/status-engine';
+
+const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
 export async function saveVoiceInteraction(prospectId: string, data: any) {
   try {
@@ -87,7 +90,8 @@ export async function saveVoiceInteraction(prospectId: string, data: any) {
       let dueIso: string | null = null;
       const rawDue = data.next_step_date || data.next_action_date;
       if (rawDue) {
-        dueIso = new Date(rawDue).toISOString();
+        const cleanDate = rawDue.includes('T') ? rawDue : `${rawDue}T10:00:00`;
+        dueIso = fromZonedTime(cleanDate, TZ).toISOString();
       }
 
       await supabase.from('tasks').insert({

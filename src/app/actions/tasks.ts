@@ -2,7 +2,7 @@
 
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { fromZonedTime } from 'date-fns-tz';
+import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
@@ -14,7 +14,9 @@ export async function createTask(formData: FormData) {
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
   const due_at = formData.get('due_date') as string;
-  const priority = formData.get('priority') as string;
+  const due_time = (formData.get('due_time') as string) || '';
+  const priority = (formData.get('priority') as string) || 'normal';
+  const type = (formData.get('type') as string) || 'follow_up';
   
   const { data: { user } } = await authClient.auth.getUser();
   const created_by = user?.id;
@@ -23,10 +25,16 @@ export async function createTask(formData: FormData) {
     return { error: 'No user authenticated' };
   }
 
-  // Parse in Argentina timezone at 12:00:00 to avoid UTC midnight shifting backward into previous date
+  // Parse in Argentina timezone at specified time (or default 10:00:00) to avoid UTC midnight shifting backward into previous date
   let dueIso: string | null = null;
   if (due_at) {
-    const cleanDate = due_at.includes('T') ? due_at : `${due_at}T12:00:00`;
+    let cleanDate: string;
+    if (due_at.includes('T')) {
+      cleanDate = due_at;
+    } else {
+      const timeStr = due_time ? (due_time.length === 5 ? `${due_time}:00` : due_time) : '10:00:00';
+      cleanDate = `${due_at}T${timeStr}`;
+    }
     dueIso = fromZonedTime(cleanDate, TZ).toISOString();
   }
 
@@ -34,6 +42,7 @@ export async function createTask(formData: FormData) {
     prospect_id,
     title,
     description: description || null,
+    type,
     due_at: dueIso,
     priority: priority || 'normal',
     status: 'pending',
@@ -95,7 +104,7 @@ export async function getPendingTasksSummary() {
   if (!user) return { success: false, error: 'Unauthorized' };
 
   // Convert current time to local Argentina string for comparison
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
 
   const { data, error } = await supabase
     .from('tasks')
@@ -115,9 +124,7 @@ export async function getPendingTasksSummary() {
 
   for (const task of data) {
     if (!task.due_at) continue;
-    // Task dates are stored as UTC iso strings (e.g. 2026-09-18T15:00:00Z)
-    // We can extract just the YYYY-MM-DD to compare
-    const taskDate = task.due_at.split('T')[0];
+    const taskDate = formatInTimeZone(new Date(task.due_at), TZ, 'yyyy-MM-dd');
     
     if (taskDate < today) {
       overdueCount++;

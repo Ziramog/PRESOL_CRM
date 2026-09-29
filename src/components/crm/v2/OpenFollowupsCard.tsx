@@ -1,11 +1,14 @@
 'use client';
 
-import { format, parseISO, isPast } from 'date-fns';
+import { parseISO } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
 import { CheckSquare, Square, Plus } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { completeTask } from '@/app/actions/tasks';
 import { TaskForm } from '@/components/crm/task-form';
+
+const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
 interface OpenFollowupsCardProps {
   tasks: any[];
@@ -53,7 +56,9 @@ export function OpenFollowupsCard({ tasks, prospectId }: OpenFollowupsCardProps)
           <div className="space-y-3">
             {displayTasks.map(task => {
               const dateObj = task.due_at ? parseISO(task.due_at) : null;
-              const isOverdue = dateObj ? isPast(dateObj) : false;
+              const todayStr = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+              const taskDateStr = dateObj ? formatInTimeZone(dateObj, TZ, 'yyyy-MM-dd') : null;
+              const isOverdue = taskDateStr ? taskDateStr < todayStr : false;
               
               return (
                 <div key={task.id} className="flex flex-col gap-0.5 group">
@@ -66,7 +71,7 @@ export function OpenFollowupsCard({ tasks, prospectId }: OpenFollowupsCardProps)
                     </div>
                     {dateObj && (
                       <span suppressHydrationWarning className={`text-[12px] font-bold shrink-0 ${isOverdue ? 'text-red-600' : 'text-gray-900'}`}>
-                        {format(dateObj, 'd MMM', { locale: es })}
+                        {formatInTimeZone(dateObj, TZ, 'd MMM', { locale: es })}
                       </span>
                     )}
                   </div>

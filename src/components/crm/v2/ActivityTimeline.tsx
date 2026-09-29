@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { format, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
 import {
   Phone,
@@ -15,6 +16,7 @@ import {
   Plus,
   Edit2,
   Video,
+  Users,
 } from 'lucide-react';
 import {
   CONTACT_LEVELS,
@@ -24,6 +26,8 @@ import {
   normalizeChannel,
 } from '@/lib/constants';
 import { ActivityForm } from '@/components/crm/activity-form';
+
+const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
 interface ActivityTimelineProps {
   activities: any[];
@@ -35,8 +39,9 @@ const TYPE_STYLES: Record<string, { icon: any; color: string; bg: string }> = {
   call: { icon: Phone, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   email: { icon: Mail, color: 'text-purple-600', bg: 'bg-purple-50' },
   whatsapp: { icon: MessageSquare, color: 'text-green-600', bg: 'bg-green-50' },
-  virtual_meeting: { icon: Video, color: 'text-amber-600', bg: 'bg-amber-50' },
-  meeting: { icon: Video, color: 'text-amber-600', bg: 'bg-amber-50' },
+  meeting_presencial: { icon: Users, color: 'text-amber-600', bg: 'bg-amber-50' },
+  virtual_meeting: { icon: Video, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  meeting: { icon: Users, color: 'text-amber-600', bg: 'bg-amber-50' },
   internal_note: { icon: StickyNote, color: 'text-slate-600', bg: 'bg-slate-100' },
   note: { icon: StickyNote, color: 'text-slate-600', bg: 'bg-slate-100' },
   quote: { icon: FileText, color: 'text-indigo-600', bg: 'bg-indigo-50' },
@@ -89,7 +94,7 @@ export function ActivityTimeline({ activities, prospectId }: ActivityTimelinePro
     if (filterType === 'Llamadas' && ch === 'call') return true;
     if (filterType === 'WhatsApp' && ch === 'whatsapp') return true;
     if (filterType === 'Email' && ch === 'email') return true;
-    if (filterType === 'Reuniones' && ch === 'virtual_meeting') return true;
+    if (filterType === 'Reuniones' && (ch === 'virtual_meeting' || ch === 'meeting_presencial')) return true;
     if (filterType === 'Notas' && ch === 'internal_note') return true;
     if (filterType === 'Cotizaciones' && (ch === ('quote' as any) || a.type === 'quote')) return true;
     return false;
@@ -165,10 +170,10 @@ export function ActivityTimeline({ activities, prospectId }: ActivityTimelinePro
                     </div>
                     <div className="w-[36px] sm:w-[42px] shrink-0 flex flex-col mt-0.5 text-right sm:text-left">
                       <span className="text-[11px] sm:text-[12px] text-slate-500 font-medium tabular-nums leading-tight" suppressHydrationWarning>
-                        {activityDate ? format(activityDate, 'HH:mm') : ''}
+                        {activityDate ? formatInTimeZone(activityDate, TZ, 'HH:mm') : ''}
                       </span>
                       <span className="text-[9px] text-slate-400 font-semibold tracking-wide leading-tight mt-0.5" suppressHydrationWarning>
-                        {activityDate ? format(activityDate, 'd MMM', { locale: es }) : ''}
+                        {activityDate ? formatInTimeZone(activityDate, TZ, 'd MMM', { locale: es }) : ''}
                       </span>
                     </div>
 

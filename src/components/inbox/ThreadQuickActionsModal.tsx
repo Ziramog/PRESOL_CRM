@@ -8,6 +8,9 @@ import { X, Check, Loader2, Calendar } from 'lucide-react';
 import { CUSTOMER_RESPONSE_OPTIONS } from '@/lib/interactions/config';
 import { recordCustomerResponseAction } from '@/app/actions/interactions';
 import { NextActionType, NEXT_ACTION_TYPE_LABELS } from '@/lib/activities/config';
+import { formatInTimeZone } from 'date-fns-tz';
+
+const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
 interface ThreadQuickActionsModalProps {
   threadId: string;
@@ -31,8 +34,9 @@ export function ThreadQuickActionsModal({
   const [createTask, setCreateTask] = useState<boolean>(false);
   const [nextActionType, setNextActionType] = useState<NextActionType>('follow_up');
   const [nextActionDate, setNextActionDate] = useState<string>(
-    new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    formatInTimeZone(new Date(Date.now() + 24 * 60 * 60 * 1000), TZ, 'yyyy-MM-dd')
   );
+  const [nextActionTime, setNextActionTime] = useState<string>('10:00');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +53,7 @@ export function ThreadQuickActionsModal({
       create_next_action: createTask,
       next_action_type: nextActionType,
       next_action_date: createTask ? nextActionDate : undefined,
+      next_action_time: createTask ? nextActionTime : undefined,
     });
 
     setIsSubmitting(false);
@@ -160,16 +165,29 @@ export function ThreadQuickActionsModal({
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                    Fecha límite:
-                  </label>
-                  <input
-                    type="date"
-                    value={nextActionDate}
-                    onChange={(e) => setNextActionDate(e.target.value)}
-                    className="w-full text-xs p-2 bg-white border border-slate-200 rounded-lg"
-                  />
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      Fecha:
+                    </label>
+                    <input
+                      type="date"
+                      value={nextActionDate}
+                      onChange={(e) => setNextActionDate(e.target.value)}
+                      className="w-full text-xs p-2 bg-white border border-slate-200 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      Horario:
+                    </label>
+                    <input
+                      type="time"
+                      value={nextActionTime}
+                      onChange={(e) => setNextActionTime(e.target.value)}
+                      className="w-full text-xs p-2 bg-white border border-slate-200 rounded-lg"
+                    />
+                  </div>
                 </div>
               </div>
             )}

@@ -27,6 +27,7 @@ import {
   Send,
   PhoneCall,
   FileBarChart,
+  Users,
 } from 'lucide-react';
 import { ThreadQuickActionsModal } from './ThreadQuickActionsModal';
 import { resolveThreadAction, reopenThreadAction } from '@/app/actions/interactions';
@@ -86,8 +87,12 @@ export function ThreadCard({ thread, onRefresh }: ThreadCardProps) {
         return { icon: MapPin, label: 'VISITA', color: 'text-purple-600 bg-purple-50 border-purple-200' };
       case 'email':
         return { icon: Mail, label: 'EMAIL', color: 'text-sky-600 bg-sky-50 border-sky-200' };
+      case 'meeting_presencial':
+        return { icon: Users, label: 'REUNIÓN PRESENCIAL', color: 'text-amber-600 bg-amber-50 border-amber-200' };
       case 'virtual_meeting':
-        return { icon: Video, label: 'REUNIÓN', color: 'text-indigo-600 bg-indigo-50 border-indigo-200' };
+        return { icon: Video, label: 'REUNIÓN VIRTUAL', color: 'text-indigo-600 bg-indigo-50 border-indigo-200' };
+      case 'meeting':
+        return { icon: Users, label: 'REUNIÓN', color: 'text-amber-600 bg-amber-50 border-amber-200' };
       default:
         return { icon: FileText, label: 'ACTIVIDAD', color: 'text-slate-600 bg-slate-50 border-slate-200' };
     }

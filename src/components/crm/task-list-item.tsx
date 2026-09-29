@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { format, parseISO } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
 import { completeTask } from '@/app/actions/tasks';
 import { Calendar, Building, CheckCircle2, Circle } from 'lucide-react';
+
+const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
 export function TaskListItem({ task }: { task: any }) {
   const [isCompleting, setIsCompleting] = useState(false);
@@ -16,7 +18,9 @@ export function TaskListItem({ task }: { task: any }) {
     // UI will update optimistically or via server revalidation
   };
 
-  const isOverdue = task.due_at && new Date(task.due_at) < new Date(new Date().setHours(0,0,0,0));
+  const todayStr = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+  const taskDateStr = task.due_at ? formatInTimeZone(new Date(task.due_at), TZ, 'yyyy-MM-dd') : null;
+  const isOverdue = taskDateStr ? taskDateStr < todayStr : false;
 
   return (
     <div className={`bg-white border rounded-lg p-4 flex gap-4 transition-all ${isCompleting ? 'opacity-50 scale-[0.99]' : 'opacity-100'} ${isOverdue ? 'border-red-200 bg-red-50/30' : 'border-gray-200'}`}>
@@ -48,7 +52,7 @@ export function TaskListItem({ task }: { task: any }) {
           {task.due_at && (
             <div className={`flex items-center gap-1 ${isOverdue ? 'text-red-600' : 'text-gray-500'}`}>
               <Calendar className="w-3.5 h-3.5" />
-              <span>{format(parseISO(task.due_at), "d MMM", { locale: es })}</span>
+              <span suppressHydrationWarning>{formatInTimeZone(new Date(task.due_at), TZ, "d MMM · HH:mm 'hs'", { locale: es })}</span>
             </div>
           )}
           

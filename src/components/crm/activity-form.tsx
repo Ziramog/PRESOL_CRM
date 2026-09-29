@@ -12,6 +12,7 @@ import {
   MessageCircle,
   Mail,
   Video,
+  Users,
   StickyNote,
   Calendar,
   Clock,
@@ -19,6 +20,7 @@ import {
   Sparkles,
   CheckCircle2,
 } from 'lucide-react';
+import { toZonedTime } from 'date-fns-tz';
 import {
   ACTIVITY_CHANNEL_CONFIG,
   ActivityChannel,
@@ -30,20 +32,23 @@ import {
   getSuggestedNextAction,
 } from '@/lib/activities/config';
 
+const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
+
 const CHANNEL_OPTIONS: { code: ActivityChannel; label: string; icon: any; color: string; bgActive: string }[] = [
   { code: 'visit', label: 'Visita', icon: MapPin, color: 'text-emerald-600', bgActive: 'bg-emerald-50 border-emerald-500 text-emerald-800' },
   { code: 'call', label: 'Llamada', icon: Phone, color: 'text-blue-600', bgActive: 'bg-blue-50 border-blue-500 text-blue-800' },
   { code: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, color: 'text-green-600', bgActive: 'bg-green-50 border-green-500 text-green-800' },
   { code: 'email', label: 'Email', icon: Mail, color: 'text-purple-600', bgActive: 'bg-purple-50 border-purple-500 text-purple-800' },
-  { code: 'virtual_meeting', label: 'Reunión', icon: Video, color: 'text-amber-600', bgActive: 'bg-amber-50 border-amber-500 text-amber-800' },
+  { code: 'meeting_presencial', label: 'Reunión presencial', icon: Users, color: 'text-amber-600', bgActive: 'bg-amber-50 border-amber-500 text-amber-800' },
+  { code: 'virtual_meeting', label: 'Reunión virtual', icon: Video, color: 'text-indigo-600', bgActive: 'bg-indigo-50 border-indigo-500 text-indigo-800' },
   { code: 'internal_note', label: 'Nota', icon: StickyNote, color: 'text-slate-600', bgActive: 'bg-slate-100 border-slate-500 text-slate-800' },
 ];
 
 const formatDateTimeLocal = (dateStr?: string) => {
   if (!dateStr) return '';
-  const d = new Date(dateStr);
+  const zoned = toZonedTime(new Date(dateStr), TZ);
   const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${zoned.getFullYear()}-${pad(zoned.getMonth() + 1)}-${pad(zoned.getDate())}T${pad(zoned.getHours())}:${pad(zoned.getMinutes())}`;
 };
 
 export function ActivityForm({
@@ -286,7 +291,7 @@ export function ActivityForm({
             <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2">
               1. Canal de interacción
             </label>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-1.5">
               {CHANNEL_OPTIONS.map((item) => {
                 const Icon = item.icon;
                 const isSelected = channel === item.code;
