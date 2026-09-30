@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, Filter, X, Check, Heart, Calendar, ArrowDownAZ, ArrowUpZA, ListTodo, Activity, ArrowUpDown } from 'lucide-react';
+import { Search, Filter, X, Check, Heart, Calendar, ArrowDownAZ, ArrowUpZA, ListTodo, Activity, ArrowUpDown, Table, LayoutGrid } from 'lucide-react';
 import { useTransition, useState, useRef, useEffect, useCallback } from 'react';
 import { PROSPECT_STATUS } from '@/lib/constants';
 import { saveProspectFilters } from '@/app/actions/preferences';
@@ -65,6 +65,18 @@ export function ProspectFilters({
   const currentStatus = searchParams.get('status') || '';
   const currentCities = searchParams.getAll('city');
   const currentFavorites = searchParams.get('favorites') || '';
+  const currentView = searchParams.get('view') === 'cards' ? 'cards' : 'table';
+
+  const handleViewChange = (newView: 'table' | 'cards') => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (newView === 'cards') {
+      params.set('view', 'cards');
+    } else {
+      params.delete('view');
+    }
+    persistFilters(params);
+    startTransition(() => router.push(`/prospects?${params.toString()}`));
+  };
 
   // Controlled input state — always in sync with URL
   const [searchValue, setSearchValue] = useState(currentSearch);
@@ -392,6 +404,34 @@ export function ProspectFilters({
             Filtros
           </span>
         </button>
+
+        {/* Desktop View Switcher (Table vs Cards) */}
+        <div className="hidden md:flex items-center border border-gray-200 rounded-lg p-0.5 bg-white h-[38px] shadow-2xs">
+          <button
+            type="button"
+            onClick={() => handleViewChange('table')}
+            title="Vista de tabla"
+            className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+              currentView === 'table'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <Table className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleViewChange('cards')}
+            title="Vista de tarjetas"
+            className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+              currentView === 'cards'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Filter panel */}

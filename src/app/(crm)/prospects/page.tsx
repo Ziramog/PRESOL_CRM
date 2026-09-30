@@ -55,6 +55,7 @@ export default async function ProspectsPage({
   const sector = typeof params.sector === 'string' ? params.sector : '';
   const status = typeof params.status === 'string' ? params.status : '';
   const favoritesOnly = params.favorites === 'true';
+  const viewMode = typeof params.view === 'string' && params.view === 'cards' ? 'cards' : 'table';
 
   // Sorting
   const sortCol = typeof params.sort === 'string' && SORTABLE_COLUMNS[params.sort]
@@ -321,13 +322,28 @@ export default async function ProspectsPage({
         )}
       </div>
 
-      {/* Desktop view (Table) */}
-      <div className="hidden md:block bg-white rounded-none border border-gray-100 shadow-sm overflow-hidden">
-        <ProspectTable
-          prospects={prospectsWithFlags}
-          currentSort={sortCol}
-          currentDir={sortDir ? 'asc' : 'desc'}
-        />
+      {/* Desktop view (Table or Cards) */}
+      <div className="hidden md:block">
+        {viewMode === 'cards' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {prospectsWithFlags.map((prospect) => (
+              <ProspectCard key={prospect.id} prospect={prospect} />
+            ))}
+            {prospectsWithFlags.length === 0 && (
+              <div className="col-span-full text-center py-12 text-gray-500 text-sm bg-white border border-gray-100 rounded-lg">
+                No se encontraron prospectos.
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="bg-white rounded-none border border-gray-100 shadow-sm overflow-hidden">
+            <ProspectTable
+              prospects={prospectsWithFlags}
+              currentSort={sortCol}
+              currentDir={sortDir ? 'asc' : 'desc'}
+            />
+          </div>
+        )}
       </div>
 
       <ProspectPagination totalCount={totalCount} pageSize={pageSize} currentPage={page} />

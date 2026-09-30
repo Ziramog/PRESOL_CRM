@@ -4,9 +4,11 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { PROSPECT_STATUS } from '@/lib/constants';
-import { ArrowUpDown, ArrowUp, ArrowDown, MessageSquare } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, MessageSquare, PlusCircle, CalendarPlus } from 'lucide-react';
 import { FavoriteButton } from './FavoriteButton';
 import { getLeadTemperature, PulseIndicator } from '@/lib/lead-temperature';
+import { ActivityForm } from './activity-form';
+import { TaskForm } from './task-form';
 
 type SortDir = 'asc' | 'desc';
 
@@ -59,6 +61,8 @@ export function ProspectTable({
   const searchParams = useSearchParams();
 
   const [isPending, startTransition] = React.useTransition();
+  const [activityProspectId, setActivityProspectId] = React.useState<string | null>(null);
+  const [taskProspectId, setTaskProspectId] = React.useState<string | null>(null);
 
   const handleSort = (colKey: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -210,13 +214,31 @@ export function ProspectTable({
                   )}
                 </td>
 
-                <td className="px-5 py-3.5 text-right">
-                  <Link
-                    href={`/prospects/${prospect.id}`}
-                    className="text-xs font-semibold text-gray-400 hover:text-blue-600 transition-colors"
-                  >
-                    Ver ficha →
-                  </Link>
+                <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setActivityProspectId(prospect.id)}
+                      title="Registrar actividad comercial"
+                      className="p-1.5 rounded-lg border border-blue-200 bg-blue-50/50 text-blue-600 hover:bg-blue-100/70 hover:border-blue-300 transition-colors active:scale-95 cursor-pointer"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTaskProspectId(prospect.id)}
+                      title="Crear tarea / seguimiento"
+                      className="p-1.5 rounded-lg border border-amber-200 bg-amber-50/50 text-amber-600 hover:bg-amber-100/70 hover:border-amber-300 transition-colors active:scale-95 cursor-pointer"
+                    >
+                      <CalendarPlus className="w-3.5 h-3.5" />
+                    </button>
+                    <Link
+                      href={`/prospects/${prospect.id}`}
+                      className="text-xs font-semibold text-gray-400 hover:text-blue-600 transition-colors ml-1"
+                    >
+                      Ver ficha →
+                    </Link>
+                  </div>
                 </td>
               </tr>
             );
@@ -224,6 +246,20 @@ export function ProspectTable({
           )}
         </tbody>
       </table>
+
+      {activityProspectId && (
+        <ActivityForm
+          prospectId={activityProspectId}
+          onClose={() => setActivityProspectId(null)}
+        />
+      )}
+
+      {taskProspectId && (
+        <TaskForm
+          prospectId={taskProspectId}
+          onClose={() => setTaskProspectId(null)}
+        />
+      )}
     </div>
   );
 }

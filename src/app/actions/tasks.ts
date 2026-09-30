@@ -59,7 +59,9 @@ export async function createTask(formData: FormData) {
   await supabase.from('prospects').update({ updated_at: new Date().toISOString() }).eq('id', prospect_id);
 
   revalidatePath(`/prospects/${prospect_id}`);
+  revalidatePath('/prospects');
   revalidatePath('/tasks');
+  revalidatePath('/dashboard');
   return { success: true };
 }
 

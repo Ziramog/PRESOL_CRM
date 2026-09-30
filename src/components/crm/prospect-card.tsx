@@ -1,8 +1,13 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
-import { MapPin, Phone, MessageCircle, ChevronRight, Building2, Factory, Leaf, Store, Star, Tag, Clock, Mic, HardHat, Hexagon, Truck, Briefcase, Wrench, Wheat, Box } from 'lucide-react';
+import { MapPin, Phone, MessageCircle, ChevronRight, Building2, Factory, Leaf, Store, Star, Tag, Clock, Mic, HardHat, Hexagon, Truck, Briefcase, Wrench, Wheat, Box, PlusCircle, CalendarPlus } from 'lucide-react';
 import { PROSPECT_STATUS } from '@/lib/constants';
 import { FavoriteButton } from '@/components/crm/FavoriteButton';
 import { getLeadTemperature, PulseIndicator } from '@/lib/lead-temperature';
+import { ActivityForm } from '@/components/crm/activity-form';
+import { TaskForm } from '@/components/crm/task-form';
 
 function getIconProps(category: string, name: string) {
   const cat = (category || '').toLowerCase();
@@ -53,6 +58,9 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
 );
 
 export function ProspectCard({ prospect }: { prospect: any }) {
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+
   const primaryContact = prospect.contacts?.find((c: any) => c.is_primary) || prospect.contacts?.[0];
   const activePhone = primaryContact?.phone || prospect.primary_phone;
   const cleanPhone = activePhone ? activePhone.replace(/\D/g, '') : '';
@@ -130,40 +138,105 @@ export function ProspectCard({ prospect }: { prospect: any }) {
         </div>
       </Link>
       
-      {/* ACTION BAR (Square buttons) */}
-      <div className="px-4 pb-4 pt-3 flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/50">
-        {/* Llamar */}
+      {/* ACTION BAR (Square action buttons) */}
+      <div className="px-3 sm:px-4 pb-3.5 pt-3 flex items-center justify-between gap-1.5 sm:gap-2 border-t border-slate-100 bg-slate-50/50">
+        {/* 1. Llamar */}
         {cleanPhone ? (
-          <a href={`tel:${cleanPhone}`} className="w-[52px] h-[52px] rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors active:scale-95">
-            <Phone className="w-5 h-5 text-blue-600" strokeWidth={2.5} />
+          <a 
+            href={`tel:${cleanPhone}`} 
+            title={`Llamar a ${prospect.company_name}`}
+            className="flex-1 h-11 sm:h-12 min-w-0 rounded-xl border border-slate-200 bg-white shadow-xs flex items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors active:scale-95"
+          >
+            <Phone className="w-5 h-5 text-blue-600" strokeWidth={2.2} />
           </a>
         ) : (
-          <div className="w-[52px] h-[52px] rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center opacity-50 cursor-not-allowed">
-            <Phone className="w-5 h-5 text-slate-400" strokeWidth={2.5} />
+          <div 
+            title="Sin teléfono"
+            className="flex-1 h-11 sm:h-12 min-w-0 rounded-xl border border-slate-200 bg-white shadow-xs flex items-center justify-center opacity-40 cursor-not-allowed"
+          >
+            <Phone className="w-5 h-5 text-slate-400" strokeWidth={2.2} />
           </div>
         )}
 
-        {/* WhatsApp */}
+        {/* 2. WhatsApp */}
         {cleanPhone ? (
-          <a href={`whatsapp://send?phone=${cleanPhone}`} className="w-[52px] h-[52px] rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-[#25D366]/10 hover:border-[#25D366]/30 transition-colors active:scale-95">
-            <WhatsAppIcon className="w-6 h-6 text-[#25D366]" />
+          <a 
+            href={`whatsapp://send?phone=${cleanPhone}`} 
+            title="Enviar WhatsApp"
+            className="flex-1 h-11 sm:h-12 min-w-0 rounded-xl border border-slate-200 bg-white shadow-xs flex items-center justify-center hover:bg-[#25D366]/10 hover:border-[#25D366]/30 transition-colors active:scale-95"
+          >
+            <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
           </a>
         ) : (
-          <div className="w-[52px] h-[52px] rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center opacity-50 cursor-not-allowed">
-            <WhatsAppIcon className="w-6 h-6 text-slate-400" />
+          <div 
+            title="Sin teléfono para WhatsApp"
+            className="flex-1 h-11 sm:h-12 min-w-0 rounded-xl border border-slate-200 bg-white shadow-xs flex items-center justify-center opacity-40 cursor-not-allowed"
+          >
+            <WhatsAppIcon className="w-5 h-5 text-slate-400" />
           </div>
         )}
 
-        {/* Audio */}
-        <Link href={`/prospects/${prospect.id}?action=voice`} className="w-[52px] h-[52px] rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-purple-50 hover:border-purple-200 transition-colors active:scale-95">
-          <Mic className="w-5 h-5 text-purple-600" strokeWidth={2.5} />
+        {/* 3. Audio */}
+        <Link 
+          href={`/prospects/${prospect.id}?action=voice`} 
+          title="Grabar nota de voz"
+          className="flex-1 h-11 sm:h-12 min-w-0 rounded-xl border border-purple-200/80 bg-purple-50/50 shadow-xs flex items-center justify-center hover:bg-purple-100 hover:border-purple-300 text-purple-600 transition-colors active:scale-95"
+        >
+          <Mic className="w-5 h-5 text-purple-600" strokeWidth={2.2} />
         </Link>
 
-        {/* Detalle */}
-        <Link href={`/prospects/${prospect.id}`} className="w-[52px] h-[52px] rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:bg-slate-100 transition-colors active:scale-95">
-          <ChevronRight className="w-6 h-6 text-slate-700" strokeWidth={2.5} />
+        {/* 4. Crear actividad */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowActivityModal(true);
+          }}
+          title="Registrar actividad comercial"
+          className="flex-1 h-11 sm:h-12 min-w-0 rounded-xl border border-blue-200 bg-blue-50/50 shadow-xs flex items-center justify-center hover:bg-blue-100/70 hover:border-blue-300 text-blue-600 transition-colors active:scale-95 cursor-pointer"
+        >
+          <PlusCircle className="w-5 h-5" strokeWidth={2.2} />
+        </button>
+
+        {/* 5. Crear tarea / seguimiento */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowTaskModal(true);
+          }}
+          title="Crear tarea / seguimiento"
+          className="flex-1 h-11 sm:h-12 min-w-0 rounded-xl border border-amber-200 bg-amber-50/50 shadow-xs flex items-center justify-center hover:bg-amber-100/70 hover:border-amber-300 text-amber-600 transition-colors active:scale-95 cursor-pointer"
+        >
+          <CalendarPlus className="w-5 h-5" strokeWidth={2.2} />
+        </button>
+
+        {/* 6. Detalle */}
+        <Link 
+          href={`/prospects/${prospect.id}`} 
+          title="Ver detalle del prospecto"
+          className="flex-1 h-11 sm:h-12 min-w-0 rounded-xl border border-slate-200 bg-white shadow-xs flex items-center justify-center hover:bg-slate-100 text-slate-700 transition-colors active:scale-95"
+        >
+          <ChevronRight className="w-5 h-5 text-slate-700" strokeWidth={2.5} />
         </Link>
       </div>
+
+      {/* Modals */}
+      {showActivityModal && (
+        <ActivityForm
+          prospectId={prospect.id}
+          onClose={() => setShowActivityModal(false)}
+        />
+      )}
+
+      {showTaskModal && (
+        <TaskForm
+          prospectId={prospect.id}
+          onClose={() => setShowTaskModal(false)}
+        />
+      )}
     </div>
   );
 }

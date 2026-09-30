@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createTask } from '@/app/actions/tasks';
 import { X, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
@@ -8,6 +9,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
 export function TaskForm({ prospectId, onClose }: { prospectId: string, onClose: () => void }) {
+  const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,6 +26,7 @@ export function TaskForm({ prospectId, onClose }: { prospectId: string, onClose:
       setError(result.error);
       setIsPending(false);
     } else {
+      router.refresh();
       onClose();
     }
   };
