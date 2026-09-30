@@ -10,6 +10,9 @@ import { ResultsBarChart } from '@/components/charts/ResultsBarChart';
 import { ConversionFunnel } from '@/components/charts/ConversionFunnel';
 import { TripPlanVsActual } from '@/components/charts/TripPlanVsActual';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createAdminClient();
@@ -26,7 +29,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
 
   const { data: stops } = await supabase
     .from('trip_stops')
-    .select('*, prospects(*)')
+    .select('*, prospects(*, contacts(*))')
     .eq('trip_id', trip.id)
     .order('stop_order', { ascending: true });
 
