@@ -1,25 +1,20 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import { Map, Calendar, ChevronRight, PlusCircle, MapPin } from 'lucide-react';
+import { Map, Calendar, ChevronRight, PlusCircle, MapPin, User } from 'lucide-react';
 import { CreateRetrospectiveTripButton } from '@/components/crm/v2/CreateRetrospectiveTripButton';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function TripsPage() {
   const supabase = await createAdminClient();
 
-  const { data: profiles } = await supabase.from('profiles').select('id').limit(1);
-  const userId = profiles && profiles.length > 0 ? profiles[0].id : null;
+  const { data: tripsData } = await supabase
+    .from('trips')
+    .select('*, trip_stops(id), profiles:owner_id(full_name)')
+    .order('trip_date', { ascending: false });
 
-  let trips: any[] = [];
-  
-  if (userId) {
-    const { data } = await supabase
-      .from('trips')
-      .select('*, trip_stops(id)')
-      .eq('owner_id', userId)
-      .order('trip_date', { ascending: false });
-      
-    if (data) trips = data;
-  }
+  const trips = tripsData || [];
 
   const activeTrips = trips.filter(t => t.status === 'in_progress');
   const plannedTrips = trips.filter(t => t.status === 'planned' || t.status === 'draft');
@@ -108,13 +103,19 @@ function TripCard({ trip, isActive = false }: { trip: any, isActive?: boolean })
             {trip.trip_date && (
               <div className="flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
-                <span>{new Date(trip.trip_date).toLocaleDateString()}</span>
+                <span>{new Date(trip.trip_date + 'T00:00:00').toLocaleDateString('es-AR')}</span>
               </div>
             )}
             <div className="flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5" />
               <span>{stopCount} {stopCount === 1 ? 'parada' : 'paradas'}</span>
             </div>
+            {trip.profiles?.full_name && (
+              <div className="flex items-center gap-1 text-gray-500">
+                <User className="w-3.5 h-3.5" />
+                <span>{trip.profiles.full_name}</span>
+              </div>
+            )}
             <span className={`px-2 py-0.5 rounded uppercase text-[10px] font-bold ${
               trip.status === 'in_progress' ? 'bg-green-100 text-green-800' :
               trip.status === 'planned' ? 'bg-blue-100 text-blue-800' :
