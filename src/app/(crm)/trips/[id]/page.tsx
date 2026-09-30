@@ -1,7 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ChevronLeft, Map, Play, CheckCircle } from 'lucide-react';
+import { ChevronLeft, Map, Play, CheckCircle, Calendar, MapPin } from 'lucide-react';
 import { TripStopCard } from '@/components/crm/trip-stop-card';
 import { TripBuilder } from '@/components/crm/trip-builder';
 
@@ -61,51 +61,111 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
     opportunities: dashboardData.summary.week.opportunities, // Fallback for opportunities
   };
 
+  // Limpiar descripción de listas extensas de empresas entre paréntesis si existieran
+  const cleanDescription = trip.description 
+    ? trip.description.replace(/\s*\([^)]*\)/g, '').trim() 
+    : '';
+  const stopsCount = stops?.length || 0;
+  const formattedDate = trip.trip_date 
+    ? new Date(trip.trip_date + 'T00:00:00').toLocaleDateString('es-AR', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      })
+    : null;
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-20 md:pb-0">
-      <div className="flex items-center justify-between">
-        <div>
-          <Link href="/trips" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 mb-2 transition-colors">
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Volver a giras
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-900">{trip.name}</h1>
-          {trip.description && <p className="text-sm text-gray-500 mt-1">{trip.description}</p>}
-        </div>
-        
-        {trip.status === 'planned' && (
-          <form action={async () => {
-            'use server';
-            const { createClient } = await import('@/lib/supabase/server');
-            const { revalidatePath } = await import('next/cache');
-            const supabase = await createAdminClient();
-            await supabase.from('trips').update({ status: 'in_progress' }).eq('id', trip.id);
-            revalidatePath(`/trips/${trip.id}`);
-            revalidatePath('/trips');
-          }}>
-            <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition-colors shadow-sm">
-              <Play className="w-4 h-4 fill-current" />
-              Iniciar Ruta
-            </button>
-          </form>
-        )}
+      {/* 1. Barra de Navegación Superior */}
+      <div className="flex items-center justify-between gap-2">
+        <Link 
+          href="/trips" 
+          className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors py-1 px-2 -ml-2 rounded-lg hover:bg-slate-100"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span>Volver a giras</span>
+        </Link>
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+          isRouteMode ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+          trip.status === 'completed' ? 'bg-slate-100 text-slate-700 border border-slate-200' :
+          'bg-blue-50 text-blue-700 border border-blue-200'
+        }`}>
+          <span className={`w-2 h-2 rounded-full ${isRouteMode ? 'bg-emerald-500 animate-pulse' : trip.status === 'completed' ? 'bg-slate-400' : 'bg-blue-500'}`} />
+          {isRouteMode ? 'En Curso' : trip.status === 'completed' ? 'Completada' : 'Planificada'}
+        </span>
+      </div>
 
-        {isRouteMode && (
-          <form action={async () => {
-            'use server';
-            const { createClient } = await import('@/lib/supabase/server');
-            const { revalidatePath } = await import('next/cache');
-            const supabase = await createAdminClient();
-            await supabase.from('trips').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', trip.id);
-            revalidatePath(`/trips/${trip.id}`);
-            revalidatePath('/trips');
-          }}>
-            <button className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-md text-sm font-medium hover:bg-gray-900 transition-colors shadow-sm">
-              <CheckCircle className="w-4 h-4" />
-              Finalizar Gira
-            </button>
-          </form>
-        )}
+      {/* 2. Header Card Rediseñado (Mobile-first, sin encimar botón y título) */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
+              {trip.name}
+            </h1>
+            
+            {cleanDescription && (
+              <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium leading-relaxed">
+                {cleanDescription}
+              </p>
+            )}
+
+            {/* Badges / Chips */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-3 text-xs font-semibold text-slate-600">
+              {formattedDate && (
+                <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80">
+                  <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  <span className="capitalize">{formattedDate}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80">
+                <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                <span>{stopsCount} {stopsCount === 1 ? 'parada programada' : 'paradas programadas'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Button: Iniciar Ruta / Finalizar Gira */}
+          <div className="w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t border-slate-100 sm:border-0">
+            {trip.status === 'planned' && (
+              <form action={async () => {
+                'use server';
+                const { revalidatePath } = await import('next/cache');
+                const supabase = await createAdminClient();
+                await supabase.from('trips').update({ status: 'in_progress' }).eq('id', trip.id);
+                revalidatePath(`/trips/${trip.id}`);
+                revalidatePath('/trips');
+              }} className="w-full sm:w-auto">
+                <button 
+                  type="submit"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3 sm:py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white rounded-xl text-sm font-bold shadow-sm hover:shadow-md transition-all cursor-pointer"
+                >
+                  <Play className="w-4 h-4 fill-current" />
+                  <span>Iniciar Ruta</span>
+                </button>
+              </form>
+            )}
+
+            {isRouteMode && (
+              <form action={async () => {
+                'use server';
+                const { revalidatePath } = await import('next/cache');
+                const supabase = await createAdminClient();
+                await supabase.from('trips').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', trip.id);
+                revalidatePath(`/trips/${trip.id}`);
+                revalidatePath('/trips');
+              }} className="w-full sm:w-auto">
+                <button 
+                  type="submit"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3 sm:py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-[0.98] text-white rounded-xl text-sm font-bold shadow-sm hover:shadow-md transition-all cursor-pointer"
+                >
+                  <CheckCircle className="w-4 h-4 text-emerald-400" />
+                  <span>Finalizar Gira</span>
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
       </div>
 
       <TripPlanVsActual stops={stops || []} />
