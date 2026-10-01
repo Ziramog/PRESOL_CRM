@@ -28,7 +28,7 @@ const navigationGroups = [
       { name: 'Dashboard', href: '/dashboard', icon: Home },
       { name: 'Bandeja Comercial', href: '/inbox', icon: Inbox },
       { name: 'Giras y Rutas', href: '/trips', icon: Map },
-      { name: 'Prospectos (CRM)', href: '/prospects', icon: Users },
+      { name: 'Clientes', href: '/prospects', icon: Users },
       { name: 'Seguimientos', href: '/tasks', icon: CheckSquare },
     ],
   },
@@ -77,34 +77,33 @@ export function MobileHeader() {
   return (
     <>
       <header className="md:hidden flex items-center justify-between px-3 py-2.5 bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="flex items-center gap-2">
+        <Link href="/dashboard" className="flex items-center">
+          <Image 
+            src="/logo-presol.png" 
+            alt="PRESOL Logo" 
+            width={120} 
+            height={34} 
+            className="object-contain"
+            priority
+          />
+        </Link>
+        
+        {/* Hamburguesa a la izquierda de la campanita */}
+        <div className="flex items-center gap-1">
           <button
             onClick={() => setIsDrawerOpen(true)}
-            className="p-1.5 -ml-1 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            className="p-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
             aria-label="Abrir menú de navegación"
           >
             <Menu className="w-5 h-5" />
           </button>
-          <Link href="/dashboard" className="flex items-center">
-            <Image 
-              src="/logo-presol.png" 
-              alt="PRESOL Logo" 
-              width={110} 
-              height={32} 
-              className="object-contain"
-              priority
-            />
-          </Link>
-        </div>
-        
-        <div className="flex items-center">
           <NotificationsBell />
         </div>
       </header>
 
-      {/* Slide-out Mobile Drawer */}
+      {/* Slide-out Mobile Drawer (desliza desde la derecha) */}
       {isDrawerOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
+        <div className="md:hidden fixed inset-0 z-50 flex justify-end">
           {/* Backdrop */}
           <div 
             className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
@@ -112,7 +111,7 @@ export function MobileHeader() {
           />
 
           {/* Drawer Menu Panel */}
-          <div className="relative w-72 max-w-[85vw] bg-slate-900 text-white h-full flex flex-col shadow-2xl z-50 animate-in slide-in-from-left duration-200">
+          <div className="relative w-72 max-w-[85vw] bg-slate-900 text-white h-full flex flex-col shadow-2xl z-50 animate-in slide-in-from-right duration-200">
             {/* Drawer Header */}
             <div className="flex h-16 shrink-0 items-center justify-between px-4 bg-white border-b border-gray-200">
               <Image 

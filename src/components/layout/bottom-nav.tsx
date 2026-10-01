@@ -36,7 +36,7 @@ export function BottomNav() {
       icon: Map,
       isTrip: true 
     },
-    { name: 'CRM', href: '/prospects', icon: Users },
+    { name: 'Clientes', href: '/prospects', icon: Users },
     { name: 'Tareas', href: '/tasks', icon: CheckSquare },
   ];
 
