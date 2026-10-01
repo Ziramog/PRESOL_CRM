@@ -2,6 +2,9 @@
 
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { formatInTimeZone } from 'date-fns-tz';
+
+const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
 export async function createTrip(formData: FormData) {
   const supabase = await createAdminClient();
@@ -114,4 +117,56 @@ export async function updateStopStatus(stopId: string, tripId: string, status: s
 
   revalidatePath(`/trips/${tripId}`);
   return { success: true };
+}
+
+export async function getActiveTripStatus(): Promise<{
+  hasTrip: boolean;
+  status: 'in_progress' | 'today' | null;
+  tripId: string | null;
+  tripName: string | null;
+}> {
+  try {
+    const supabase = await createAdminClient();
+
+    // 1. Any trip currently in_progress?
+    const { data: inProgress } = await supabase
+      .from('trips')
+      .select('id, name, trip_date, status')
+      .eq('status', 'in_progress')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (inProgress && inProgress.length > 0) {
+      return {
+        hasTrip: true,
+        status: 'in_progress',
+        tripId: inProgress[0].id,
+        tripName: inProgress[0].name,
+      };
+    }
+
+    // 2. Any planned trip for today in local timezone?
+    const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+    const { data: todayTrips } = await supabase
+      .from('trips')
+      .select('id, name, trip_date, status')
+      .eq('trip_date', today)
+      .neq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (todayTrips && todayTrips.length > 0) {
+      return {
+        hasTrip: true,
+        status: 'today',
+        tripId: todayTrips[0].id,
+        tripName: todayTrips[0].name,
+      };
+    }
+
+    return { hasTrip: false, status: null, tripId: null, tripName: null };
+  } catch (error) {
+    console.error('Error fetching active trip status:', error);
+    return { hasTrip: false, status: null, tripId: null, tripName: null };
+  }
 }
