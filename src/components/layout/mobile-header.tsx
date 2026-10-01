@@ -88,8 +88,9 @@ export function MobileHeader() {
           />
         </Link>
         
-        {/* Hamburguesa a la izquierda de la campanita */}
+        {/* Campanita y luego Hamburguesa en el extremo derecho */}
         <div className="flex items-center gap-1">
+          <NotificationsBell />
           <button
             onClick={() => setIsDrawerOpen(true)}
             className="p-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
@@ -97,7 +98,6 @@ export function MobileHeader() {
           >
             <Menu className="w-5 h-5" />
           </button>
-          <NotificationsBell />
         </div>
       </header>
 
