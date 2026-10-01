@@ -5,6 +5,7 @@ import { Camera, Upload, X, Check, Building2, User, Mail, Phone, Briefcase, Load
 import { createProspect, updateProspect } from '@/app/actions/prospects';
 import { createContact } from '@/app/actions/contacts';
 import { useRouter } from 'next/navigation';
+import { compressImageFile } from '@/lib/image-compress';
 
 export function BusinessCardScanner() {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,15 +25,6 @@ export function BusinessCardScanner() {
     }
   };
 
-  const toBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
-  };
-
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -44,7 +36,8 @@ export function BusinessCardScanner() {
     setExistingCompany(null);
 
     try {
-      const base64 = await toBase64(file);
+      // Compresión client-side automática para móviles
+      const base64 = await compressImageFile(file, 1200, 0.82);
       
       const res = await fetch('/api/process-business-card', {
         method: 'POST',
@@ -62,7 +55,7 @@ export function BusinessCardScanner() {
       setExistingCompany(json.existingCompany);
 
     } catch (err: any) {
-      setError(err.message || 'Ocurrió un error inesperado');
+      setError(err.message || 'Ocurrió un error inesperado al procesar la imagen');
     } finally {
       setIsProcessing(false);
       // reset file input
@@ -134,7 +127,6 @@ export function BusinessCardScanner() {
         type="file"
         ref={fileInputRef}
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={handleFileChange}
       />

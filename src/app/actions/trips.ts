@@ -68,6 +68,66 @@ export async function addTripStop(tripId: string, prospectId: string) {
   return { success: true };
 }
 
+export async function quickCreateProspectAndAddStop(
+  tripId: string, 
+  companyName: string, 
+  city?: string, 
+  phone?: string,
+  contactName?: string
+) {
+  const supabase = await createAdminClient();
+  
+  if (!companyName || !companyName.trim()) {
+    return { error: 'El nombre de la empresa es obligatorio' };
+  }
+
+  // 1. Crear prospecto en base de datos
+  const { data: prospect, error: pError } = await supabase
+    .from('prospects')
+    .insert({
+      company_name: companyName.trim(),
+      city: city?.trim() || 'Córdoba',
+      primary_phone: phone?.trim() || null,
+      ask_for: contactName?.trim() || null,
+      class: 'B',
+      contact_status: 'pending',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .select('id, company_name')
+    .single();
+
+  if (pError || !prospect) {
+    console.error('Error al crear prospecto rápido:', pError);
+    return { error: pError?.message || 'Error al crear la empresa' };
+  }
+
+  // Crear contacto si se especificó nombre o teléfono
+  if (contactName || phone) {
+    try {
+      await supabase.from('contacts').insert({
+        prospect_id: prospect.id,
+        full_name: contactName?.trim() || prospect.company_name,
+        role_title: 'Contacto Comercial',
+        phone: phone?.trim() || null,
+        is_primary: true
+      });
+    } catch (cErr) {
+      console.warn('Error creating quick contact:', cErr);
+    }
+  }
+
+  // 2. Agregar como parada en la gira
+  const stopRes = await addTripStop(tripId, prospect.id);
+  if (stopRes.error) {
+    return { error: stopRes.error };
+  }
+
+  revalidatePath(`/trips/${tripId}`);
+  revalidatePath('/prospects');
+  return { success: true, prospectId: prospect.id };
+}
+
 export async function removeTripStop(stopId: string, tripId: string) {
   const supabase = await createAdminClient();
   

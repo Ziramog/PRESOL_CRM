@@ -3,8 +3,9 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createContact, updateContact, deleteContact } from '@/app/actions/contacts';
-import { X, BookUser, UserCircle, Briefcase, Phone, Mail, Camera, Trash2 } from 'lucide-react';
+import { X, BookUser, UserCircle, Briefcase, Phone, Mail, Camera, Trash2, CheckCircle2 } from 'lucide-react';
 import { MobileContactImportModal } from '@/components/crm/v2/MobileContactImportModal';
+import { compressImageFile } from '@/lib/image-compress';
 
 export function ContactForm({ 
   prospectId, 
@@ -19,6 +20,7 @@ export function ContactForm({
   const isEdit = Boolean(contact && contact.id);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
 
   const nameRef = useRef<HTMLInputElement>(null);
@@ -66,24 +68,18 @@ export function ContactForm({
   const roleRef = useRef<HTMLInputElement>(null);
   const [isScanning, setIsScanning] = useState(false);
 
-  const toBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
-  };
-
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsScanning(true);
     setError(null);
+    setSuccessMsg(null);
 
     try {
-      const base64 = await toBase64(file);
+      // Compresión client-side automática para móviles (evita límite 4.5MB Vercel y acelera OpenAI Vision)
+      const base64 = await compressImageFile(file, 1200, 0.82);
+      
       const res = await fetch('/api/process-business-card', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -104,6 +100,8 @@ export function ContactForm({
       if (data.roleTitle && roleRef.current) {
         roleRef.current.value = data.roleTitle;
       }
+
+      setSuccessMsg('Tarjeta leída con IA. Verifica y ajusta los datos si es necesario.');
 
     } catch (err: any) {
       setError(err.message || 'Error al procesar la tarjeta');
@@ -209,12 +207,18 @@ export function ContactForm({
             <input 
               type="file" 
               accept="image/*" 
-              capture="environment" 
               ref={fileInputRef} 
               className="hidden" 
               onChange={handleFileChange} 
             />
           </div>
+
+          {successMsg && (
+            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{successMsg}</span>
+            </div>
+          )}
           
           <form id="contact-form" onSubmit={handleSubmit} className="space-y-5">
             <input type="hidden" name="prospect_id" value={prospectId} />
@@ -242,6 +246,7 @@ export function ContactForm({
                   Cargo / Rol
                 </label>
                 <input 
+                  ref={roleRef}
                   type="text" 
                   name="role_title" 
                   defaultValue={contact?.role_title}

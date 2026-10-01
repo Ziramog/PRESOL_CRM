@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { ChevronLeft, Map, Play, CheckCircle, Calendar, MapPin } from 'lucide-react';
 import { TripStopCard } from '@/components/crm/trip-stop-card';
 import { TripBuilder } from '@/components/crm/trip-builder';
+import { AddTripStopDialog } from '@/components/crm/add-trip-stop-dialog';
 
 import { getDashboardData } from '@/lib/dashboard/queries';
 import { ResultsBarChart } from '@/components/charts/ResultsBarChart';
@@ -177,40 +178,65 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-2">Itinerario</h2>
+          <div className="flex items-center justify-between gap-3 mb-1">
+            <div>
+              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Itinerario</h2>
+              <p className="text-xs text-slate-500 font-medium">
+                {stopsCount} {stopsCount === 1 ? 'parada programada' : 'paradas programadas'} • {stops?.filter((s: any) => s.status === 'visited').length || 0} completadas
+              </p>
+            </div>
+            <AddTripStopDialog 
+              tripId={trip.id} 
+              existingProspectIds={stops?.map((s: any) => s.prospect_id) || []}
+              tripStatus={trip.status}
+            />
+          </div>
           
           {!stops || stops.length === 0 ? (
-            <div className="bg-white rounded-lg border border-gray-200 border-dashed p-8 text-center">
-              <Map className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-              <h3 className="text-sm font-medium text-gray-900">Tu gira está vacía</h3>
-              <p className="text-sm text-gray-500 mt-1">Busca prospectos a la derecha para agregarlos a tu ruta.</p>
+            <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-8 text-center">
+              <Map className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+              <h3 className="text-sm font-bold text-slate-900">Tu gira está vacía</h3>
+              <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Usa el botón &ldquo;Agregar Parada&rdquo; para sumar empresas a tu ruta comercial.</p>
+              <div className="mt-4">
+                <AddTripStopDialog 
+                  tripId={trip.id} 
+                  existingProspectIds={stops?.map((s: any) => s.prospect_id) || []}
+                  tripStatus={trip.status}
+                />
+              </div>
             </div>
           ) : (
             <div className="space-y-4 relative before:absolute before:inset-0 before:ml-[1.125rem] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
-              {stops.map((stop, index) => (
+              {stops.map((stop: any, index: number) => (
                 <TripStopCard 
                   key={stop.id} 
                   stop={stop} 
                   isRouteMode={isRouteMode} 
                   tripId={trip.id}
-                  isNext={!isRouteMode ? false : stops.findIndex(s => s.status === 'pending') === index}
+                  isNext={!isRouteMode ? false : stops.findIndex((s: any) => s.status === 'pending') === index}
                 />
               ))}
             </div>
           )}
         </div>
 
-        <div className="lg:col-span-1">
-          {trip.status === 'planned' || trip.status === 'draft' ? (
-            <TripBuilder tripId={trip.id} />
-          ) : (
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-5">
-              <h3 className="font-semibold text-blue-900 mb-2">Ruta en curso</h3>
-              <p className="text-sm text-blue-800">
-                Concéntrate en el camino. Sigue el orden establecido y registra cada visita para avanzar.
+        <div className="lg:col-span-1 space-y-4">
+          {isRouteMode && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-emerald-900 shadow-2xs">
+              <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-emerald-800">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                <span>Ruta en curso</span>
+              </div>
+              <p className="text-xs text-emerald-800/90 mt-1 font-medium leading-relaxed">
+                Sigue el orden de visitas. Puedes agregar nuevas paradas al itinerario en cualquier momento.
               </p>
             </div>
           )}
+
+          <TripBuilder 
+            tripId={trip.id} 
+            existingProspectIds={stops?.map((s: any) => s.prospect_id) || []}
+          />
         </div>
       </div>
     </div>
