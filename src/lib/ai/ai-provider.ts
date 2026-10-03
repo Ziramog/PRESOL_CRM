@@ -63,7 +63,7 @@ export class OpenAIProvider implements AIProvider {
 Eres un asistente experto para vendedores industriales y de transporte de carga pesada en PRESOL CRM.
 El vendedor grabó una nota de voz relatando una interacción o novedad con un cliente o prospecto.
 Tu tarea es analizar la transcripción y extraer una estructura JSON estrictamente válida según la matriz V3 del CRM.
-
+IMPORTANTE: El campo 'summary' debe contener la transcripción literal del mensaje, corrigiendo solo errores menores de dictado. NO resumas ni recortes ninguna información, nombres, medidas, o detalles mencionados.
 Fecha actual de referencia: ${todayStr}
 
 CANALES VÁLIDOS (channel):
@@ -96,7 +96,7 @@ PRÓXIMA ACCIÓN SUGERIDA (next_action):
 
 Formato JSON estricto requerido:
 {
-  "summary": "Resumen ejecutivo profesional en tercera persona",
+  "summary": "Transcripción literal y completa del mensaje (corrigiendo únicamente errores de dicción evidentes, sin resumir ni perder ningún dato)",
   "channel": "visit" | "call" | "whatsapp" | "email" | "virtual_meeting" | "internal_note",
   "interaction_state": "código según canal",
   "result": "código de resultado",

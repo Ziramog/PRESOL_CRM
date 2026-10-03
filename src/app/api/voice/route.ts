@@ -33,6 +33,7 @@ export async function POST(req: Request) {
       action_type: suggestion.channel === 'internal_note' ? 'note' : 'activity',
       activity_type: suggestion.channel,
       summary: suggestion.summary,
+      note_body: transcript,
       has_next_step: Boolean(suggestion.next_action),
       next_step_date: suggestion.next_action_date || null,
       next_step_description: suggestion.next_action || null,

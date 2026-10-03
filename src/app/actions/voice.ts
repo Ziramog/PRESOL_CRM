@@ -31,7 +31,7 @@ export async function saveVoiceInteraction(prospectId: string, data: any) {
     const channel = normalizeChannel(data.channel || data.activity_type || 'visit');
     const interaction_state = data.interaction_state || null;
     const result = data.result || null;
-    const summary = data.summary || data.notes || '';
+    const summary = data.note_body || data.summary || data.notes || '';
     const effectiveContactBool = Boolean(
       data.effective_contact ?? isEffectiveContact(channel, interaction_state, result)
     );

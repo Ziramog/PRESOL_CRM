@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createActivity, updateActivity, deleteActivity, getTeamMembers } from '@/app/actions/activities';
 import { updateStopStatus } from '@/app/actions/trips';
@@ -19,6 +19,8 @@ import {
   User,
   Sparkles,
   CheckCircle2,
+  Mic,
+  Loader2
 } from 'lucide-react';
 import { toZonedTime } from 'date-fns-tz';
 import {
@@ -31,6 +33,7 @@ import {
   normalizeChannel,
   getSuggestedNextAction,
 } from '@/lib/activities/config';
+import { BusinessCardScanner } from '@/components/crm/v2/BusinessCardScanner';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
@@ -107,10 +110,72 @@ export function ActivityForm({
   const [nextActionAssignedTo, setNextActionAssignedTo] = useState<string>('');
   const [teamMembers, setTeamMembers] = useState<{ id: string; full_name: string }[]>([]);
 
+  // 6. Dictation states
+  const [isDictating, setIsDictating] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<BlobPart[]>([]);
+
+  const startDictation = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        setIsDictating(false);
+        setIsTranscribing(true);
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+        const blob = new Blob(audioChunksRef.current, { type: mimeType });
+        const ext = mimeType.includes('mp4') ? 'm4a' : 'webm';
+        
+        stream.getTracks().forEach(track => track.stop());
+        
+        const formData = new FormData();
+        formData.append('file', blob, `audio.${ext}`);
+
+        try {
+          const res = await fetch('/api/voice/transcribe', { method: 'POST', body: formData });
+          const json = await res.json();
+          if (json.transcript) {
+            setNotes(prev => prev ? `${prev} ${json.transcript}` : json.transcript);
+          }
+        } catch (err) {
+          console.error('Dictation error', err);
+          setError('Error al transcribir la voz');
+        } finally {
+          setIsTranscribing(false);
+        }
+      };
+
+      mediaRecorder.start();
+      setIsDictating(true);
+    } catch (err) {
+      console.error(err);
+      setError('No se pudo acceder al micrófono');
+    }
+  };
+
+  const stopDictation = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+    }
+  };
+
   useEffect(() => {
     getTeamMembers().then((members) => {
       setTeamMembers(members);
     });
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+    };
   }, []);
 
   // Al cambiar de canal: resetear estado de interacción y resultado
@@ -365,6 +430,17 @@ export function ActivityForm({
             </div>
           )}
 
+          {/* Botón rápido para escanear tarjeta si es visita */}
+          {channel === 'visit' && (
+            <div className="bg-indigo-50/50 p-2.5 rounded border border-indigo-100 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-bold text-indigo-800">¿Recibiste una tarjeta personal?</p>
+                <p className="text-[10px] text-indigo-600">Puedes cargar el contacto rápidamente usando la cámara.</p>
+              </div>
+              <BusinessCardScanner defaultProspectId={effectiveProspectId} defaultProspectName="Empresa (Asociado a esta gestión)" />
+            </div>
+          )}
+
           {/* 3. Resultado dinámico */}
           {channel !== 'internal_note' && interactionState && (
             <div className="animate-in fade-in slide-in-from-top-1">
@@ -407,11 +483,26 @@ export function ActivityForm({
           )}
 
           {/* 4. Notas */}
-          <div>
+          <div className="relative">
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+              <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
                 {channel === 'internal_note' ? '3. Detalle de la nota' : '4. Notas y comentarios'}
-                {isOtherSelected && <span className="text-rose-500 ml-1 font-bold">* Obligatorio</span>}
+                {isOtherSelected && <span className="text-rose-500 font-bold">* Obligatorio</span>}
+                <button
+                  type="button"
+                  onClick={isDictating ? stopDictation : startDictation}
+                  disabled={isTranscribing}
+                  className={`ml-2 flex items-center justify-center p-1.5 rounded-full transition-colors ${
+                    isDictating 
+                      ? 'bg-rose-500 text-white animate-pulse' 
+                      : isTranscribing
+                        ? 'bg-amber-100 text-amber-600 cursor-not-allowed'
+                        : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                  }`}
+                  title={isDictating ? 'Detener dictado' : 'Dictar nota por voz'}
+                >
+                  {isTranscribing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mic className="w-3.5 h-3.5" />}
+                </button>
               </label>
               {isOtherSelected && (
                 <span className="text-[10px] text-rose-500 font-medium">Especifique el motivo de "Otro"</span>

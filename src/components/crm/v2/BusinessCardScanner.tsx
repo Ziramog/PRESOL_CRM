@@ -7,7 +7,7 @@ import { createContact } from '@/app/actions/contacts';
 import { useRouter } from 'next/navigation';
 import { compressImageFile } from '@/lib/image-compress';
 
-export function BusinessCardScanner() {
+export function BusinessCardScanner({ defaultProspectId, defaultProspectName }: { defaultProspectId?: string; defaultProspectName?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -42,7 +42,7 @@ export function BusinessCardScanner() {
       const res = await fetch('/api/process-business-card', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: base64 }),
+        body: JSON.stringify({ imageBase64: base64, defaultProspectId }),
       });
       
       const json = await res.json();
@@ -52,7 +52,8 @@ export function BusinessCardScanner() {
       }
 
       setExtractedData(json.parsed);
-      setExistingCompany(json.existingCompany);
+      // If default is passed, assume it's the current one to show in UI
+      setExistingCompany(defaultProspectId ? { id: defaultProspectId, company_name: defaultProspectName || 'Empresa Actual' } : json.existingCompany);
 
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error inesperado al procesar la imagen');
@@ -127,6 +128,7 @@ export function BusinessCardScanner() {
         type="file"
         ref={fileInputRef}
         accept="image/*"
+        capture="environment"
         className="hidden"
         onChange={handleFileChange}
       />
