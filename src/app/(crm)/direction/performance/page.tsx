@@ -18,10 +18,14 @@ export default async function PerformancePage() {
     return <div>No autorizado</div>;
   }
 
-  // Get date range (Last 4 weeks)
+  // Get date range (Last 4-5 weeks, aligned to Monday)
   const endDate = new Date();
   const startDate = new Date();
   startDate.setDate(endDate.getDate() - 28);
+  
+  // Align start date to Monday
+  const diff = startDate.getDay() === 0 ? -6 : 1 - startDate.getDay();
+  startDate.setDate(startDate.getDate() + diff);
   
   const startStr = startDate.toISOString().split('T')[0];
   const endStr = endDate.toISOString().split('T')[0];
@@ -70,12 +74,17 @@ export default async function PerformancePage() {
     if (day.visitas_locales > 0) metrics.push({ value: day.visitas_locales, label: 'visitas locales' });
     if (day.contactos_digitales > 0) metrics.push({ value: day.contactos_digitales, label: 'contacto digital /\nllamada' });
 
+    let cleanDesc = day.description || '';
+    // Fix possible UTF-8 artifacts from DB migration script
+    if (cleanDesc.includes('Gesti') || cleanDesc.includes('oficina')) cleanDesc = 'Gestión de oficina';
+    if (cleanDesc.includes('Sin dedicaci') || cleanDesc.includes('relevante')) cleanDesc = 'Sin dedicación relevante';
+
     weeksMap.get(weekNum).days.push({
       performance_date: day.performance_date,
       dayName,
       dateStr: `${String(dateObj.getUTCDate()).padStart(2, '0')}/${String(dateObj.getUTCMonth() + 1).padStart(2, '0')}`,
       dayType: day.day_type,
-      description: day.description || '',
+      description: cleanDesc,
       hours_dedicated: day.hours_dedicated,
       visitas_locales: day.visitas_locales,
       visitas_afuera: day.visitas_afuera,
