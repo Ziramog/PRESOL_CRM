@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -14,10 +14,11 @@ const items = [
   { name: 'Radar', href: '/radar', icon: Compass },
   { name: 'Cotizaciones', href: '/quotes', icon: FileText },
   { name: 'Giras', href: '/trips', icon: Map },
-  // { name: 'Dirección', href: '/direction', icon: BarChart3 }, // hidden until fully developed
+  { name: 'Desempeno', href: '/direction/performance', icon: BarChart3 },
+  // { name: 'DirecciÃ³n', href: '/direction', icon: BarChart3 }, // hidden until fully developed
   { name: 'Seguimientos', href: '/tasks', icon: CheckSquare },
   { name: 'Oportunidades', href: '/opportunities', icon: Target },
-  { name: 'Configuración', href: '/settings', icon: Settings },
+  { name: 'ConfiguraciÃ³n', href: '/settings', icon: Settings },
 ];
 
 export function Sidebar() {
