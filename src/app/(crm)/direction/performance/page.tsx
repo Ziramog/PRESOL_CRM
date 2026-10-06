@@ -13,8 +13,9 @@ function getWeekNumber(d: Date) {
 export default async function PerformancePage({
   searchParams,
 }: {
-  searchParams: { start?: string; end?: string };
+  searchParams: Promise<{ start?: string; end?: string }>;
 }) {
+  const params = await searchParams;
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   
@@ -26,12 +27,12 @@ export default async function PerformancePage({
   let endDate = new Date();
   let startDate = new Date();
 
-  if (searchParams.end) {
-    endDate = new Date(searchParams.end + 'T12:00:00Z');
+  if (params.end) {
+    endDate = new Date(params.end + 'T12:00:00Z');
   }
 
-  if (searchParams.start) {
-    startDate = new Date(searchParams.start + 'T12:00:00Z');
+  if (params.start) {
+    startDate = new Date(params.start + 'T12:00:00Z');
   } else {
     startDate.setDate(endDate.getDate() - 28);
     const diff = startDate.getDay() === 0 ? -6 : 1 - startDate.getDay();
