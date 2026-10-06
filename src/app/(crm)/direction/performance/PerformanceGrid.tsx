@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { Laptop, Car, Home, MinusCircle, X } from 'lucide-react';
@@ -44,26 +44,38 @@ const dayLabels = {
   oficina: 'Oficina',
   local: 'Local',
   gira: 'Gira',
-  minima: 'Actividad mínima',
+  minima: 'Actividad mÃ­nima',
 };
 
 export default function PerformanceGrid({ 
   weeks, 
   totals, 
-  cities 
+  cities,
+  currentStart,
+  currentEnd
 }: { 
   weeks: WeekData[], 
   totals: any, 
-  cities: string 
+  cities: string,
+  currentStart: string,
+  currentEnd: string
 }) {
   const router = useRouter();
   const [selectedDay, setSelectedDay] = useState<DailyStats | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Filter state
+  const [startDate, setStartDate] = useState(currentStart);
+  const [endDate, setEndDate] = useState(currentEnd);
+
   // Form state
   const [dayType, setDayType] = useState<DayType>('oficina');
   const [description, setDescription] = useState('');
   const [hours, setHours] = useState(8);
+
+  const applyDateFilter = () => {
+    router.push(`/direction/performance?start=${startDate}&end=${endDate}`);
+  };
 
   const openModal = (day: DailyStats) => {
     if (!day.dayType) return;
@@ -107,8 +119,31 @@ export default function PerformanceGrid({
     <div className="p-4 md:p-6 max-w-[1400px] mx-auto space-y-4 font-sans bg-white min-h-screen text-[#1e345e]">
       
       {/* Top Header */}
-      <div className="bg-gradient-to-r from-[#4476ad] to-[#254674] text-white rounded-xl p-3 flex justify-between items-center shadow-md">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-wide">Resumen Desempeño Comercial PRESOL</h1>
+      <div className="bg-gradient-to-r from-[#4476ad] to-[#254674] text-white rounded-xl p-3 flex flex-col md:flex-row gap-3 justify-between items-center shadow-md">
+        <h1 className="text-xl md:text-3xl font-bold tracking-wide">Resumen Desempeño Comercial PRESOL</h1>
+        
+        <div className="flex items-center gap-2 bg-white/10 p-2 rounded-lg backdrop-blur-sm">
+           <span className="text-sm font-semibold whitespace-nowrap">Período:</span>
+           <input 
+              type="date" 
+              value={startDate} 
+              onChange={e => setStartDate(e.target.value)} 
+              className="bg-white/90 text-[#1e345e] text-sm rounded px-2 py-1 font-medium outline-none"
+           />
+           <span className="text-sm font-semibold">al</span>
+           <input 
+              type="date" 
+              value={endDate} 
+              onChange={e => setEndDate(e.target.value)} 
+              className="bg-white/90 text-[#1e345e] text-sm rounded px-2 py-1 font-medium outline-none"
+           />
+           <button 
+              onClick={applyDateFilter}
+              className="ml-2 bg-white text-[#254674] px-3 py-1 rounded text-sm font-bold shadow-sm hover:bg-gray-100 transition-colors"
+           >
+              Filtrar
+           </button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -146,7 +181,7 @@ export default function PerformanceGrid({
                       <div className="flex flex-col items-center justify-center pt-3 pb-2">
                         <Icon strokeWidth={2.5} className="w-8 h-8 mb-1" />
                         <span className="font-extrabold text-sm">{dayLabels[day.dayType]}</span>
-                        {day.dayType === 'local' && <span className="text-[10px] font-medium leading-none">Río Tercero</span>}
+                        {day.dayType === 'local' && <span className="text-[10px] font-medium leading-none">RÃ­o Tercero</span>}
                       </div>
                       
                       {/* Description */}
@@ -181,7 +216,7 @@ export default function PerformanceGrid({
         <div className="flex-1 bg-[#1a3861] text-white rounded-xl shadow-md overflow-hidden flex flex-col md:flex-row">
           
           <div className="bg-[#122744] px-4 py-3 flex items-center shrink-0">
-             <span className="font-bold text-[15px]">Totales del período</span>
+             <span className="font-bold text-[15px]">Totales del perÃ­odo</span>
           </div>
 
           <div className="flex flex-wrap md:flex-nowrap flex-1 divide-x divide-white/20">
@@ -189,7 +224,7 @@ export default function PerformanceGrid({
                 <Car strokeWidth={2.5} className="w-8 h-8" />
                 <div className="flex flex-col items-center">
                    <span className="text-2xl font-black leading-none">{totals.diasGira}</span>
-                   <span className="text-[10px] font-bold">días de gira</span>
+                   <span className="text-[10px] font-bold">dÃ­as de gira</span>
                 </div>
                 <div className="flex flex-col items-center ml-2 border-l border-black/20 pl-4">
                    <span className="text-2xl font-black leading-none">{totals.visitasAfuera}</span>
@@ -201,11 +236,11 @@ export default function PerformanceGrid({
                 <Home strokeWidth={2.5} className="w-8 h-8" />
                 <div className="flex flex-col items-center">
                    <span className="text-2xl font-black leading-none">{totals.diasLocal}</span>
-                   <span className="text-[10px] font-bold">días locales</span>
+                   <span className="text-[10px] font-bold">dÃ­as locales</span>
                 </div>
                 <div className="flex flex-col items-center ml-2 border-l border-black/20 pl-4 text-center">
                    <span className="text-xl font-black leading-none">{totals.visitasLocales}</span>
-                   <span className="text-[9px] font-bold leading-tight">visitas locales<br/>(Río Tercero)</span>
+                   <span className="text-[9px] font-bold leading-tight">visitas locales<br/>(RÃ­o Tercero)</span>
                 </div>
             </div>
 
@@ -213,7 +248,7 @@ export default function PerformanceGrid({
                 <Laptop strokeWidth={2.5} className="w-8 h-8" />
                 <div className="flex flex-col items-center">
                    <span className="text-2xl font-black leading-none">{totals.diasOficina}</span>
-                   <span className="text-[10px] font-bold">días de oficina</span>
+                   <span className="text-[10px] font-bold">dÃ­as de oficina</span>
                 </div>
             </div>
 
@@ -221,7 +256,7 @@ export default function PerformanceGrid({
                 <MinusCircle strokeWidth={2.5} className="w-6 h-6 text-gray-500" />
                 <div className="flex flex-col items-center">
                    <span className="text-xl font-black leading-none">{totals.diasMinima}</span>
-                   <span className="text-[9px] font-bold leading-tight text-center">días de<br/>actividad mínima</span>
+                   <span className="text-[9px] font-bold leading-tight text-center">dÃ­as de<br/>actividad mÃ­nima</span>
                 </div>
                 <div className="flex flex-col items-center ml-1 border-l border-black/20 pl-3">
                    <span className="text-xl font-black leading-none">{totals.contactosDigitales}</span>
@@ -256,26 +291,26 @@ export default function PerformanceGrid({
             
             <form onSubmit={handleSave} className="p-5 space-y-4">
                <div>
-                  <label className="block text-sm font-semibold text-[#1e345e] mb-1">Tipo de Día</label>
+                  <label className="block text-sm font-semibold text-[#1e345e] mb-1">Tipo de DÃ­a</label>
                   <select 
                     value={dayType} 
                     onChange={e => setDayType(e.target.value as DayType)}
                     className="w-full border-[#dce6f2] rounded-md shadow-sm p-2.5 bg-[#f8fafc] text-[#1e345e] border font-medium focus:ring-2 focus:ring-[#4476ad] outline-none"
                   >
                      <option value="oficina">Oficina</option>
-                     <option value="local">Local (Río Tercero)</option>
+                     <option value="local">Local (RÃ­o Tercero)</option>
                      <option value="gira">Gira (Afuera)</option>
-                     <option value="minima">Actividad Mínima</option>
+                     <option value="minima">Actividad MÃ­nima</option>
                   </select>
                </div>
                
                <div>
-                  <label className="block text-sm font-semibold text-[#1e345e] mb-1">Descripción / Ciudades</label>
+                  <label className="block text-sm font-semibold text-[#1e345e] mb-1">DescripciÃ³n / Ciudades</label>
                   <textarea 
                     value={description} 
                     onChange={e => setDescription(e.target.value)}
                     rows={3}
-                    placeholder="Ej. Armado de campañas..."
+                    placeholder="Ej. Armado de campaÃ±as..."
                     className="w-full border-[#dce6f2] rounded-md shadow-sm p-2.5 bg-[#f8fafc] text-[#1e345e] border text-sm focus:ring-2 focus:ring-[#4476ad] outline-none"
                   />
                </div>
@@ -294,7 +329,7 @@ export default function PerformanceGrid({
                </div>
 
                <div className="bg-yellow-50 text-yellow-800 text-xs p-3 rounded-md border border-yellow-200 mt-2 font-medium">
-                 Nota: Los contadores de visitas y llamadas seguirán calculándose automáticamente del CRM, pero este cambio de "Tipo de Día" y "Descripción" sobrescribirá la regla automática para este día.
+                 Nota: Los contadores de visitas y llamadas seguirÃ¡n calculÃ¡ndose automÃ¡ticamente del CRM, pero este cambio de "Tipo de DÃ­a" y "DescripciÃ³n" sobrescribirÃ¡ la regla automÃ¡tica para este dÃ­a.
                </div>
 
                <div className="flex justify-end gap-2 pt-4">
@@ -310,3 +345,4 @@ export default function PerformanceGrid({
     </div>
   );
 }
+

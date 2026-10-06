@@ -10,7 +10,11 @@ function getWeekNumber(d: Date) {
   return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1)/7);
 }
 
-export default async function PerformancePage() {
+export default async function PerformancePage({
+  searchParams,
+}: {
+  searchParams: { start?: string; end?: string };
+}) {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   
@@ -18,14 +22,21 @@ export default async function PerformancePage() {
     return <div>No autorizado</div>;
   }
 
-  // Get date range (Last 4-5 weeks, aligned to Monday)
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - 28);
-  
-  // Align start date to Monday
-  const diff = startDate.getDay() === 0 ? -6 : 1 - startDate.getDay();
-  startDate.setDate(startDate.getDate() + diff);
+  // Get date range (from params or default to Last 4-5 weeks aligned to Monday)
+  let endDate = new Date();
+  let startDate = new Date();
+
+  if (searchParams.end) {
+    endDate = new Date(searchParams.end + 'T12:00:00Z');
+  }
+
+  if (searchParams.start) {
+    startDate = new Date(searchParams.start + 'T12:00:00Z');
+  } else {
+    startDate.setDate(endDate.getDate() - 28);
+    const diff = startDate.getDay() === 0 ? -6 : 1 - startDate.getDay();
+    startDate.setDate(startDate.getDate() + diff);
+  }
   
   const startStr = startDate.toISOString().split('T')[0];
   const endStr = endDate.toISOString().split('T')[0];
@@ -146,6 +157,8 @@ export default async function PerformancePage() {
        weeks={weeks} 
        totals={totals}
        cities={citiesStr}
+       currentStart={startStr}
+       currentEnd={endStr}
     />
   );
 }
