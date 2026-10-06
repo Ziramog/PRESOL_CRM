@@ -58,7 +58,7 @@ export default function PerformanceGrid({
   weeks: WeekData[], 
   totals: any, 
   cities: string,
-  managedCompanies?: string[],
+  managedCompanies?: Record<string, string[]>,
   currentStart: string,
   currentEnd: string
 }) {
@@ -283,17 +283,24 @@ export default function PerformanceGrid({
       </div>
 
       {/* Listado de Empresas Gestionadas */}
-      {managedCompanies && managedCompanies.length > 0 && (
+      {managedCompanies && Object.keys(managedCompanies).length > 0 && (
          <div className="mt-4 bg-[#f8fafc] border border-[#dce6f2] rounded-xl p-4 md:p-6 shadow-sm">
-            <div className="flex items-center gap-2 text-[#1a3861] mb-3 border-b border-[#dce6f2] pb-2">
+            <div className="flex items-center gap-2 text-[#1a3861] mb-4 border-b border-[#dce6f2] pb-2">
                <Users className="w-5 h-5" />
                <h3 className="font-bold text-lg">Empresas Gestionadas en el Período</h3>
             </div>
-            <div className="flex flex-wrap gap-2">
-               {managedCompanies.map((company, i) => (
-                  <span key={i} className="bg-white border border-[#c4d7ef] text-[#254674] text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm hover:bg-[#eef3f8] transition-colors">
-                     {company}
-                  </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-4">
+               {Object.keys(managedCompanies).sort().map(city => (
+                  <div key={city} className="flex flex-col gap-1.5">
+                     <span className="font-bold text-[#4476ad] text-xs uppercase tracking-wider mb-0.5 border-b border-[#c4d7ef]/50 pb-0.5">{city}</span>
+                     <div className="flex flex-col gap-1">
+                       {managedCompanies[city].map((company, i) => (
+                          <span key={i} className="text-[#1e345e] text-xs font-semibold py-0.5 leading-tight hover:text-[#4476ad] transition-colors cursor-default">
+                             • {company}
+                          </span>
+                       ))}
+                     </div>
+                  </div>
                ))}
             </div>
          </div>

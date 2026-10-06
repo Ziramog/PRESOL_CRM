@@ -59,7 +59,7 @@ export default async function PerformancePage({
   // Fetch managed companies (prospects with interaction in this period)
   const { data: companiesData, error: companiesError } = await supabaseAdmin
     .from('interaction_events')
-    .select('prospects(company_name)')
+    .select('prospects(company_name, city)')
     .eq('user_id', userData.user.id)
     .gte('occurred_at', startStr + 'T00:00:00Z')
     .lt('occurred_at', endStr + 'T23:59:59Z')
@@ -69,14 +69,24 @@ export default async function PerformancePage({
     console.error("Error fetching companies:", companiesError);
   }
 
-  // Extract unique companies
-  const managedCompaniesList = Array.from(
-    new Set(
-      (companiesData || [])
-        .map((c: any) => c.prospects?.company_name)
-        .filter(Boolean)
-    )
-  ).sort();
+  // Extract unique companies grouped by city
+  const companiesByCity = new Map<string, Set<string>>();
+  
+  (companiesData || []).forEach((c: any) => {
+    const p = c.prospects;
+    if (p && p.company_name) {
+      const city = p.city ? p.city.trim() : 'Sin Ciudad';
+      if (!companiesByCity.has(city)) {
+        companiesByCity.set(city, new Set<string>());
+      }
+      companiesByCity.get(city)!.add(p.company_name);
+    }
+  });
+
+  const managedCompaniesGrouped: Record<string, string[]> = {};
+  Array.from(companiesByCity.keys()).sort().forEach(city => {
+    managedCompaniesGrouped[city] = Array.from(companiesByCity.get(city)!).sort();
+  });
 
   // Process data into weeks
   const weeksMap = new Map<number, any>();
@@ -183,7 +193,7 @@ export default async function PerformancePage({
        weeks={weeks} 
        totals={totals}
        cities={citiesStr}
-       managedCompanies={managedCompaniesList}
+       managedCompanies={managedCompaniesGrouped}
        currentStart={startStr}
        currentEnd={endStr}
     />
