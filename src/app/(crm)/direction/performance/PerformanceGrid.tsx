@@ -83,24 +83,17 @@ export default function PerformanceGrid({
     setIsSaving(true);
     
     try {
-      // Create supabase client and update
-      const { createClient } = await import('@/lib/supabase/client');
-      const supabase = createClient();
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData.user;
-
-      if (user) {
-        await supabase.from('daily_performance').upsert({
-          user_id: user.id,
-          date: selectedDay.performance_date,
-          day_type: dayType,
-          description: description,
-          hours_dedicated: hours,
-          is_manual: true,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id,date' });
-        
-        router.refresh();
+      const { saveDailyPerformance } = await import('@/app/actions/performance');
+      const res = await saveDailyPerformance(
+         selectedDay.performance_date,
+         dayType,
+         description,
+         hours
+      );
+      if (res.error) {
+         console.error(res.error);
+      } else {
+         router.refresh();
       }
     } catch (error) {
       console.error(error);

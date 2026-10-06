@@ -11,7 +11,7 @@ function getWeekNumber(d: Date) {
 }
 
 export default async function PerformancePage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   
   if (!userData?.user) {
