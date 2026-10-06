@@ -63,7 +63,7 @@ export default async function PerformancePage({
     .eq('user_id', userData.user.id)
     .gte('occurred_at', startStr + 'T00:00:00Z')
     .lt('occurred_at', endStr + 'T23:59:59Z')
-    .in('channel', ['visit', 'meeting', 'call', 'whatsapp', 'email', 'social_media']);
+    .in('channel', ['visit', 'meeting']);
 
   if (companiesError) {
     console.error("Error fetching companies:", companiesError);

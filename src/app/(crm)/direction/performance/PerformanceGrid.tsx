@@ -287,7 +287,7 @@ export default function PerformanceGrid({
          <div className="mt-4 bg-[#f8fafc] border border-[#dce6f2] rounded-xl p-4 md:p-6 shadow-sm">
             <div className="flex items-center gap-2 text-[#1a3861] mb-4 border-b border-[#dce6f2] pb-2">
                <Users className="w-5 h-5" />
-               <h3 className="font-bold text-lg">Empresas Gestionadas en el Período</h3>
+               <h3 className="font-bold text-lg">Empresas Visitadas en el Período</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-4">
                {Object.keys(managedCompanies).sort().map(city => (
