@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapPin, Phone, MessageCircle, PlusCircle, Trash2, AlertTriangle, X, Edit, Building2, Factory, Mic, ChevronLeft, MoreHorizontal, ChevronRight, Heart, Calendar, Clock, User, ArrowUpRight, Mail, ChevronDown, UserPlus } from 'lucide-react';
+import { MapPin, Phone, MessageCircle, PlusCircle, Trash2, AlertTriangle, X, Edit, Building2, Factory, Mic, ChevronLeft, MoreHorizontal, ChevronRight, Heart, Calendar, Clock, User, ArrowUpRight, Mail, ChevronDown, UserPlus, Share } from 'lucide-react';
 import { ActivityForm } from './activity-form';
 import { TaskForm } from './task-form';
 import { OpportunityForm } from './opportunity-form';
@@ -138,6 +138,32 @@ export function ProspectHeader({
   const activePhone = selectedContact?.phone || prospect.primary_phone;
   const cleanPhone = activePhone?.replace(/[^\d+]/g, '');
   const activeEmail = selectedContact?.email || prospect.email;
+
+  const handleShareContact = () => {
+    const contactName = selectedContact?.full_name || prospect.ask_for || prospect.company_name;
+    const phone = cleanPhone || prospect.primary_phone?.replace(/[^\d+]/g, '') || '';
+    const email = activeEmail || '';
+    const org = prospect.company_name || '';
+    
+    const vcard = `BEGIN:VCARD
+VERSION:3.0
+FN:${contactName}
+ORG:${org}
+TEL;TYPE=WORK,VOICE:${phone}
+EMAIL;TYPE=WORK:${email}
+END:VCARD`;
+
+    const blob = new Blob([vcard], { type: 'text/vcard' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${contactName.replace(/[^a-z0-9]/gi, '_')}.vcf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <>
@@ -412,13 +438,23 @@ export function ProspectHeader({
                           {activePhone}
                         </a>
                       </div>
-                      <a 
-                        href={`whatsapp://send?phone=${cleanPhone || activePhone.replace(/\D/g, '')}`} 
-                        className="p-1 rounded-md text-[#25D366] hover:bg-[#25D366]/10 transition-colors shrink-0"
-                        title="Enviar WhatsApp"
-                      >
-                        <WhatsAppIcon className="w-4 h-4" />
-                      </a>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={handleShareContact}
+                          type="button"
+                          className="p-1.5 rounded-md text-blue-600 hover:bg-blue-50 transition-colors shrink-0"
+                          title="Guardar en Agenda (vCard)"
+                        >
+                          <Share className="w-4 h-4" />
+                        </button>
+                        <a 
+                          href={`whatsapp://send?phone=${cleanPhone || activePhone.replace(/\D/g, '')}`} 
+                          className="p-1.5 rounded-md text-[#25D366] hover:bg-[#25D366]/10 transition-colors shrink-0"
+                          title="Enviar WhatsApp"
+                        >
+                          <WhatsAppIcon className="w-4 h-4" />
+                        </a>
+                      </div>
                     </div>
                   ) : (
                     <button
@@ -465,12 +501,22 @@ export function ProspectHeader({
                           {prospect.primary_phone}
                         </a>
                       </div>
-                      <a 
-                        href={`whatsapp://send?phone=${prospect.primary_phone.replace(/[^\d+]/g, '')}`} 
-                        className="p-1 rounded text-[#25D366]"
-                      >
-                        <WhatsAppIcon className="w-4 h-4" />
-                      </a>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={handleShareContact}
+                          type="button"
+                          className="p-1 rounded text-blue-600 hover:bg-blue-50 transition-colors shrink-0"
+                          title="Guardar en Agenda (vCard)"
+                        >
+                          <Share className="w-4 h-4" />
+                        </button>
+                        <a 
+                          href={`whatsapp://send?phone=${prospect.primary_phone.replace(/[^\d+]/g, '')}`} 
+                          className="p-1 rounded text-[#25D366] hover:bg-[#25D366]/10"
+                        >
+                          <WhatsAppIcon className="w-4 h-4" />
+                        </a>
+                      </div>
                     </div>
                   )}
                   <button
