@@ -53,6 +53,24 @@ export default async function PerformancePage({
     return <div>Error al cargar datos</div>;
   }
 
+  // Fetch managed companies (prospects with interaction in this period)
+  const { data: companiesData } = await supabase
+    .from('interaction_events')
+    .select('prospects(company_name)')
+    .eq('user_id', userData.user.id)
+    .gte('occurred_at', startStr + 'T00:00:00Z')
+    .lt('occurred_at', endStr + 'T23:59:59Z')
+    .in('channel', ['visit', 'meeting', 'call', 'whatsapp', 'email', 'social_media']);
+
+  // Extract unique companies
+  const managedCompaniesList = Array.from(
+    new Set(
+      (companiesData || [])
+        .map((c: any) => c.prospects?.company_name)
+        .filter(Boolean)
+    )
+  ).sort();
+
   // Process data into weeks
   const weeksMap = new Map<number, any>();
   const allCities = new Set<string>();
@@ -158,6 +176,7 @@ export default async function PerformancePage({
        weeks={weeks} 
        totals={totals}
        cities={citiesStr}
+       managedCompanies={managedCompaniesList}
        currentStart={startStr}
        currentEnd={endStr}
     />
