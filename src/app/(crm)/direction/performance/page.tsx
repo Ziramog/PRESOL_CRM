@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import PerformanceGrid from './PerformanceGrid';
 
 export const dynamic = 'force-dynamic';
@@ -53,14 +54,20 @@ export default async function PerformancePage({
     return <div>Error al cargar datos</div>;
   }
 
+  const supabaseAdmin = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+
   // Fetch managed companies (prospects with interaction in this period)
-  const { data: companiesData } = await supabase
+  const { data: companiesData, error: companiesError } = await supabaseAdmin
     .from('interaction_events')
     .select('prospects(company_name)')
     .eq('user_id', userData.user.id)
     .gte('occurred_at', startStr + 'T00:00:00Z')
     .lt('occurred_at', endStr + 'T23:59:59Z')
     .in('channel', ['visit', 'meeting', 'call', 'whatsapp', 'email', 'social_media']);
+
+  if (companiesError) {
+    console.error("Error fetching companies:", companiesError);
+  }
 
   // Extract unique companies
   const managedCompaniesList = Array.from(
