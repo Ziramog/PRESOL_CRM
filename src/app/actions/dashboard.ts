@@ -75,12 +75,12 @@ export async function getDashboardKPIList(
   };
 
   // We add !inner to prospects to ensure we only get records where the prospect matches our filters
-  let prospectSelect = 'prospect_id, type, outcome, summary, prospects!inner(id, company_name, city, commercial_category)';
+  let prospectSelect = 'id, prospect_id, type, outcome, summary, prospects!inner(id, company_name, city, commercial_category)';
   
   let query;
   
   // Flag to know if we need to manually filter activities in memory
-  const isActivityKpi = ['visited', 'visits', 'calls', 'effective_contacts', 'interested'].includes(kpi);
+  const isActivityKpi = ['visited', 'visits', 'calls', 'effective_contacts', 'interested', 'total_activities'].includes(kpi);
 
   switch (kpi) {
     case 'visited':
@@ -88,6 +88,7 @@ export async function getDashboardKPIList(
     case 'calls':
     case 'effective_contacts':
     case 'interested':
+    case 'total_activities':
       query = applyFilters(supabase
         .from('activities')
         .select(prospectSelect)
@@ -146,12 +147,13 @@ export async function getDashboardKPIList(
   if (isActivityKpi) {
     const unique = new Map();
     data.forEach((item: any) => {
-      if (item.type === 'note') return;
+      if (item.type === 'note' || item.type === 'internal_note') return;
       
       let include = false;
       
-      if (kpi === 'visited') include = true;
-      else if (kpi === 'visits' && (item.type === 'visit' || item.type === 'meeting')) include = true;
+      if (kpi === 'total_activities') include = true;
+      else if (kpi === 'visited') include = true;
+      else if (kpi === 'visits' && (item.type === 'visit' || item.type === 'meeting' || item.type === 'virtual_meeting')) include = true;
       else if (kpi === 'calls' && (item.type === 'call' || item.type === 'whatsapp' || item.type === 'email')) include = true;
       else if (kpi === 'effective_contacts') {
         const legacyEffective = ['reception_only', 'decision_maker_contact', 'contact_made', 'interested', 'requested_info', 'requested_quote', 'follow_up', 'not_interested'];
@@ -163,8 +165,12 @@ export async function getDashboardKPIList(
         include = interestedOutcomes.includes(item.outcome);
       }
 
-      if (include && !unique.has(item.prospect_id)) {
-        unique.set(item.prospect_id, item);
+      if (include) {
+        if (kpi === 'total_activities') {
+          unique.set(item.id, item);
+        } else if (!unique.has(item.prospect_id)) {
+          unique.set(item.prospect_id, item);
+        }
       }
     });
     return Array.from(unique.values());

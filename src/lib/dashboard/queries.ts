@@ -111,6 +111,7 @@ export async function getDashboardData(params: DashboardParams) {
       return {
         visited: uniqueManaged.size, // backward compatibility
         managed: uniqueManaged.size,
+        total_activities: acts.length, // total gross activities
         visits: uniqueVisits.size,
         calls: uniqueCalls.size,
         effective_contacts: uniqueEffective.size,

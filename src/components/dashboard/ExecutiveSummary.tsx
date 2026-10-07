@@ -266,11 +266,12 @@ export function ExecutiveSummary({ summary, baseDate }: { summary: any, baseDate
   };
 
   const active = periods[activeIdx];
-  const d = active.data ?? { visited: 0, managed: 0, visits: 0, calls: 0, effective_contacts: 0, interested: 0, opportunities: 0 };
+  const d = active.data ?? { visited: 0, managed: 0, total_activities: 0, visits: 0, calls: 0, effective_contacts: 0, interested: 0, opportunities: 0 };
   const totalManaged = d.managed !== undefined ? d.managed : d.visited;
 
   const metrics = [
-    { key: 'managed',           label: 'Gestionados',           value: totalManaged,          indent: false },
+    { key: 'total_activities',  label: 'Interacciones Totales', value: d.total_activities || 0, indent: false },
+    { key: 'managed',           label: 'Prospectos gestionados',value: totalManaged,          indent: true },
     { key: 'visits',            label: 'Visitas presenciales',  value: d.visits || 0,          indent: true  },
     { key: 'calls',             label: 'Llamadas / Virtuales',  value: d.calls || 0,           indent: true  },
     { key: 'effective_contacts',label: 'Contactos efectivos',   value: d.effective_contacts,   indent: false },
@@ -421,11 +422,12 @@ function DesktopPeriodCard({
   onMetricClick: (kpiKey: string, title: string, period: string, periodLabel: string, dateStr: string) => void;
   onCardClick: () => void;
 }) {
-  const d = data ?? { visited: 0, managed: 0, visits: 0, calls: 0, effective_contacts: 0, interested: 0, opportunities: 0 };
+  const d = data ?? { visited: 0, managed: 0, total_activities: 0, visits: 0, calls: 0, effective_contacts: 0, interested: 0, opportunities: 0 };
   const totalManaged = d.managed !== undefined ? d.managed : d.visited;
 
   const metrics = [
-    { key: 'managed',            label: 'Gestionados (Total)',   value: totalManaged },
+    { key: 'total_activities',   label: 'Interacciones Totales',  value: d.total_activities || 0 },
+    { key: 'managed',            label: '• Prospectos Gestionados', value: totalManaged },
     { key: 'visits',             label: '• Visitas Presenciales', value: d.visits || 0 },
     { key: 'calls',              label: '• Llamadas / Virtuales', value: d.calls || 0 },
     { key: 'effective_contacts', label: 'Contactos Efectivos',    value: d.effective_contacts },
