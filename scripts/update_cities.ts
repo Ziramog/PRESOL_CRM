@@ -18,13 +18,21 @@ async function main() {
   const cities = new Set(data.map(d => d.city).filter(Boolean));
   console.log("Distinct cities before:", Array.from(cities));
 
-  // Update
-  const { error: updError, count } = await supabase
-    .from('prospects')
-    .update({ city: 'Córdoba Capital' })
-    .ilike('city', 'c%rdoba capital%');
-    
-  if (updError) throw updError;
+  const updates = [
+    { from: 'Córdoba', to: 'Córdoba Capital' },
+    { from: 'Villa Maria', to: 'Villa María' },
+    { from: 'Laspiur', to: 'Saturnino M. Laspiur' },
+    { from: 'San Agustin', to: 'San Agustín' },
+  ];
+
+  for (const { from, to } of updates) {
+    console.log(`Normalizing '${from}' to '${to}'...`);
+    const { error: updError } = await supabase
+      .from('prospects')
+      .update({ city: to })
+      .eq('city', from);
+    if (updError) throw updError;
+  }
 
   const { data: dataAfter } = await supabase.from('prospects').select('city');
   const citiesAfter = new Set(dataAfter?.map(d => d.city).filter(Boolean));

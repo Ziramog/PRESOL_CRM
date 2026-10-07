@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createActivity, updateActivity, deleteActivity, getTeamMembers } from '@/app/actions/activities';
+import { getContactsForProspect } from '@/app/actions/contacts';
 import { updateStopStatus } from '@/app/actions/trips';
 import {
   X,
@@ -75,6 +76,12 @@ export function ActivityForm({
 
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Contacts
+  const [contacts, setContacts] = useState<{ id: string; full_name: string; role_title: string }[]>([]);
+  const [selectedContactId, setSelectedContactId] = useState<string>(activityToEdit?.contact_id || '');
+  const [isManualContact, setIsManualContact] = useState(false);
+  const [newContactName, setNewContactName] = useState('');
 
   // 1. Canal
   const initialChannel = normalizeChannel(activityToEdit?.channel || activityToEdit?.type || 'visit');
@@ -171,12 +178,15 @@ export function ActivityForm({
     getTeamMembers().then((members) => {
       setTeamMembers(members);
     });
+    if (effectiveProspectId) {
+      getContactsForProspect(effectiveProspectId).then((data) => setContacts(data));
+    }
     return () => {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         mediaRecorderRef.current.stop();
       }
     };
-  }, []);
+  }, [effectiveProspectId]);
 
   // Al cambiar de canal: resetear estado de interacción y resultado
   const handleChannelChange = (newChannel: ActivityChannel) => {
@@ -246,6 +256,12 @@ export function ActivityForm({
     const formData = new FormData(e.currentTarget);
     formData.set('channel', channel);
     formData.set('type', channel);
+
+    if (isManualContact && newContactName.trim()) {
+      formData.set('new_contact_name', newContactName.trim());
+    } else if (selectedContactId) {
+      formData.set('contact_id', selectedContactId);
+    }
 
     if (channel === 'internal_note') {
       formData.set('note_type', noteType);
@@ -379,7 +395,54 @@ export function ActivityForm({
             </div>
           </div>
 
-          {/* 2. Estado de interacción dinámico (o Tipo de Nota si es internal_note) */}
+          {/* 2. Contacto */}
+          {channel !== 'internal_note' && (
+            <div className="animate-in fade-in bg-slate-50 p-3 rounded border border-slate-200">
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1">
+                <Users className="w-3.5 h-3.5" />
+                2. ¿Con quién te comunicaste?
+              </label>
+              
+              <div className="flex flex-col gap-2">
+                <select
+                  value={isManualContact ? 'manual' : selectedContactId}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === 'manual') {
+                      setIsManualContact(true);
+                      setSelectedContactId('');
+                    } else {
+                      setIsManualContact(false);
+                      setSelectedContactId(val);
+                      setNewContactName('');
+                    }
+                  }}
+                  className="w-full text-xs rounded border border-gray-200 p-2 bg-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">(No especificar / Empresa en general)</option>
+                  {contacts.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.full_name} {c.role_title ? `(${c.role_title})` : ''}
+                    </option>
+                  ))}
+                  <option value="manual">+ Registrar otro contacto manualmente</option>
+                </select>
+
+                {isManualContact && (
+                  <input
+                    type="text"
+                    value={newContactName}
+                    onChange={(e) => setNewContactName(e.target.value)}
+                    placeholder="Nombre del nuevo contacto..."
+                    autoFocus
+                    className="w-full text-xs rounded border border-blue-200 bg-blue-50 p-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 3. Estado de interacción dinámico (o Tipo de Nota si es internal_note) */}
           {channel === 'internal_note' ? (
             <div className="bg-slate-50 p-3 rounded border border-slate-200 animate-in fade-in">
               <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
@@ -405,7 +468,7 @@ export function ActivityForm({
           ) : (
             <div className="animate-in fade-in">
               <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2">
-                2. {channelConfig?.interactionLabel || 'Estado de interacción'}
+                3. {channelConfig?.interactionLabel || 'Estado de interacción'}
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {Object.values(availableStates).map((stateCfg) => {
@@ -446,7 +509,7 @@ export function ActivityForm({
             <div className="animate-in fade-in slide-in-from-top-1">
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                  3. Resultado comercial
+                  4. Resultado comercial
                 </label>
                 <span className="text-[10px] text-slate-400 font-medium">¿Qué ocurrió en la interacción?</span>
               </div>
@@ -486,7 +549,7 @@ export function ActivityForm({
           <div className="relative">
             <div className="flex items-center justify-between mb-1.5">
               <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
-                {channel === 'internal_note' ? '3. Detalle de la nota' : '4. Notas y comentarios'}
+                {channel === 'internal_note' ? '3. Detalle de la nota' : '5. Notas y comentarios'}
                 {isOtherSelected && <span className="text-rose-500 font-bold">* Obligatorio</span>}
                 <button
                   type="button"
@@ -505,7 +568,7 @@ export function ActivityForm({
                 </button>
               </label>
               {isOtherSelected && (
-                <span className="text-[10px] text-rose-500 font-medium">Especifique el motivo de "Otro"</span>
+                <span className="text-[10px] text-rose-500 font-medium">Especifique el motivo de &quot;Otro&quot;</span>
               )}
             </div>
             <textarea

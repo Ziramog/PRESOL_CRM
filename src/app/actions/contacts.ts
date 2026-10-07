@@ -176,3 +176,19 @@ export async function deleteContact(id: string, prospect_id: string) {
   }
   return { success: true };
 }
+
+export async function getContactsForProspect(prospectId: string) {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('contacts')
+    .select('id, full_name, role_title')
+    .eq('prospect_id', prospectId)
+    .order('is_primary', { ascending: false })
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching contacts:', error);
+    return [];
+  }
+  return data || [];
+}

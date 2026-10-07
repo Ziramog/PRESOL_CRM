@@ -79,6 +79,27 @@ export async function createActivity(formData: FormData) {
     created_by,
   };
 
+  let contact_id = formData.get('contact_id') as string || null;
+  const new_contact_name = (formData.get('new_contact_name') as string || '').trim();
+
+  // Create manual contact if provided
+  if (new_contact_name && prospect_id) {
+    const { data: newContact, error: contactError } = await supabase
+      .from('contacts')
+      .insert([{
+        prospect_id,
+        full_name: new_contact_name,
+        is_primary: false,
+      }])
+      .select('id')
+      .single();
+    
+    if (!contactError && newContact) {
+      contact_id = newContact.id;
+    }
+  }
+
+  if (contact_id) activityData.contact_id = contact_id;
   if (trip_id) activityData.trip_id = trip_id;
   if (trip_stop_id) activityData.trip_stop_id = trip_stop_id;
 
@@ -141,10 +162,9 @@ export async function createActivity(formData: FormData) {
   // Orquestación con Interaction Threads y Eventos
   let activeThreadId: string | null = null;
   try {
-    const contact_id = (formData.get('contact_id') as string) || null;
     const { thread } = await recordInteraction(supabase, {
       prospect_id,
-      contact_id,
+      contact_id, // Use the updated contact_id from above
       owner_id: created_by,
       channel,
       activity_id: insertedActivity?.id || null,
@@ -259,6 +279,30 @@ export async function updateActivity(formData: FormData) {
     outcome: legacyOutcome,
     notes: notes || null,
   };
+
+  let contact_id = formData.get('contact_id') as string || null;
+  const new_contact_name = (formData.get('new_contact_name') as string || '').trim();
+
+  // Create manual contact if provided
+  if (new_contact_name && prospect_id) {
+    const { data: newContact, error: contactError } = await supabase
+      .from('contacts')
+      .insert([{
+        prospect_id,
+        full_name: new_contact_name,
+        is_primary: false,
+      }])
+      .select('id')
+      .single();
+    
+    if (!contactError && newContact) {
+      contact_id = newContact.id;
+    }
+  }
+
+  if (contact_id !== null) {
+    updateData.contact_id = contact_id || null;
+  }
 
   if (activity_at_str) {
     updateData.activity_at = fromZonedTime(activity_at_str, TZ).toISOString();
