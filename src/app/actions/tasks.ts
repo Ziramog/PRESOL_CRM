@@ -19,11 +19,18 @@ export async function createTask(formData: FormData) {
   const type = (formData.get('type') as string) || 'follow_up';
   
   const { data: { user } } = await authClient.auth.getUser();
-  const created_by = user?.id;
+  let created_by = user?.id;
+
+  if (!created_by) {
+    const { data: profiles } = await supabase.from('profiles').select('id').limit(1);
+    created_by = profiles && profiles.length > 0 ? profiles[0].id : undefined;
+  }
 
   if (!created_by) {
     return { error: 'No user authenticated' };
   }
+
+  const assigned_to = (formData.get('assigned_to') as string) || created_by;
 
   // Parse in Argentina timezone at specified time (or default 10:00:00) to avoid UTC midnight shifting backward into previous date
   let dueIso: string | null = null;
@@ -38,7 +45,7 @@ export async function createTask(formData: FormData) {
     dueIso = fromZonedTime(cleanDate, TZ).toISOString();
   }
 
-  const { error } = await supabase.from('tasks').insert({
+  const { data: inserted, error } = await supabase.from('tasks').insert({
     prospect_id,
     title,
     description: description || null,
@@ -47,8 +54,8 @@ export async function createTask(formData: FormData) {
     priority: priority || 'normal',
     status: 'pending',
     created_by,
-    assigned_to: created_by // asignado al mismo que la crea en MVP
-  });
+    assigned_to
+  }).select('*, prospects(id, company_name, city, class), profiles!tasks_assigned_to_fkey(id, full_name)').single();
 
   if (error) {
     console.error('Error creating task:', error);
@@ -62,7 +69,7 @@ export async function createTask(formData: FormData) {
   revalidatePath('/prospects');
   revalidatePath('/tasks');
   revalidatePath('/dashboard');
-  return { success: true };
+  return { success: true, task: inserted };
 }
 
 export async function completeTask(taskId: string) {
@@ -78,11 +85,13 @@ export async function completeTask(taskId: string) {
     return { error: 'Task not found' };
   }
 
+  const completedAt = new Date().toISOString();
+
   const { error } = await supabase
     .from('tasks')
     .update({ 
       status: 'completed',
-      completed_at: new Date().toISOString()
+      completed_at: completedAt
     })
     .eq('id', taskId);
 
@@ -92,11 +101,66 @@ export async function completeTask(taskId: string) {
   }
 
   // Touch the prospect to register activity
-  await supabase.from('prospects').update({ updated_at: new Date().toISOString() }).eq('id', task.prospect_id);
+  await supabase.from('prospects').update({ updated_at: completedAt }).eq('id', task.prospect_id);
 
   revalidatePath(`/prospects/${task.prospect_id}`);
   revalidatePath('/tasks');
+  revalidatePath('/dashboard');
+  return { success: true, completed_at: completedAt };
+}
+
+export async function reopenTask(taskId: string) {
+  const supabase = await createAdminClient();
+
+  const { data: task, error: fetchError } = await supabase
+    .from('tasks')
+    .select('prospect_id')
+    .eq('id', taskId)
+    .single();
+
+  if (fetchError || !task) {
+    return { error: 'Task not found' };
+  }
+
+  const { error } = await supabase
+    .from('tasks')
+    .update({
+      status: 'pending',
+      completed_at: null,
+    })
+    .eq('id', taskId);
+
+  if (error) {
+    console.error('Error reopening task:', error);
+    return { error: error.message };
+  }
+
+  revalidatePath(`/prospects/${task.prospect_id}`);
+  revalidatePath('/tasks');
+  revalidatePath('/dashboard');
   return { success: true };
+}
+
+export async function searchProspectsForTask(query: string) {
+  const supabase = await createAdminClient();
+  let q = supabase
+    .from('prospects')
+    .select('id, company_name, city, class')
+    .is('deleted_at', null)
+    .order('company_name', { ascending: true })
+    .limit(25);
+
+  if (query && query.trim().length > 0) {
+    const clean = query.trim();
+    q = q.or(`company_name.ilike.%${clean}%,city.ilike.%${clean}%`);
+  }
+
+  const { data, error } = await q;
+  if (error) {
+    console.error('Error searching prospects for task:', error);
+    return [];
+  }
+  return data || [];
 }
 
 export async function getPendingTasksSummary() {

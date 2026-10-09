@@ -1,94 +1,101 @@
 import { createAdminClient } from '@/lib/supabase/server';
-import { TaskListItem } from '@/components/crm/task-list-item';
-import { formatInTimeZone } from 'date-fns-tz';
+import { TasksCalendarView, FollowUpEventItem } from '@/components/crm/tasks-calendar-view';
+import { getChannelLabel, getResultLabel } from '@/lib/activities/config';
+import { subDays } from 'date-fns';
 
-const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
+export const dynamic = 'force-dynamic';
 
 export default async function TasksPage() {
   const supabase = await createAdminClient();
 
-  // For MVP we get the admin user ID
-  const { data: profiles } = await supabase.from('profiles').select('id').limit(1);
-  const userId = profiles && profiles.length > 0 ? profiles[0].id : null;
+  const sixMonthsAgo = subDays(new Date(), 180).toISOString();
 
-  let tasks: any[] = [];
-  
-  if (userId) {
-    const { data } = await supabase
+  const [tasksRes, activitiesRes, prospectsRes, profilesRes] = await Promise.all([
+    supabase
       .from('tasks')
-      .select('*, prospects(id, company_name, city, class)')
-      .eq('assigned_to', userId)
-      .eq('status', 'pending')
-      .order('due_at', { ascending: true });
-      
-    if (data) tasks = data;
-  }
+      .select('*, prospects(id, company_name, city, class), profiles!tasks_assigned_to_fkey(id, full_name)')
+      .in('status', ['pending', 'in_progress', 'completed'])
+      .is('deleted_at', null)
+      .order('due_at', { ascending: true }),
 
-  const todayStr = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+    supabase
+      .from('activities')
+      .select('id, prospect_id, type, channel, interaction_state, summary, outcome, result, notes, activity_at, occurred_at, created_at, created_by, prospects(id, company_name, city, class), profiles(id, full_name)')
+      .is('deleted_at', null)
+      .gte('activity_at', sixMonthsAgo)
+      .order('activity_at', { ascending: false })
+      .limit(400),
 
-  const overdueTasks = tasks.filter(t => {
-    if (!t.due_at) return false;
-    const taskDateStr = formatInTimeZone(new Date(t.due_at), TZ, 'yyyy-MM-dd');
-    return taskDateStr < todayStr;
-  });
-  const todayTasks = tasks.filter(t => {
-    if (!t.due_at) return false;
-    const taskDateStr = formatInTimeZone(new Date(t.due_at), TZ, 'yyyy-MM-dd');
-    return taskDateStr === todayStr;
-  });
-  const upcomingTasks = tasks.filter(t => {
-    if (!t.due_at) return false;
-    const taskDateStr = formatInTimeZone(new Date(t.due_at), TZ, 'yyyy-MM-dd');
-    return taskDateStr > todayStr;
-  });
-  const noDateTasks = tasks.filter(t => !t.due_at);
+    supabase
+      .from('prospects')
+      .select('id, company_name, city, class')
+      .is('deleted_at', null)
+      .order('updated_at', { ascending: false })
+      .limit(30),
+
+    supabase
+      .from('profiles')
+      .select('id, full_name')
+      .order('full_name', { ascending: true }),
+  ]);
+
+  const tasks: FollowUpEventItem[] = (tasksRes.data || []).map((t: any) => ({
+    id: t.id,
+    prospect_id: t.prospect_id,
+    title: t.title,
+    description: t.description,
+    type: t.type || 'follow_up',
+    status: t.status === 'completed' ? 'completed' : 'pending',
+    priority: t.priority || 'normal',
+    due_at: t.due_at,
+    completed_at: t.completed_at,
+    assigned_to: t.assigned_to,
+    is_activity_record: false,
+    prospects: Array.isArray(t.prospects) ? t.prospects[0] : t.prospects,
+    profiles: Array.isArray(t.profiles) ? t.profiles[0] : t.profiles,
+  }));
+
+  // Transformar actividades comerciales realizadas en eventos de calendario "Realizados"
+  const activityEvents: FollowUpEventItem[] = (activitiesRes.data || [])
+    .filter((a: any) => {
+      const ch = a.channel || a.type;
+      return ch !== 'note' && ch !== 'internal_note';
+    })
+    .map((a: any) => {
+      const rawChannel = a.channel || a.type || 'visit';
+      const channelLabel = getChannelLabel(rawChannel);
+      const resultCode = a.result || a.outcome;
+      const stateCode = a.interaction_state || a.summary;
+      const resultLabel = getResultLabel(resultCode, rawChannel, stateCode);
+      const eventDate = a.activity_at || a.occurred_at || a.created_at;
+
+      const title = resultLabel
+        ? `${channelLabel} · ${resultLabel}`
+        : channelLabel;
+
+      return {
+        id: `act-${a.id}`,
+        prospect_id: a.prospect_id,
+        title,
+        description: a.notes || null,
+        type: rawChannel,
+        status: 'completed' as const,
+        priority: 'normal',
+        due_at: eventDate,
+        completed_at: eventDate,
+        assigned_to: a.created_by,
+        is_activity_record: true,
+        prospects: Array.isArray(a.prospects) ? a.prospects[0] : a.prospects,
+        profiles: Array.isArray(a.profiles) ? a.profiles[0] : a.profiles,
+      };
+    });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Agenda de Seguimientos</h1>
-        <p className="text-sm text-gray-500 mt-1">Planifica tus próximos pasos y reuniones</p>
-      </div>
-
-      <div className="space-y-8">
-        {overdueTasks.length > 0 && (
-          <section>
-            <h2 className="text-sm font-bold text-red-600 uppercase tracking-wider mb-3">Vencidos ({overdueTasks.length})</h2>
-            <div className="space-y-3">
-              {overdueTasks.map(task => <TaskListItem key={task.id} task={task} />)}
-            </div>
-          </section>
-        )}
-
-        <section>
-          <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">Para hoy ({todayTasks.length})</h2>
-          {todayTasks.length === 0 ? (
-            <p className="text-sm text-gray-500 italic">No tienes seguimientos programados para hoy.</p>
-          ) : (
-            <div className="space-y-3">
-              {todayTasks.map(task => <TaskListItem key={task.id} task={task} />)}
-            </div>
-          )}
-        </section>
-
-        {upcomingTasks.length > 0 && (
-          <section>
-            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Próximos ({upcomingTasks.length})</h2>
-            <div className="space-y-3">
-              {upcomingTasks.map(task => <TaskListItem key={task.id} task={task} />)}
-            </div>
-          </section>
-        )}
-        
-        {noDateTasks.length > 0 && (
-          <section>
-            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Sin fecha ({noDateTasks.length})</h2>
-            <div className="space-y-3">
-              {noDateTasks.map(task => <TaskListItem key={task.id} task={task} />)}
-            </div>
-          </section>
-        )}
-      </div>
-    </div>
+    <TasksCalendarView
+      initialTasks={tasks}
+      activityEvents={activityEvents}
+      initialProspects={prospectsRes.data || []}
+      teamMembers={profilesRes.data || []}
+    />
   );
 }
