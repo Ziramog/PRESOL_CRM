@@ -9,18 +9,12 @@ import { OpportunityForm } from './opportunity-form';
 import { ProspectForm } from '@/components/crm/prospect-form';
 import { ContactForm } from './contact-form';
 import { VoiceRecorderModal } from './v2/VoiceRecorderModal';
-import { updateProspectStatus, deleteProspect, toggleFavorite } from '@/app/actions/prospects';
+import { deleteProspect, toggleFavorite } from '@/app/actions/prospects';
 import { getLeadTemperature, PulseIndicator } from '@/lib/lead-temperature';
+import { DISCARD_REASONS, DiscardReason } from '@/lib/constants';
+import { ManagementStatusSelect, CommercialStageSelect } from '@/components/crm/status';
+import { WhatsAppIcon } from './prospect-card';
 
-import { PROSPECT_STATUS } from '@/lib/constants';
-
-const WhatsAppIcon = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className={className} fill="currentColor">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-  </svg>
-);
-
-const STATUS_OPTIONS = Object.entries(PROSPECT_STATUS).map(([value, label]) => ({ value, label }));
 
 function formatDateDistance(dateString: string) {
   if (!dateString) return '';
@@ -105,13 +99,6 @@ export function ProspectHeader({
     }
   };
 
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStatus = e.target.value;
-    startTransition(() => {
-      updateProspectStatus(prospect.id, newStatus);
-    });
-  };
-
   const handleToggleFavorite = () => {
     const prev = optimisticFav;
     setOptimisticFav(!prev);
@@ -185,44 +172,35 @@ END:VCARD`;
           
           {/* MOBILE ONLY: Top Action Bar (Status + Corner Icons) */}
           <div className="flex lg:hidden items-center justify-between mb-4 w-full">
-            {/* Small Status */}
-            <div className="relative inline-flex items-center">
-              <select
-                value={prospect.contact_status || 'pending'}
-                onChange={handleStatusChange}
-                disabled={isPending}
-                className={`appearance-none cursor-pointer outline-none transition-colors border pl-7 pr-6 py-1 rounded-lg text-[11px] font-bold tracking-wide shadow-sm
-                  ${isPending ? 'opacity-50' : ''}
-                  ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-800 border-blue-200' :
-                    prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
-                    prospect.contact_status === 'opportunity' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' :
-                    prospect.contact_status === 'quote' ? 'bg-purple-50 text-purple-800 border-purple-200' :
-                    prospect.contact_status === 'customer' ? 'bg-green-50 text-green-800 border-green-200' :
-                    prospect.contact_status === 'discarded' ? 'bg-rose-50 text-rose-800 border-rose-200' :
-                    'bg-amber-50 text-amber-800 border-amber-200'
-                  }
-                `}
-              >
-                {STATUS_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center">
-                <span className={`w-2 h-2 rounded-sm 
-                  ${prospect.contact_status === 'in_progress' ? 'bg-blue-500' :
-                    prospect.contact_status === 'interested' ? 'bg-emerald-500' :
-                    prospect.contact_status === 'opportunity' ? 'bg-indigo-500' :
-                    prospect.contact_status === 'quote' ? 'bg-purple-500' :
-                    prospect.contact_status === 'customer' ? 'bg-green-500' :
-                    prospect.contact_status === 'discarded' ? 'bg-rose-500' :
-                    'bg-amber-500'
-                  }
-                `}></span>
+            {/* Small Two-Layer Status */}
+            <div className="flex flex-col gap-1 max-w-[70%]">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <ManagementStatusSelect
+                  prospectId={prospect.id}
+                  currentStatus={prospect.contact_status}
+                  size="sm"
+                />
+                <CommercialStageSelect
+                  prospectId={prospect.id}
+                  currentStage={prospect.commercial_stage}
+                  managementStatus={prospect.contact_status}
+                  size="sm"
+                />
               </div>
-              <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-current opacity-60">
-                <ChevronDown className="w-3 h-3" />
-              </div>
+              {prospect.contact_status === 'discarded' && prospect.discard_reason && (
+                <div className="text-[10px] text-rose-700 bg-rose-50/70 border border-rose-200/60 rounded px-1.5 py-0.5 truncate">
+                  Motivo: <span className="font-semibold">{DISCARD_REASONS[prospect.discard_reason as DiscardReason] || prospect.discard_reason}</span>
+                  {prospect.discard_notes ? ` — ${prospect.discard_notes}` : ''}
+                </div>
+              )}
+              {prospect.contact_status === 'paused' && prospect.paused_until && (
+                <div className="text-[10px] text-slate-700 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 truncate">
+                  Retomar: <span className="font-semibold">{new Date(prospect.paused_until + 'T00:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' })}</span>
+                  {prospect.discard_notes ? ` — ${prospect.discard_notes}` : ''}
+                </div>
+              )}
             </div>
+
 
             {/* Corner Icons (Heart + Menu) */}
             <div className="flex items-center gap-1.5">
@@ -560,44 +538,31 @@ END:VCARD`;
         <div className="hidden lg:flex flex-col justify-between shrink-0 w-full lg:w-auto border-t border-slate-100 lg:border-t-0 lg:border-l lg:border-slate-200 p-5 lg:px-6 lg:py-6">
           
           {/* Status & Priority */}
-          <div className="flex flex-col gap-2">
-            <div className="relative inline-flex items-center w-full min-w-[200px]">
-              <select
-                value={prospect.contact_status || 'pending'}
-                onChange={handleStatusChange}
-                disabled={isPending}
-                className={`appearance-none cursor-pointer outline-none transition-colors border pl-10 pr-8 py-2.5 rounded-xl text-[13px] font-bold tracking-wide w-full shadow-sm
-                  ${isPending ? 'opacity-50' : ''}
-                  ${prospect.contact_status === 'in_progress' ? 'bg-blue-50 text-blue-800 border-blue-200' :
-                    prospect.contact_status === 'interested' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
-                    prospect.contact_status === 'opportunity' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' :
-                    prospect.contact_status === 'quote' ? 'bg-purple-50 text-purple-800 border-purple-200' :
-                    prospect.contact_status === 'customer' ? 'bg-green-50 text-green-800 border-green-200' :
-                    prospect.contact_status === 'discarded' ? 'bg-rose-50 text-rose-800 border-rose-200' :
-                    'bg-amber-50 text-amber-800 border-amber-200'
-                  }
-                `}
-              >
-                {STATUS_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
-                <span className={`w-2.5 h-2.5 rounded-[4px] 
-                  ${prospect.contact_status === 'in_progress' ? 'bg-blue-500' :
-                    prospect.contact_status === 'interested' ? 'bg-emerald-500' :
-                    prospect.contact_status === 'opportunity' ? 'bg-indigo-500' :
-                    prospect.contact_status === 'quote' ? 'bg-purple-500' :
-                    prospect.contact_status === 'customer' ? 'bg-green-500' :
-                    prospect.contact_status === 'discarded' ? 'bg-rose-500' :
-                    'bg-amber-500'
-                  }
-                `}></span>
+          <div className="flex flex-col gap-2 min-w-[210px]">
+            <ManagementStatusSelect
+              prospectId={prospect.id}
+              currentStatus={prospect.contact_status}
+              size="md"
+            />
+            <CommercialStageSelect
+              prospectId={prospect.id}
+              currentStage={prospect.commercial_stage}
+              managementStatus={prospect.contact_status}
+              size="md"
+            />
+            {prospect.contact_status === 'discarded' && prospect.discard_reason && (
+              <div className="text-[11px] text-rose-700 bg-rose-50/70 border border-rose-200/60 rounded-xl px-3 py-1.5 leading-tight">
+                Motivo: <span className="font-semibold">{DISCARD_REASONS[prospect.discard_reason as DiscardReason] || prospect.discard_reason}</span>
+                {prospect.discard_notes ? ` — ${prospect.discard_notes}` : ''}
               </div>
-              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-current opacity-60">
-                <ChevronDown className="w-4 h-4" />
+            )}
+            {prospect.contact_status === 'paused' && prospect.paused_until && (
+              <div className="text-[11px] text-slate-700 bg-slate-100 border border-slate-200 rounded-xl px-3 py-1.5 leading-tight">
+                Retomar: <span className="font-semibold">{new Date(prospect.paused_until + 'T00:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' })}</span>
+                {prospect.discard_notes ? ` — ${prospect.discard_notes}` : ''}
               </div>
-            </div>
+            )}
+
 
             {prospect.priority === 'Alta' && (
               <div className="flex items-center gap-1.5 bg-rose-50 border border-rose-100 text-rose-700 px-3 py-1.5 rounded-lg text-[12px] font-bold shadow-sm">

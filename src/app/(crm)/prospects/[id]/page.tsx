@@ -153,7 +153,16 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
     .not('status', 'in', '("resolved","closed")')
     .order('last_event_at', { ascending: false });
 
+  // Fetch latest status changes for CommercialStatusCard
+  const { data: statusHistory } = await supabase
+    .from('prospect_status_history')
+    .select('*, profiles(full_name)')
+    .eq('prospect_id', id)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
   return (
+
     <div className="w-full px-4 md:px-8 pt-4 pb-24 md:pb-8">
       <RealtimeListener prospectId={id} />
       
@@ -227,7 +236,12 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
           <DataQualityCard prospect={prospect} dataQuality={overview.data_quality} />
           
           {/* CommercialStatus (moved from row 1 to row 3) */}
-          <CommercialStatusCard prospect={prospect} latestActivity={overview.latest_activity} />
+          <CommercialStatusCard
+            prospect={prospect}
+            latestActivity={overview.latest_activity}
+            statusHistory={statusHistory || []}
+          />
+
         </div>
         
         {/* ROW 4: 2 columns (50/50 split) */}

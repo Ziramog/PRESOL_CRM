@@ -35,6 +35,7 @@ import {
   getSuggestedNextAction,
 } from '@/lib/activities/config';
 import { BusinessCardScanner } from '@/components/crm/v2/BusinessCardScanner';
+import { ReactivationPrompt } from '@/components/crm/status';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
@@ -76,6 +77,9 @@ export function ActivityForm({
 
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Reactivation prompt state
+  const [reactivationPromptData, setReactivationPromptData] = useState<{ prospectId: string; status: string } | null>(null);
 
   // Contacts
   const [contacts, setContacts] = useState<{ id: string; full_name: string; role_title: string }[]>([]);
@@ -309,10 +313,22 @@ export function ActivityForm({
       if (tripContext && !activityToEdit) {
         await updateStopStatus(tripContext.tripStopId, tripContext.tripId, 'visited');
       }
+
+      const res = saveRes as { error?: string; reactivationPrompt?: boolean; managementStatus?: any };
+      if (res.reactivationPrompt && effectiveProspectId) {
+        setReactivationPromptData({
+          prospectId: effectiveProspectId,
+          status: res.managementStatus || 'discarded',
+        });
+        setIsPending(false);
+        return;
+      }
+
       router.refresh();
       onClose();
     }
   };
+
 
   const handleDelete = async () => {
     if (!activityToEdit?.id || !confirm('¿Estás seguro de que deseas eliminar esta actividad?')) return;
@@ -752,6 +768,25 @@ export function ActivityForm({
           </button>
         </div>
       </div>
+
+      {reactivationPromptData && (
+        <ReactivationPrompt
+          isOpen={true}
+          prospectId={reactivationPromptData.prospectId}
+          currentStatus={reactivationPromptData.status}
+          onClose={() => {
+            setReactivationPromptData(null);
+            router.refresh();
+            onClose();
+          }}
+          onReactivated={() => {
+            setReactivationPromptData(null);
+            router.refresh();
+            onClose();
+          }}
+        />
+      )}
     </div>
   );
 }
+

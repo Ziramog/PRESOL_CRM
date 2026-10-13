@@ -2,6 +2,7 @@
 
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { applyProspectTransition } from '@/lib/prospects/apply-transition';
 
 export async function createOpportunity(formData: FormData) {
   const supabase = await createAdminClient();
@@ -39,9 +40,18 @@ export async function createOpportunity(formData: FormData) {
     return { error: error.message };
   }
 
+  // Elevate prospect commercial stage
+  await applyProspectTransition(
+    supabase,
+    prospect_id,
+    { kind: 'opportunity_created' },
+    { source: 'opportunity', userId }
+  );
+
   revalidatePath(`/prospects/${prospect_id}`);
   revalidatePath('/opportunities');
   return { success: true };
+
 }
 
 export async function updateOpportunityStage(id: string, stage: string, prospectId?: string) {
@@ -62,9 +72,34 @@ export async function updateOpportunityStage(id: string, stage: string, prospect
     return { error: error.message };
   }
 
+  // Elevate prospect commercial stage to customer if won
+  if (stage === 'won') {
+    let effectiveProspectId = prospectId;
+    if (!effectiveProspectId) {
+      const { data: opp } = await supabase
+        .from('opportunities')
+        .select('prospect_id')
+        .eq('id', id)
+        .single();
+      effectiveProspectId = opp?.prospect_id;
+    }
+
+    if (effectiveProspectId) {
+      const authClient = await createClient();
+      const { data: { user } } = await authClient.auth.getUser();
+      await applyProspectTransition(
+        supabase,
+        effectiveProspectId,
+        { kind: 'opportunity_won' },
+        { source: 'opportunity', sourceId: id, userId: user?.id }
+      );
+    }
+  }
+
   if (prospectId) {
     revalidatePath(`/prospects/${prospectId}`);
   }
   revalidatePath('/opportunities');
   return { success: true };
+
 }

@@ -1,8 +1,16 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { getProspectSearchFilters } from '@/lib/prospects/search';
+import {
+  ManagementStatus,
+  CommercialStage,
+  DiscardReason,
+  MANAGEMENT_STATUS,
+  COMMERCIAL_STAGE,
+  DISCARD_REASONS,
+} from '@/lib/constants';
 
 export async function searchProspects(query: string) {
   if (!query.trim()) return { data: [] };
@@ -210,26 +218,212 @@ export async function updateProspect(id: string, formData: FormData) {
   return { prospect: data };
 }
 
-export async function updateProspectStatus(prospectId: string, status: string) {
+export async function setManagementStatus(
+  prospectId: string,
+  status: ManagementStatus,
+  opts?: {
+    reason?: DiscardReason;
+    notes?: string;
+    pausedUntil?: string;
+    createReminder?: boolean;
+  }
+) {
+  if (!MANAGEMENT_STATUS[status]) {
+    return { error: 'Estado de gestión inválido' };
+  }
+
+  if (status === 'discarded') {
+    if (!opts?.reason || !DISCARD_REASONS[opts.reason]) {
+      return { error: 'El motivo de descarte es obligatorio' };
+    }
+  }
+
   const supabase = await createAdminClient();
-  
-  const { error } = await supabase
+  const authClient = await createClient();
+  const { data: { user } } = await authClient.auth.getUser();
+  const userId = user?.id || null;
+
+  const { data: current, error: readError } = await supabase
     .from('prospects')
-    .update({ 
-      contact_status: status,
-      updated_at: new Date().toISOString()
-    })
+    .select('contact_status')
+    .eq('id', prospectId)
+    .single();
+
+  if (readError || !current) {
+    console.error('Error fetching prospect for management status update:', readError);
+    return { error: 'Error al obtener prospecto' };
+  }
+
+  const nowIso = new Date().toISOString();
+  const updatePayload: Record<string, any> = {
+    contact_status: status,
+    status_changed_at: nowIso,
+    updated_at: nowIso,
+  };
+
+  if (status === 'discarded') {
+    updatePayload.discard_reason = opts?.reason;
+    updatePayload.discard_notes = opts?.notes?.trim() || null;
+    updatePayload.discarded_at = nowIso;
+    updatePayload.paused_until = null;
+  } else if (status === 'paused') {
+    updatePayload.paused_until = opts?.pausedUntil || null;
+    updatePayload.discard_reason = null;
+    updatePayload.discard_notes = opts?.notes?.trim() || null;
+    updatePayload.discarded_at = null;
+  } else {
+    // pending or in_progress: clean discard & pause fields
+    updatePayload.discard_reason = null;
+    updatePayload.discard_notes = null;
+    updatePayload.discarded_at = null;
+    updatePayload.paused_until = null;
+  }
+
+  const { error: updateError } = await supabase
+    .from('prospects')
+    .update(updatePayload)
     .eq('id', prospectId);
 
-  if (error) {
-    console.error('Error updating prospect status:', error);
-    return { error: 'Error al actualizar el estado' };
+  if (updateError) {
+    console.error('Error updating prospect management status:', updateError);
+    return { error: 'Error al actualizar el estado: ' + updateError.message };
+  }
+
+  // Insert status history
+  const { error: histError } = await supabase
+    .from('prospect_status_history')
+    .insert([{
+      prospect_id: prospectId,
+      layer: 'management',
+      from_value: current.contact_status || null,
+      to_value: status,
+      reason: opts?.reason || null,
+      notes: opts?.notes?.trim() || null,
+      source: 'manual',
+      changed_by: userId,
+    }]);
+
+  if (histError) {
+    console.error('Error inserting prospect status history (management):', histError);
+  }
+
+  // Optional: create reminder task if paused with date and checkbox selected
+  if (status === 'paused' && opts?.createReminder && opts?.pausedUntil) {
+    try {
+      await supabase.from('tasks').insert([{
+        prospect_id: prospectId,
+        title: 'Retomar gestión (fin de pausa)',
+        description: opts.notes ? `Pausado previamente: ${opts.notes}` : 'Prospecto en pausa finaliza período',
+        type: 'follow_up',
+        due_at: `${opts.pausedUntil}T10:00:00Z`,
+        priority: 'normal',
+        status: 'pending',
+        created_by: userId,
+        assigned_to: userId,
+      }]);
+    } catch (taskErr) {
+      console.error('Error creating follow-up task on pause:', taskErr);
+    }
   }
 
   revalidatePath(`/prospects/${prospectId}`);
   revalidatePath('/prospects');
   return { success: true };
 }
+
+export async function setCommercialStage(
+  prospectId: string,
+  stage: CommercialStage
+) {
+  if (!COMMERCIAL_STAGE[stage]) {
+    return { error: 'Etapa comercial inválida' };
+  }
+
+  const supabase = await createAdminClient();
+  const authClient = await createClient();
+  const { data: { user } } = await authClient.auth.getUser();
+  const userId = user?.id || null;
+
+  const { data: current, error: readError } = await supabase
+    .from('prospects')
+    .select('contact_status, commercial_stage')
+    .eq('id', prospectId)
+    .single();
+
+  if (readError || !current) {
+    console.error('Error reading prospect for commercial stage update:', readError);
+    return { error: 'Error al obtener prospecto' };
+  }
+
+  const nowIso = new Date().toISOString();
+  const updatePayload: Record<string, any> = {
+    commercial_stage: stage,
+    status_changed_at: nowIso,
+    updated_at: nowIso,
+  };
+
+  // Rule 3: if stage > unqualified and management is pending -> in_progress
+  const shouldElevateMgmt = stage !== 'unqualified' && (!current.contact_status || current.contact_status === 'pending');
+  if (shouldElevateMgmt) {
+    updatePayload.contact_status = 'in_progress';
+  }
+
+  const { error: updateError } = await supabase
+    .from('prospects')
+    .update(updatePayload)
+    .eq('id', prospectId);
+
+  if (updateError) {
+    console.error('Error updating prospect commercial stage:', updateError);
+    return { error: 'Error al actualizar la etapa: ' + updateError.message };
+  }
+
+  const historyRows: Array<{
+    prospect_id: string;
+    layer: 'stage' | 'management';
+    from_value: string | null;
+    to_value: string;
+    source: string;
+    changed_by: string | null;
+  }> = [
+    {
+      prospect_id: prospectId,
+      layer: 'stage',
+      from_value: current.commercial_stage || null,
+      to_value: stage,
+      source: 'manual',
+      changed_by: userId,
+    },
+  ];
+
+  if (shouldElevateMgmt) {
+    historyRows.push({
+      prospect_id: prospectId,
+      layer: 'management',
+      from_value: current.contact_status || 'pending',
+      to_value: 'in_progress',
+      source: 'manual',
+      changed_by: userId,
+    });
+  }
+
+  const { error: histError } = await supabase
+    .from('prospect_status_history')
+    .insert(historyRows);
+
+  if (histError) {
+    console.error('Error inserting prospect status history (stage):', histError);
+  }
+
+  revalidatePath(`/prospects/${prospectId}`);
+  revalidatePath('/prospects');
+  return { success: true };
+}
+
+export async function reactivateProspect(prospectId: string) {
+  return setManagementStatus(prospectId, 'in_progress');
+}
+
 
 export async function deleteProspect(prospectId: string) {
   const supabase = await createAdminClient();

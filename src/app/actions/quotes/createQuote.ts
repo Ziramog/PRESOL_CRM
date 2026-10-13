@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { calculateQuoteAction } from './calculateQuote';
+import { applyProspectTransition } from '@/lib/prospects/apply-transition';
 
 export async function createQuote(inputData: any, clientId: string, contactName: string) {
   const supabase = await createClient();
@@ -104,5 +105,16 @@ export async function createQuote(inputData: any, clientId: string, contactName:
     return { success: false, error: snapshotError.message };
   }
 
+  // Elevate prospect commercial stage
+  if (clientId) {
+    await applyProspectTransition(
+      supabase,
+      clientId,
+      { kind: 'quote_created' },
+      { source: 'quote', sourceId: quote.id, userId: user.user.id }
+    );
+  }
+
   return { success: true, quoteId: quote.id };
 }
+

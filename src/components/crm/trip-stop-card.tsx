@@ -15,7 +15,7 @@ import {
   Clock 
 } from 'lucide-react';
 import { updateStopStatus, removeTripStop } from '@/app/actions/trips';
-import { PROSPECT_STATUS } from '@/lib/constants';
+import { StatusBadges } from '@/components/crm/status';
 import { FavoriteButton } from '@/components/crm/FavoriteButton';
 import { getLeadTemperature, PulseIndicator } from '@/lib/lead-temperature';
 import { ActivityForm } from '@/components/crm/activity-form';
@@ -177,11 +177,14 @@ export function TripStopCard({
                 {prospect.commercial_category || 'SIN CATEGORÍA'}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 bg-gray-50 text-gray-600 rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide shrink-0">
-              <span>{PROSPECT_STATUS[prospect.contact_status as keyof typeof PROSPECT_STATUS] || 'Pendiente'}</span>
-            </div>
-          </div>
-        </Link>
+          <StatusBadges
+            management={prospect.contact_status}
+            stage={prospect.commercial_stage}
+            size="sm"
+          />
+        </div>
+      </Link>
+
 
         {/* ITINERARIO: Horario planificado y Objetivo de visita de la agenda */}
         {(stop.route_note || timeDisplay) && (

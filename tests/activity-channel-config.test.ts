@@ -3,17 +3,15 @@ import assert from 'node:assert';
 import {
   isEffectiveContact,
   getSuggestedNextAction,
-  isExplicitInterest,
   ACTIVITY_CHANNEL_CONFIG,
   normalizeChannel,
   channelToLegacyType,
   getChannelLabel,
   getResultLabel,
   INTERNAL_NOTE_TYPE_LABELS,
-  NEXT_ACTION_TYPE_LABELS,
   ActivityChannel,
 } from '../src/lib/activities/config';
-import { calculateNewStatus } from '../src/lib/prospects/status-engine';
+import { computeTransition } from '../src/lib/prospects/status-engine';
 
 test('1. WhatsApp sent + brochure_sent → effective_contact false', () => {
   const result = isEffectiveContact('whatsapp', 'sent', 'brochure_sent');
@@ -114,24 +112,54 @@ test('7. Próxima acción sugerida según resultado', () => {
   assert.strictEqual(getSuggestedNextAction('email', 'sent', 'quote_sent'), 'email');
 });
 
-test('8. Reglas de impacto comercial (calculateNewStatus)', () => {
-  // pending -> in_progress con cualquier actividad
-  assert.strictEqual(calculateNewStatus('pending', 'call', 'no_answer'), 'in_progress');
-  assert.strictEqual(calculateNewStatus('pending', 'whatsapp', 'brochure_sent'), 'in_progress');
+test('8. Reglas de impacto comercial (computeTransition)', () => {
+  // pending -> in_progress con cualquier actividad real
+  assert.strictEqual(
+    computeTransition({ management: 'pending', stage: 'unqualified' }, { kind: 'activity', channel: 'call', result: 'no_answer' }).management,
+    'in_progress'
+  );
+  assert.strictEqual(
+    computeTransition({ management: 'pending', stage: 'unqualified' }, { kind: 'activity', channel: 'whatsapp', result: 'brochure_sent' }).management,
+    'in_progress'
+  );
 
   // interested -> interested
-  assert.strictEqual(calculateNewStatus('in_progress', 'whatsapp', 'interested'), 'interested');
-  assert.strictEqual(calculateNewStatus('in_progress', 'whatsapp', 'schedule_meeting'), 'interested');
+  assert.strictEqual(
+    computeTransition({ management: 'in_progress', stage: 'unqualified' }, { kind: 'activity', channel: 'whatsapp', result: 'interested' }).stage,
+    'interested'
+  );
+  assert.strictEqual(
+    computeTransition({ management: 'in_progress', stage: 'unqualified' }, { kind: 'activity', channel: 'whatsapp', result: 'schedule_meeting' }).stage,
+    'interested'
+  );
 
   // requested_quote -> quote
-  assert.strictEqual(calculateNewStatus('in_progress', 'visit', 'requested_quote'), 'quote');
-  assert.strictEqual(calculateNewStatus('interested', 'visit', 'requested_quote'), 'quote');
-  assert.strictEqual(calculateNewStatus('interested', 'virtual_meeting', 'proposal_required'), 'quote');
+  assert.strictEqual(
+    computeTransition({ management: 'in_progress', stage: 'unqualified' }, { kind: 'activity', channel: 'visit', result: 'requested_quote' }).stage,
+    'quote'
+  );
+  assert.strictEqual(
+    computeTransition({ management: 'in_progress', stage: 'interested' }, { kind: 'activity', channel: 'visit', result: 'requested_quote' }).stage,
+    'quote'
+  );
+  assert.strictEqual(
+    computeTransition({ management: 'in_progress', stage: 'interested' }, { kind: 'activity', channel: 'virtual_meeting', result: 'proposal_required' }).stage,
+    'quote'
+  );
 
-  // NUNCA degradar estado automáticamente
-  assert.strictEqual(calculateNewStatus('quote', 'call', 'not_interested'), null);
-  assert.strictEqual(calculateNewStatus('opportunity', 'call', 'no_answer'), null);
-  assert.strictEqual(calculateNewStatus('interested', 'call', 'no_answer'), null);
+  // NUNCA degradar etapa comercial automáticamente
+  assert.strictEqual(
+    computeTransition({ management: 'in_progress', stage: 'quote' }, { kind: 'activity', channel: 'call', result: 'not_interested' }).stage,
+    undefined
+  );
+  assert.strictEqual(
+    computeTransition({ management: 'in_progress', stage: 'opportunity' }, { kind: 'activity', channel: 'call', result: 'no_answer' }).stage,
+    undefined
+  );
+  assert.strictEqual(
+    computeTransition({ management: 'in_progress', stage: 'interested' }, { kind: 'activity', channel: 'call', result: 'no_answer' }).stage,
+    undefined
+  );
 });
 
 test('9. Mapeo y compatibilidad legacy', () => {

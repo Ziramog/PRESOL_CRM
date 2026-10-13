@@ -14,7 +14,7 @@ import {
   isEffectiveContact
 } from '@/lib/activities/config';
 import { fromZonedTime } from 'date-fns-tz';
-import { calculateNewStatus } from '@/lib/prospects/status-engine';
+import { applyProspectTransition } from '@/lib/prospects/apply-transition';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
@@ -109,24 +109,24 @@ export async function saveVoiceInteraction(prospectId: string, data: any) {
       });
     }
 
-    // 4. Actualizar estado comercial del prospecto (respetando nunca degradar)
-    const { data: prospect } = await supabase.from('prospects').select('contact_status').eq('id', prospectId).single();
-    const newStatus = prospect ? calculateNewStatus(prospect.contact_status, channel, result) : null;
-
-    if (newStatus) {
-      await supabase.from('prospects').update({
-        contact_status: newStatus,
-        updated_at: new Date().toISOString(),
-      }).eq('id', prospectId);
-    } else {
-      await supabase.from('prospects').update({ updated_at: new Date().toISOString() }).eq('id', prospectId);
-    }
+    // 4. Actualizar estado y etapa según motor de dos capas
+    const transitionRes = await applyProspectTransition(
+      supabase,
+      prospectId,
+      { kind: 'activity', channel, result },
+      { source: 'activity', sourceId: insertedActivity?.id || null, userId: user.id }
+    );
 
     revalidatePath(`/prospects/${prospectId}`);
     revalidatePath('/inbox');
     revalidatePath('/prospects');
     revalidatePath('/tasks');
-    return { success: true };
+    return {
+      success: true,
+      reactivationPrompt: transitionRes.reactivationPrompt,
+      managementStatus: transitionRes.management,
+    };
+
 
   } catch (error: any) {
     console.error('Error saving voice interaction:', error);

@@ -2,6 +2,7 @@
 
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { applyProspectTransition } from '@/lib/prospects/apply-transition';
 
 export async function createRetrospectiveTrip(dateString: string, tripName: string) {
   const supabase = await createAdminClient();
@@ -57,6 +58,17 @@ export async function createRetrospectiveTrip(dateString: string, tripName: stri
   if (stopsError) {
     return { error: stopsError.message };
   }
+
+  // Automate prospect status via two-layer engine
+  for (const pid of prospectIds) {
+    await applyProspectTransition(
+      supabase,
+      pid,
+      { kind: 'trip_visited' },
+      { source: 'trip', sourceId: trip.id, userId }
+    );
+  }
+
 
   // Update activities with the new trip_id
   const { error: updateError } = await supabase

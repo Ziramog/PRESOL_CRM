@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { MapPin, Phone, MessageCircle, ChevronRight, Building2, Factory, Leaf, Store, Star, Tag, Clock, Mic, HardHat, Hexagon, Truck, Briefcase, Wrench, Wheat, Box, PlusCircle, CalendarPlus } from 'lucide-react';
-import { PROSPECT_STATUS } from '@/lib/constants';
+import { StatusBadges } from '@/components/crm/status';
 import { FavoriteButton } from '@/components/crm/FavoriteButton';
 import { getLeadTemperature, PulseIndicator } from '@/lib/lead-temperature';
 import { ActivityForm } from '@/components/crm/activity-form';
@@ -132,11 +132,14 @@ export function ProspectCard({ prospect }: { prospect: any }) {
               {prospect.commercial_category || 'SIN CATEGORÍA'}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 bg-gray-50 text-gray-600 rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide shrink-0">
-            <span>{PROSPECT_STATUS[prospect.contact_status as keyof typeof PROSPECT_STATUS] || 'Pendiente'}</span>
-          </div>
+          <StatusBadges
+            management={prospect.contact_status}
+            stage={prospect.commercial_stage}
+            size="sm"
+          />
         </div>
       </Link>
+
       
       {/* ACTION BAR (Square action buttons) */}
       <div className="px-3 sm:px-4 pb-3.5 pt-3 flex items-center justify-between gap-1.5 sm:gap-2 border-t border-slate-100 bg-slate-50/50">

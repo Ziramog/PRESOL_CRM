@@ -80,6 +80,7 @@ export interface InteractionThreadWithRelations extends InteractionThread {
     city?: string | null;
     commercial_category?: string | null;
     contact_status?: string | null;
+    commercial_stage?: string | null;
     primary_phone?: string | null;
     ask_for?: string | null;
     is_favorite?: boolean;

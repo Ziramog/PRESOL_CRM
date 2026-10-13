@@ -3,6 +3,7 @@
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { formatInTimeZone } from 'date-fns-tz';
+import { applyProspectTransition } from '@/lib/prospects/apply-transition';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
 
@@ -166,14 +167,21 @@ export async function updateStopStatus(stopId: string, tripId: string, status: s
     return { error: error.message };
   }
 
-  // Automate prospect status
+  // Automate prospect status via two-layer engine
   if (status === 'visited') {
-    // We need the prospectId to update it
     const { data } = await supabase.from('trip_stops').select('prospect_id').eq('id', stopId).single();
     if (data?.prospect_id) {
-      await supabase.from('prospects').update({ contact_status: 'visited' }).eq('id', data.prospect_id);
+      const authClient = await createClient();
+      const { data: { user } } = await authClient.auth.getUser();
+      await applyProspectTransition(
+        supabase,
+        data.prospect_id,
+        { kind: 'trip_visited' },
+        { source: 'trip', sourceId: stopId, userId: user?.id }
+      );
     }
   }
+
 
   revalidatePath(`/trips/${tripId}`);
   return { success: true };

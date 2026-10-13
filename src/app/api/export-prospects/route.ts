@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import * as xlsx from 'xlsx';
-import { CONTACT_LEVELS, ACTIVITY_RESULTS } from '@/lib/constants';
+import { CONTACT_LEVELS, ACTIVITY_RESULTS, MANAGEMENT_STATUS, COMMERCIAL_STAGE, DISCARD_REASONS } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,6 +74,12 @@ export async function GET() {
     );
     const lastDirectionComment = sortedComments[0]?.body || '';
 
+    const mgmtStatus = (p.contact_status ? (MANAGEMENT_STATUS[p.contact_status as keyof typeof MANAGEMENT_STATUS] || p.contact_status) : '') as string;
+    const commStage = (p.commercial_stage ? (COMMERCIAL_STAGE[p.commercial_stage as keyof typeof COMMERCIAL_STAGE] || p.commercial_stage) : '') as string;
+    const discardReason = p.discard_reason
+      ? `${DISCARD_REASONS[p.discard_reason as keyof typeof DISCARD_REASONS] || p.discard_reason}${p.discard_notes ? ` (${p.discard_notes})` : ''}`
+      : (p.discard_notes || '');
+
     return {
       'ID CRM': p.external_id || p.id.split('-')[0],
       'Empresa': p.company_name,
@@ -84,7 +90,9 @@ export async function GET() {
       'Categoría': p.commercial_category || '',
       'Teléfonos': p.phones_raw || p.primary_phone || '',
       'Dirección': p.address || '',
-      'Estado Actual': p.contact_status || '',
+      'Gestión': mgmtStatus,
+      'Etapa comercial': commStage,
+      'Motivo descarte': discardReason,
       'Prioridad Visita': p.visit_priority || '',
       'Necesidad Probable': p.probable_need || '',
       'Última Interacción (Fecha)': lastInteractionDate,
@@ -109,13 +117,16 @@ export async function GET() {
     { wch: 25 }, // Categoria
     { wch: 20 }, // Telefonos
     { wch: 30 }, // Dirección
-    { wch: 15 }, // Estado
+    { wch: 15 }, // Gestión
+    { wch: 18 }, // Etapa comercial
+    { wch: 30 }, // Motivo descarte
     { wch: 20 }, // Prioridad
     { wch: 35 }, // Necesidad
     { wch: 20 }, // Fecha
     { wch: 50 }, // Resumen
     { wch: 40 }, // Comentario Dirección
   ];
+
   worksheet['!cols'] = wscols;
 
   // Generate buffer using 'array' to get an Uint8Array which works better with NextResponse

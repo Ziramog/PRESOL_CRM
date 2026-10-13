@@ -12,7 +12,7 @@ import {
   NEXT_ACTION_TYPE_LABELS,
   NextActionType,
 } from '@/lib/activities/config';
-import { calculateNewStatus } from '@/lib/prospects/status-engine';
+import { applyProspectTransition } from '@/lib/prospects/apply-transition';
 import { recordInteraction } from '@/lib/interactions/service';
 
 const TZ = process.env.NEXT_PUBLIC_TIMEZONE || 'America/Argentina/Cordoba';
@@ -216,21 +216,13 @@ export async function createActivity(formData: FormData) {
     });
   }
 
-  // Actualización de estado comercial según reglas V3 (nunca degradar)
-  const { data: prospect } = await supabase.from('prospects').select('contact_status').eq('id', prospect_id).single();
-
-  const newStatus = prospect
-    ? calculateNewStatus(prospect.contact_status, channel, result)
-    : null;
-
-  if (newStatus) {
-    await supabase.from('prospects').update({
-      contact_status: newStatus,
-      updated_at: new Date().toISOString(),
-    }).eq('id', prospect_id);
-  } else {
-    await supabase.from('prospects').update({ updated_at: new Date().toISOString() }).eq('id', prospect_id);
-  }
+  // Actualización de estado y etapa según motor de dos capas
+  const transitionRes = await applyProspectTransition(
+    supabase,
+    prospect_id,
+    { kind: 'activity', channel, result },
+    { source: 'activity', sourceId: insertedActivity?.id || null, userId: created_by }
+  );
 
   revalidatePath(`/prospects/${prospect_id}`);
   revalidatePath('/prospects');
@@ -238,7 +230,11 @@ export async function createActivity(formData: FormData) {
   revalidatePath('/dashboard');
   revalidatePath('/direction');
   revalidatePath('/tasks');
-  return { success: true };
+  return {
+    success: true,
+    reactivationPrompt: transitionRes.reactivationPrompt,
+    managementStatus: transitionRes.management,
+  };
 }
 
 export async function updateActivity(formData: FormData) {
@@ -340,25 +336,23 @@ export async function updateActivity(formData: FormData) {
     return { error: updateAttempt.error.message };
   }
 
-  const { data: prospect } = await supabase.from('prospects').select('contact_status').eq('id', prospect_id).single();
-  const newStatus = prospect
-    ? calculateNewStatus(prospect.contact_status, channel, result)
-    : null;
-
-  if (newStatus) {
-    await supabase.from('prospects').update({
-      contact_status: newStatus,
-      updated_at: new Date().toISOString(),
-    }).eq('id', prospect_id);
-  } else {
-    await supabase.from('prospects').update({ updated_at: new Date().toISOString() }).eq('id', prospect_id);
-  }
+  const transitionRes = await applyProspectTransition(
+    supabase,
+    prospect_id,
+    { kind: 'activity', channel, result },
+    { source: 'activity', sourceId: id }
+  );
 
   revalidatePath(`/prospects/${prospect_id}`);
   revalidatePath('/prospects');
   revalidatePath('/dashboard');
   revalidatePath('/direction');
-  return { success: true };
+  return {
+    success: true,
+    // Editing an existing activity never prompts for reactivation (only new activities do)
+    reactivationPrompt: false,
+    managementStatus: transitionRes.management,
+  };
 }
 
 export async function deleteActivity(id: string, prospectId: string) {

@@ -51,6 +51,7 @@ export async function getCommercialInboxData(
           city,
           commercial_category,
           contact_status,
+          commercial_stage,
           primary_phone,
           ask_for,
           source_payload
@@ -115,6 +116,7 @@ export async function getCommercialInboxData(
           city,
           commercial_category,
           contact_status,
+          commercial_stage,
           primary_phone,
           ask_for,
           source_payload,
@@ -213,6 +215,7 @@ export async function getCommercialInboxData(
           city: rawProspect.city,
           commercial_category: rawProspect.commercial_category,
           contact_status: rawProspect.contact_status,
+          commercial_stage: rawProspect.commercial_stage,
           primary_phone: rawProspect.primary_phone,
           ask_for: rawProspect.ask_for,
           is_favorite: Boolean(rawProspect.source_payload?.is_favorite),

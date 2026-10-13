@@ -3,10 +3,10 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, Filter, X, Check, Heart, Calendar, ArrowDownAZ, ArrowUpZA, ListTodo, Activity, ArrowUpDown, Table, LayoutGrid } from 'lucide-react';
 import { useTransition, useState, useRef, useEffect, useCallback } from 'react';
-import { PROSPECT_STATUS } from '@/lib/constants';
+import { COMMERCIAL_STAGE } from '@/lib/constants';
 import { saveProspectFilters } from '@/app/actions/preferences';
 
-type Tab = 'class' | 'sector' | 'city' | 'status';
+type Tab = 'class' | 'sector' | 'city' | 'stage';
 
 const SORT_OPTIONS = [
   { value: 'created_at-desc', label: 'Más recientes primero', icon: <Calendar /> },
@@ -62,10 +62,25 @@ export function ProspectFilters({
   const currentSearch = searchParams.get('search') || '';
   const currentClass = searchParams.get('class') || '';
   const currentSector = searchParams.get('sector') || '';
-  const currentStatus = searchParams.get('status') || '';
+  const rawStatus = searchParams.get('status') || '';
+  const rawMgmt = searchParams.get('mgmt') || '';
+  const rawStage = searchParams.get('stage') || '';
+
+  // Backward compatibility: map old status param to mgmt or stage
+  let effectiveMgmt = rawMgmt;
+  let effectiveStage = rawStage;
+  if (!effectiveMgmt && !effectiveStage && rawStatus) {
+    if (['pending', 'in_progress', 'paused', 'discarded'].includes(rawStatus)) {
+      effectiveMgmt = rawStatus;
+    } else {
+      effectiveStage = rawStatus;
+    }
+  }
+
   const currentCities = searchParams.getAll('city');
   const currentFavorites = searchParams.get('favorites') || '';
   const currentView = searchParams.get('view') === 'cards' ? 'cards' : 'table';
+
 
   const handleViewChange = (newView: 'table' | 'cards') => {
     const params = new URLSearchParams(searchParams.toString());
@@ -176,6 +191,8 @@ export function ProspectFilters({
     params.delete('city');
     params.delete('sector');
     params.delete('status');
+    params.delete('mgmt');
+    params.delete('stage');
     params.delete('favorites');
     params.delete('page'); // Reset pagination
     persistFilters(params);
@@ -185,15 +202,38 @@ export function ProspectFilters({
     } catch {}
   };
 
+  const handleMgmtChip = (val: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('status'); // Clean legacy
+    if (val) {
+      params.set('mgmt', val);
+    } else {
+      params.delete('mgmt');
+    }
+    params.delete('page');
+    persistFilters(params);
+    startTransition(() => router.push(`/prospects?${params.toString()}`));
+  };
+
+  const MGMT_CHIPS = [
+    { value: '', label: 'Todos' },
+    { value: 'in_progress', label: 'En gestión', dot: 'bg-blue-500' },
+    { value: 'pending', label: 'Pendientes', dot: 'bg-amber-500' },
+    { value: 'paused', label: 'En pausa', dot: 'bg-slate-500' },
+    { value: 'discarded', label: 'Descartados', dot: 'bg-rose-500' },
+  ];
+
   const activeFiltersCount =
     (currentClass ? 1 : 0) +
     currentCities.length +
     (currentSector ? 1 : 0) +
-    (currentStatus ? 1 : 0) +
+    (effectiveMgmt ? 1 : 0) +
+    (effectiveStage ? 1 : 0) +
     (currentFavorites === 'true' ? 1 : 0);
 
-  // Status options aligned with current PROSPECT_STATUS constants
-  const statusOptions = Object.entries(PROSPECT_STATUS).map(([value, label]) => ({ value, label }));
+  // Stage options aligned with COMMERCIAL_STAGE constants
+  const stageOptions = Object.entries(COMMERCIAL_STAGE).map(([value, label]) => ({ value, label }));
+
 
   const tabClass = (tab: Tab) =>
     `flex-none px-3 py-2.5 text-xs font-medium border-b-2 transition-colors ${
@@ -208,7 +248,30 @@ export function ProspectFilters({
     }`;
 
   return (
-    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto relative" ref={filterRef}>
+    <div className="flex flex-col gap-2 w-full sm:w-auto" ref={filterRef}>
+      {/* Management chips row (always visible) */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 [&::-webkit-scrollbar]:hidden">
+        {MGMT_CHIPS.map((chip) => {
+          const isSelected = effectiveMgmt === chip.value;
+          return (
+            <button
+              key={chip.value}
+              type="button"
+              onClick={() => handleMgmtChip(chip.value)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                isSelected
+                  ? 'bg-slate-900 text-white shadow-2xs'
+                  : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              {chip.dot && <span className={`w-2 h-2 rounded-full ${chip.dot}`} />}
+              <span>{chip.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto relative items-center">
       {/* Search input (Row 1 on mobile) */}
       <div className="relative w-full sm:w-64 flex-none">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -470,9 +533,10 @@ export function ProspectFilters({
               <button onClick={() => setActiveTab('city')} className={tabClass('city')}>
                 Ciudad {currentCities.length > 0 && `(${currentCities.length})`}
               </button>
-              <button onClick={() => setActiveTab('status')} className={tabClass('status')}>
-                Estado {currentStatus && '·'}
+              <button onClick={() => setActiveTab('stage')} className={tabClass('stage')}>
+                Etapa {effectiveStage && '·'}
               </button>
+
               <button onClick={() => setActiveTab('sector')} className={tabClass('sector')}>
                 Rubro {currentSector && '·'}
               </button>
@@ -511,26 +575,44 @@ export function ProspectFilters({
                 </div>
               )}
 
-              {/* ESTADO */}
-              {activeTab === 'status' && (
+              {/* ETAPA */}
+              {activeTab === 'stage' && (
                 <div className="space-y-0.5 pb-16 sm:pb-0">
-                  <button onClick={() => handleSingleFilter('status', '')} className={filterItemClass(!currentStatus)}>
-                    <span>Todos los estados</span>
-                    {!currentStatus && <Check className="w-4 h-4 shrink-0" />}
+                  <button
+                    onClick={() => {
+                      const params = new URLSearchParams(searchParams.toString());
+                      params.delete('status');
+                      params.delete('stage');
+                      params.delete('page');
+                      persistFilters(params);
+                      startTransition(() => router.push(`/prospects?${params.toString()}`));
+                    }}
+                    className={filterItemClass(!effectiveStage)}
+                  >
+                    <span>Todas las etapas</span>
+                    {!effectiveStage && <Check className="w-4 h-4 shrink-0" />}
                   </button>
                   <div className="my-2 border-t border-gray-100" />
-                  {statusOptions.map((s) => (
+                  {stageOptions.map((s) => (
                     <button
                       key={s.value}
-                      onClick={() => handleSingleFilter('status', s.value)}
-                      className={filterItemClass(currentStatus === s.value)}
+                      onClick={() => {
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.delete('status');
+                        params.set('stage', s.value);
+                        params.delete('page');
+                        persistFilters(params);
+                        startTransition(() => router.push(`/prospects?${params.toString()}`));
+                      }}
+                      className={filterItemClass(effectiveStage === s.value)}
                     >
                       <span className="truncate">{s.label}</span>
-                      {currentStatus === s.value && <Check className="w-4 h-4 shrink-0" />}
+                      {effectiveStage === s.value && <Check className="w-4 h-4 shrink-0" />}
                     </button>
                   ))}
                 </div>
               )}
+
 
               {/* RUBRO */}
               {activeTab === 'sector' && (
@@ -589,6 +671,8 @@ export function ProspectFilters({
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }
+

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { PROSPECT_STATUS } from '@/lib/constants';
+import { StatusBadges } from '@/components/crm/status';
 import { ArrowUpDown, ArrowUp, ArrowDown, MessageSquare, PlusCircle, CalendarPlus } from 'lucide-react';
 import { FavoriteButton } from './FavoriteButton';
 import { getLeadTemperature, PulseIndicator } from '@/lib/lead-temperature';
@@ -31,17 +31,8 @@ const COLUMNS: Column[] = [
   { key: 'actions', label: 'Acciones', sortable: false, align: 'right' },
 ];
 
-const STATUS_STYLE: Record<string, string> = {
-  pending: 'bg-gray-100 text-gray-600',
-  in_progress: 'bg-blue-50 text-blue-700',
-  interested: 'bg-amber-50 text-amber-700',
-  opportunity: 'bg-purple-50 text-purple-700',
-  quote: 'bg-indigo-50 text-indigo-700',
-  customer: 'bg-emerald-50 text-emerald-700',
-  discarded: 'bg-red-50 text-red-500',
-};
-
 const CLASS_STYLE: Record<string, string> = {
+
   A: 'bg-emerald-100 text-emerald-800',
   B: 'bg-blue-100 text-blue-800',
   C: 'bg-gray-100 text-gray-700',
@@ -189,19 +180,13 @@ export function ProspectTable({
 
                 {/* Estado */}
                 <td className="px-5 py-3.5">
-                  {prospect.contact_status ? (
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                        STATUS_STYLE[prospect.contact_status] ?? 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      {PROSPECT_STATUS[prospect.contact_status as keyof typeof PROSPECT_STATUS] ??
-                        prospect.contact_status}
-                    </span>
-                  ) : (
-                    <span className="text-gray-300">—</span>
-                  )}
+                  <StatusBadges
+                    management={prospect.contact_status}
+                    stage={prospect.commercial_stage}
+                    size="sm"
+                  />
                 </td>
+
 
                 {/* Seguimientos */}
                 <td className="px-5 py-3.5">

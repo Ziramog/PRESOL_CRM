@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { convertQuoteToTrip } from '@/app/actions/quotes/convertQuoteToTrip';
 import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
+import { applyProspectTransition } from '@/lib/prospects/apply-transition';
 
 export default async function QuoteDetailPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params;
@@ -27,8 +28,18 @@ export default async function QuoteDetailPage(props: { params: Promise<{ id: str
     'use server';
     const supabase = await createClient();
     await supabase.from('quotes').update({ status: 'accepted' }).eq('id', quote.id);
+    if (quote.client_id) {
+      const { data: { user } } = await supabase.auth.getUser();
+      await applyProspectTransition(
+        supabase,
+        quote.client_id,
+        { kind: 'quote_accepted' },
+        { source: 'quote', sourceId: quote.id, userId: user?.id }
+      );
+    }
     revalidatePath(`/quotes/${quote.id}`);
   }
+
 
   // Action for converting to trip
   async function handleConvertToTrip() {

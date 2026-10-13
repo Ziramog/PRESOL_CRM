@@ -5,6 +5,7 @@ import { Mic, Square, Loader2, X, Check, Activity, CalendarDays, FileText } from
 import { saveVoiceInteraction } from '@/app/actions/voice';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { ReactivationPrompt } from '@/components/crm/status';
 
 interface VoiceRecorderModalProps {
   prospectId: string;
@@ -18,6 +19,8 @@ export function VoiceRecorderModal({ prospectId, onClose }: VoiceRecorderModalPr
   const [proposal, setProposal] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [reactivationPromptData, setReactivationPromptData] = useState<{ prospectId: string; status: string } | null>(null);
+
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
@@ -122,6 +125,14 @@ export function VoiceRecorderModal({ prospectId, onClose }: VoiceRecorderModalPr
     try {
       const result = await saveVoiceInteraction(prospectId, proposal);
       if (result.success) {
+        if (result.reactivationPrompt) {
+          setReactivationPromptData({
+            prospectId,
+            status: result.managementStatus || 'discarded',
+          });
+          setIsSaving(false);
+          return;
+        }
         onClose();
       } else {
         throw new Error(result.error);
@@ -131,6 +142,7 @@ export function VoiceRecorderModal({ prospectId, onClose }: VoiceRecorderModalPr
       setIsSaving(false);
     }
   };
+
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -285,6 +297,23 @@ export function VoiceRecorderModal({ prospectId, onClose }: VoiceRecorderModalPr
           </div>
         )}
       </div>
+
+      {reactivationPromptData && (
+        <ReactivationPrompt
+          isOpen={true}
+          prospectId={reactivationPromptData.prospectId}
+          currentStatus={reactivationPromptData.status}
+          onClose={() => {
+            setReactivationPromptData(null);
+            onClose();
+          }}
+          onReactivated={() => {
+            setReactivationPromptData(null);
+            onClose();
+          }}
+        />
+      )}
     </div>
   );
 }
+

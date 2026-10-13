@@ -53,8 +53,22 @@ export default async function ProspectsPage({
     ? [cityParam]
     : [];
   const sector = typeof params.sector === 'string' ? params.sector : '';
-  const status = typeof params.status === 'string' ? params.status : '';
+  const rawStatus = typeof params.status === 'string' ? params.status : '';
+  const rawMgmt = typeof params.mgmt === 'string' ? params.mgmt : '';
+  const rawStage = typeof params.stage === 'string' ? params.stage : '';
+
+  let mgmt = rawMgmt;
+  let stage = rawStage;
+  if (!mgmt && !stage && rawStatus) {
+    if (['pending', 'in_progress', 'paused', 'discarded'].includes(rawStatus)) {
+      mgmt = rawStatus;
+    } else {
+      stage = rawStatus;
+    }
+  }
+
   const favoritesOnly = params.favorites === 'true';
+
   const viewMode = typeof params.view === 'string' && params.view === 'cards' ? 'cards' : 'table';
 
   // Sorting
@@ -101,8 +115,10 @@ export default async function ProspectsPage({
   if (prospectClass) baseQuery = baseQuery.eq('class', prospectClass);
   if (selectedCities.length > 0) baseQuery = baseQuery.in('city', selectedCities);
   if (sector) baseQuery = baseQuery.eq('sector', sector);
-  if (status) baseQuery = baseQuery.eq('contact_status', status);
+  if (mgmt) baseQuery = baseQuery.eq('contact_status', mgmt);
+  if (stage) baseQuery = baseQuery.eq('commercial_stage', stage);
   if (favoritesOnly) {
+
     baseQuery = baseQuery.contains('source_payload', { is_favorite: true });
   }
 
@@ -116,16 +132,26 @@ export default async function ProspectsPage({
   let totalCount = 0;
   let taskCounts: Record<string, number> = {};
   
-  // Status weight for logical sorting (ascending = funnel order, active first)
-  // Lower weight = higher priority (shows first in asc sort)
-  const STATUS_WEIGHTS: Record<string, number> = {
+  // Composite funnel weights (management priority primary, stage descending secondary)
+  const MGMT_WEIGHTS: Record<string, number> = {
     in_progress: 1,
-    interested: 2,
-    opportunity: 3,
-    quote: 4,
-    customer: 5,
-    pending: 6,
-    discarded: 7,
+    pending: 2,
+    paused: 3,
+    discarded: 4,
+  };
+
+  const STAGE_SCORES: Record<string, number> = {
+    customer: 4,
+    quote: 3,
+    opportunity: 2,
+    interested: 1,
+    unqualified: 0,
+  };
+
+  const getFunnelWeight = (item: any) => {
+    const mgmtWeight = MGMT_WEIGHTS[item.contact_status || 'pending'] || 2;
+    const stageScore = STAGE_SCORES[item.commercial_stage || 'unqualified'] || 0;
+    return mgmtWeight * 10 - stageScore;
   };
 
   const MEMORY_SORT_COLS = ['open_tasks', 'contact_status', 'is_favorite'];
@@ -139,14 +165,15 @@ export default async function ProspectsPage({
       taskCounts[t.prospect_id] = (taskCounts[t.prospect_id] || 0) + 1;
     });
 
-    let lightweightQuery = supabaseAdmin.from('prospects').select('id, contact_status, company_name, source_payload, created_at, updated_at, city, class, commercial_category, external_id');
+    let lightweightQuery = supabaseAdmin.from('prospects').select('id, contact_status, commercial_stage, company_name, source_payload, created_at, updated_at, city, class, commercial_category, external_id');
     for (const filter of searchFilters) {
       lightweightQuery = lightweightQuery.or(filter);
     }
     if (prospectClass) lightweightQuery = lightweightQuery.eq('class', prospectClass);
     if (selectedCities.length > 0) lightweightQuery = lightweightQuery.in('city', selectedCities);
     if (sector) lightweightQuery = lightweightQuery.eq('sector', sector);
-    if (status) lightweightQuery = lightweightQuery.eq('contact_status', status);
+    if (mgmt) lightweightQuery = lightweightQuery.eq('contact_status', mgmt);
+    if (stage) lightweightQuery = lightweightQuery.eq('commercial_stage', stage);
     if (favoritesOnly) lightweightQuery = lightweightQuery.contains('source_payload', { is_favorite: true });
     
     const { data: idData, error: idError } = await lightweightQuery;
@@ -161,7 +188,8 @@ export default async function ProspectsPage({
     // 3. Sort in memory
     const getValue = (item: any, col: string | null) => {
       if (col === 'open_tasks') return taskCounts[item.id] || 0;
-      if (col === 'contact_status') return STATUS_WEIGHTS[item.contact_status || 'pending'] || 0;
+      if (col === 'contact_status') return getFunnelWeight(item);
+
       if (col === 'company_name') return item.company_name?.toLowerCase() || '';
       if (col === 'city') return item.city?.toLowerCase() || '';
       if (col === 'class') return item.class?.toLowerCase() || '';
